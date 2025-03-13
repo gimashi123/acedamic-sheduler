@@ -1,12 +1,13 @@
 import Timetable from '../models/timetable.model.js';
 import {errorResponse, HTTP_STATUS, successResponse} from "../config/http.config.js";
+import {timeTableResponseDto} from "../dto/timeTable.response.dto.js";
 
 // @desc Get all timetables
 // @route GET /timetables
 export const getTimetables = async (req, res) => {
     try {
         const timetables = await Timetable.find();
-        return successResponse(res, "Timetables fetched Successfully", HTTP_STATUS.OK,  timetables);
+        return successResponse(res ,"Fetch successful",HTTP_STATUS.OK, timetables.map(timeTableResponseDto));
 
     } catch (error) {
         return errorResponse(res, "Failed to fetch timetables", HTTP_STATUS.SERVER_ERROR);
@@ -26,9 +27,13 @@ export const createTimetable = async (req, res) => {
 
         const newTimetable = new Timetable({ course, instructor, day, startTime, endTime, venue });
         await newTimetable.save();
-        res.status(201).json(newTimetable);
+        return successResponse(
+            res,"Timetable created successfully",HTTP_STATUS.CREATED,timeTableResponseDto(newTimetable)
+        )
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return errorResponse(
+            res,"Failed to create timetable",HTTP_STATUS.SERVER_ERROR
+        )
     }
 };
 export const getTimetableById = async (req, res) => {

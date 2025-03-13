@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const timetableSchema = new mongoose.Schema({
+    slots: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Slot'
+        }
+    ],
     course: {
         type: String,
         required: true
