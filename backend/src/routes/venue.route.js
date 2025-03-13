@@ -1,5 +1,5 @@
 import express from "express";
-import { createVenue, deleteVenue, getVenueById, getVenues, updateVenue } from "../controllers/venue.controller.js";
+import { createVenue, deleteVenue, getVenueById, getVenues, updateVenue } from "../controller/venue.controller.js";
 
 const router = express.Router();
 
