@@ -1,13 +1,15 @@
 import Timetable from '../models/timetable.model.js';
+import {errorResponse, HTTP_STATUS, successResponse} from "../config/http.config.js";
 
 // @desc Get all timetables
 // @route GET /timetables
 export const getTimetables = async (req, res) => {
     try {
         const timetables = await Timetable.find();
-        res.status(200).json(timetables);
+        return successResponse(res, "Timetables fetched Successfully", HTTP_STATUS.OK,  timetables);
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return errorResponse(res, "Failed to fetch timetables", HTTP_STATUS.SERVER_ERROR);
     }
 };
 

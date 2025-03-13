@@ -1,5 +1,5 @@
 .idea
 .vscode
-frontend/.env
-frontend/node_modules
-frontend/package-lock.json
+web-app/.env
+web-app/node_modules
+web-app/package-lock.json

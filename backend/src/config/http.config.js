@@ -12,11 +12,11 @@ export const successResponse = (
   res,
   message,
   status = HTTP_STATUS.OK,
-  data = null,
+  result = null,
 ) => {
-  res.status(status).json({ success: true, message, data });
+  res.status(status).json({ success: true, message, result });
 };
 
-export const errorResponse = (res, message, status, data = null) => {
-  res.status(status).json({ success: false, message, data });
+export const errorResponse = (res, message, status, result = null) => {
+  res.status(status).json({ success: false, message, result });
 };
