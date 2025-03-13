@@ -4,10 +4,12 @@ import {
   successResponse,
 } from '../config/http.config.js';
 import User from '../models/user.model.js';
-import { userResponseDto } from '../dto/user.response.dto.js';
-
-/*const bcrypt = import('bcryptjs');
-const jwt = import('jsonwebtoken');*/
+import { userLoginResponseDTO } from '../dto/user.response.dto.js';
+import {
+  comparePassword,
+  generateAccessToken,
+  generateRefreshToken,
+} from '../middleware/jwt.middleware.js';
 
 export const login = async (req, res) => {
   try {
@@ -22,7 +24,9 @@ export const login = async (req, res) => {
       );
     }
 
-    if (user.password !== password) {
+    const is_password_correct = comparePassword(password, user.password);
+
+    if (!is_password_correct) {
       return errorResponse(
         res,
         'Invalid email or password',
@@ -30,11 +34,15 @@ export const login = async (req, res) => {
       );
     }
 
+    const accessToken = generateAccessToken(user);
+    user.refreshToken = generateRefreshToken(user);
+    user.save();
+
     return successResponse(
       res,
       'Login Successful',
       HTTP_STATUS.OK,
-      userResponseDto(user),
+      userLoginResponseDTO(user, accessToken),
     );
   } catch (e) {
     return errorResponse(

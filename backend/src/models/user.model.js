@@ -17,6 +17,10 @@ const userSchema = new Schema(
       enum: [ROLES.LECTURER, ROLES.STUDENT, ROLES.ADMIN],
       required: true,
     },
+    refreshToken: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true },
 );
