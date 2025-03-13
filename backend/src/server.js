@@ -27,7 +27,10 @@ app.get('/hello', (_, res) => {
   res.send('Backend is up and running');
 });
 
+// gimashi
 app.use('/auth', authRoute);
 app.use('/user', userRoute);
+
+// ravindu
 app.use('/api/groups', groupRoutes);
 app.use('/api/venues', venueRoutes);
