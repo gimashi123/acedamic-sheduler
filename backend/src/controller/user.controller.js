@@ -8,13 +8,12 @@ import User, { ROLES } from '../models/user.model.js';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { userResponseDto } from '../dto/user.response.dto.js';
+import { hashPassword } from '../middleware/jwt.middleware.js';
 
 dotenv.config();
 
 const senderEmail = process.env.EMAIL_SERVICE_EMAIL;
 const senderPassword = process.env.EMAIL_SERVICE_PASSWORD;
-
-//const bcrypt = import('bcryptjs');
 
 // Admin registers an approved user
 export const registerUser = async (req, res) => {
@@ -33,14 +32,14 @@ export const registerUser = async (req, res) => {
 
     // Generate default password
     const defaultPassword = Math.random().toString(36).slice(-8);
-    // const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    const hashedPassword = await hashPassword(defaultPassword);
 
     // Create user
     const newUser = new User({
       firstName: formRequest.firstName,
       lastName: formRequest.lastName,
       email: formRequest.email,
-      password: defaultPassword,
+      password: hashedPassword,
       role: formRequest.role,
     });
 
@@ -107,15 +106,14 @@ export const registerAdmin = async (req, res) => {
       );
     }
 
-    // Hash the provided password
-    //const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     // Create Admin User
     const newAdmin = new User({
       firstName,
       lastName,
       email,
-      password,
+      password: hashedPassword,
       role: ROLES.ADMIN, // Ensure role is set to Admin
     });
 

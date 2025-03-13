@@ -7,3 +7,16 @@ export const userResponseDto = (user) => {
     role: user.role,
   };
 };
+
+export const userLoginResponseDTO = (user, accessToken) => {
+  return {
+    user: {
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+    },
+    accessToken: accessToken,
+  };
+};
