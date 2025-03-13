@@ -16,7 +16,7 @@ app.use(cors({ origin: true, credentials: true }));
 const PORT = process.env.BACKEND_PORT;
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log("Server started at http://localhost:" + PORT);
 });
 
 await connect_db().then(() => {
