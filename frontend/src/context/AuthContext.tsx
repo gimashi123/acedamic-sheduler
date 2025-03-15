@@ -1,23 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import authService from '../services/auth.service';
-import { LoginCredentials, RegisterData } from '../services/auth.service';
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-}
+import { User, LoginCredentials, Role } from '../types';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
   login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   isAuthenticated: () => boolean;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,27 +55,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (data: RegisterData) => {
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await authService.register(data);
-      setUser(response.user);
+      await authService.changePassword(currentPassword, newPassword);
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      setError(err.message || 'Failed to change password');
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    setUser(null);
-  };
-
   const isAuthenticated = () => {
     return authService.isAuthenticated();
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   const value = {
@@ -90,9 +86,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     error,
     login,
-    register,
     logout,
+    changePassword,
     isAuthenticated,
+    clearError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

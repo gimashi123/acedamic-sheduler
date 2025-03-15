@@ -62,3 +62,16 @@ export const hashPassword = async (password) => {
 export const comparePassword = async (password, hashedPassword) => {
   return bcrypt.compare(password, hashedPassword);
 };
+
+// Admin authorization middleware
+export const isAdmin = (req, res, next) => {
+  if (!req.user) {
+    return errorResponse(res, 'Unauthorized - User not authenticated', HTTP_STATUS.UNAUTHORIZED);
+  }
+
+  if (req.user.role !== 'Admin') {
+    return errorResponse(res, 'Forbidden - Admin access required', HTTP_STATUS.FORBIDDEN);
+  }
+
+  next();
+};
