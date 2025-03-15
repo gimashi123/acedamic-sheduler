@@ -9,7 +9,7 @@ import userRoute from './routes/user.route.js';
 import requestRoute from './routes/request.route.js';
 import groupRoutes from './routes/group.route.js';
 import venueRoutes from './routes/venue.route.js';
-import settingsRoutes from './routes/settings.route.js';
+import settingsRoutes from './routes/settings.routes.js';
 import { authenticateToken } from './middleware/jwt.middleware.js';
 
 const app = express();
@@ -17,7 +17,7 @@ dotenv.config();
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 
-const PORT = process.env.BACKEND_PORT || 5000;
+const PORT = process.env.BACKEND_PORT || 5001;
 
 // Connect to database before starting server
 try {

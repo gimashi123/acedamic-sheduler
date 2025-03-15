@@ -6,7 +6,7 @@ import {
 } from '../config/http.config.js';
 import User from '../models/user.model.js';
 import { hashPassword } from '../middleware/jwt.middleware.js';
-import nodemailer from 'nodemailer';
+import emailService from '../services/email.service.js';
 import dotenv from 'dotenv';
 import { emailSettings } from './settings.controller.js';
 
@@ -211,12 +211,18 @@ export const updateRequestStatus = async (req, res) => {
         // Store the default password in the request for the response
         request.defaultPassword = defaultPassword;
 
-        // Try to send email, but continue even if it fails
+        // Send email notification using our email service
         try {
-          await sendEmail(
+          // Generate HTML content for the email
+          const htmlContent = emailService.generateAccountCreationHtml(
+            request.firstName,
+            request.lastName,
             request.email,
-            'Your Account Has Been Approved',
-            `Dear ${request.firstName} ${request.lastName},
+            defaultPassword
+          );
+
+          // Plain text version as fallback
+          const textContent = `Dear ${request.firstName} ${request.lastName},
 
 Your account request has been approved. You can now log in to the Academic Scheduler system with the following credentials:
 
@@ -226,37 +232,72 @@ Password: ${defaultPassword}
 Please change your password after your first login.
 
 Best regards,
-Academic Scheduler Team`
+Academic Scheduler Team`;
+
+          // Send the email with both HTML and plain text versions
+          const emailResult = await emailService.sendEmail(
+            request.email,
+            'Your Account Has Been Approved',
+            textContent,
+            htmlContent
           );
-          request.isEmailSent = true;
+
+          // Mark email as sent if successful
+          request.isEmailSent = emailResult.success;
+          
+          // Log the result
+          if (emailResult.success) {
+            console.log(`Approval email sent to ${request.email} using provider: ${emailResult.provider}`);
+          } else {
+            console.warn(`Could not send approval email to ${request.email}: ${emailResult.message}`);
+          }
         } catch (emailError) {
           console.error('Failed to send approval email:', emailError);
           // Continue processing despite email failure
         }
       }
     } else if (status === REQUEST_STATUS.REJECTED) {
-      // Try to send rejection email, but continue even if it fails
+      // Send rejection email using our email service
       try {
-        let emailContent = `Dear ${request.firstName} ${request.lastName},
+        // Generate HTML content for the email
+        const htmlContent = emailService.generateRejectionHtml(
+          request.firstName,
+          request.lastName,
+          reason
+        );
+
+        // Plain text version as fallback
+        let textContent = `Dear ${request.firstName} ${request.lastName},
 
 We regret to inform you that your account request for the Academic Scheduler system has been rejected.`;
 
         // Add reason if provided
         if (reason) {
-          emailContent += `\n\nReason: ${reason}`;
+          textContent += `\n\nReason: ${reason}`;
         }
 
-        emailContent += `\n\nIf you believe this is an error or if you have any questions, please contact the administrator.
+        textContent += `\n\nIf you believe this is an error or if you have any questions, please contact the administrator.
 
 Best regards,
 Academic Scheduler Team`;
 
-        await sendEmail(
+        // Send the email with both HTML and plain text versions
+        const emailResult = await emailService.sendEmail(
           request.email,
           'Your Account Request Has Been Rejected',
-          emailContent
+          textContent,
+          htmlContent
         );
-        request.isEmailSent = true;
+
+        // Mark email as sent if successful
+        request.isEmailSent = emailResult.success;
+        
+        // Log the result
+        if (emailResult.success) {
+          console.log(`Rejection email sent to ${request.email} using provider: ${emailResult.provider}`);
+        } else {
+          console.warn(`Could not send rejection email to ${request.email}: ${emailResult.message}`);
+        }
       } catch (emailError) {
         console.error('Failed to send rejection email:', emailError);
         // Continue processing despite email failure

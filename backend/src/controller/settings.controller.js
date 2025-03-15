@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
 import { successResponse, errorResponse, HTTP_STATUS } from '../config/http.config.js';
+import emailService from '../services/email.service.js';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -13,25 +14,30 @@ const ENV_FILE_PATH = path.resolve(__dirname, '../../.env');
 // Initialize env
 dotenv.config();
 
-// Store email settings in memory for fallback if .env cannot be updated
-export let emailSettings = {
+// In-memory settings storage (could be replaced with database storage in production)
+export const emailSettings = {
+  isEnabled: process.env.EMAIL_ENABLED === 'true',
+  service: 'gmail',
   email: process.env.EMAIL_SERVICE_EMAIL || '',
   password: process.env.EMAIL_SERVICE_PASSWORD || '',
-  isEnabled: process.env.EMAIL_ENABLED === 'true',
 };
 
-// Get current email settings
+// Get email settings
 export const getEmailSettings = async (req, res) => {
   try {
+    // Return settings without the password for security
+    const safeSettings = {
+      isEnabled: emailSettings.isEnabled,
+      service: emailSettings.service,
+      email: emailSettings.email,
+      // Password is intentionally omitted
+    };
+
     return successResponse(
       res,
       'Email settings retrieved successfully',
       HTTP_STATUS.OK,
-      {
-        email: emailSettings.email,
-        isEnabled: emailSettings.isEnabled,
-        // Don't return the password
-      }
+      safeSettings
     );
   } catch (error) {
     console.error('Error getting email settings:', error);
@@ -46,57 +52,47 @@ export const getEmailSettings = async (req, res) => {
 // Update email settings
 export const updateEmailSettings = async (req, res) => {
   try {
-    const { email, password, isEnabled } = req.body;
-    
-    // Update in-memory settings first
-    emailSettings = {
-      email: email || '',
-      password: password || '',
-      isEnabled: isEnabled === true,
-    };
+    const { isEnabled, service, email, password } = req.body;
 
-    // Update environment variables
-    process.env.EMAIL_SERVICE_EMAIL = email || '';
-    process.env.EMAIL_SERVICE_PASSWORD = password || '';
-    process.env.EMAIL_ENABLED = isEnabled === true ? 'true' : 'false';
-    
-    // Try to update .env file, but don't fail if it can't be updated
-    try {
-      // Read existing .env file content
-      let envContent = '';
-      if (fs.existsSync(ENV_FILE_PATH)) {
-        envContent = fs.readFileSync(ENV_FILE_PATH, 'utf8');
-      }
-
-      // Parse the existing entries
-      const envLines = envContent.split('\n').filter(line => 
-        !line.startsWith('EMAIL_SERVICE_EMAIL=') && 
-        !line.startsWith('EMAIL_SERVICE_PASSWORD=') && 
-        !line.startsWith('EMAIL_ENABLED=')
+    // Validate input
+    if (isEnabled && (!email || (!password && !emailSettings.password))) {
+      return errorResponse(
+        res,
+        'Email and password are required when email notifications are enabled',
+        HTTP_STATUS.BAD_REQUEST
       );
-
-      // Add our updated values
-      envLines.push(`EMAIL_SERVICE_EMAIL=${email || ''}`);
-      if (password) {
-        envLines.push(`EMAIL_SERVICE_PASSWORD=${password}`);
-      } else if (process.env.EMAIL_SERVICE_PASSWORD) {
-        // Keep existing password if not provided
-        envLines.push(`EMAIL_SERVICE_PASSWORD=${process.env.EMAIL_SERVICE_PASSWORD}`);
-      }
-      envLines.push(`EMAIL_ENABLED=${isEnabled === true ? 'true' : 'false'}`);
-
-      // Write back to the file
-      fs.writeFileSync(ENV_FILE_PATH, envLines.join('\n') + '\n');
-    } catch (fileError) {
-      console.warn('Could not update .env file:', fileError);
-      // This is not a critical error, we continue with the in-memory settings
     }
+
+    // Update settings
+    emailSettings.isEnabled = isEnabled;
+    emailSettings.service = service || 'gmail';
+    emailSettings.email = email || '';
+    
+    // Only update password if provided
+    if (password) {
+      emailSettings.password = password;
+    }
+
+    // Update environment variables (for current session only)
+    process.env.EMAIL_ENABLED = isEnabled ? 'true' : 'false';
+    process.env.EMAIL_SERVICE_EMAIL = email;
+    if (password) {
+      process.env.EMAIL_SERVICE_PASSWORD = password;
+    }
+
+    // Reinitialize email service providers with new settings
+    emailService.initializeProviders();
 
     return successResponse(
       res,
       'Email settings updated successfully',
       HTTP_STATUS.OK,
-      { isEnabled: emailSettings.isEnabled }
+      {
+        isEnabled: emailSettings.isEnabled,
+        service: emailSettings.service,
+        email: emailSettings.email,
+        // Password is intentionally omitted
+      }
     );
   } catch (error) {
     console.error('Error updating email settings:', error);
@@ -108,68 +104,86 @@ export const updateEmailSettings = async (req, res) => {
   }
 };
 
-// Test email configuration
-export const testEmailSettings = async (req, res) => {
+// Send test email
+export const sendTestEmail = async (req, res) => {
   try {
-    const { testEmail } = req.body;
-    
-    if (!testEmail) {
+    const { to } = req.body;
+
+    if (!to) {
       return errorResponse(
         res,
-        'Test email address is required',
+        'Email address is required',
         HTTP_STATUS.BAD_REQUEST
       );
     }
-    
+
     if (!emailSettings.isEnabled) {
       return errorResponse(
         res,
-        'Email notifications are currently disabled',
+        'Email notifications are disabled in settings',
         HTTP_STATUS.BAD_REQUEST
       );
     }
-    
-    if (!emailSettings.email || !emailSettings.password) {
+
+    // Generate HTML content for the test email
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #4a6da7; color: white; padding: 10px 20px; border-radius: 5px 5px 0 0; }
+          .content { padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 5px 5px; }
+          .footer { font-size: 12px; color: #777; margin-top: 20px; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2>Academic Scheduler - Test Email</h2>
+          </div>
+          <div class="content">
+            <p>This is a test email from the Academic Scheduler system.</p>
+            <p>If you received this email, it means your email configuration is working correctly.</p>
+            <p>Time sent: ${new Date().toLocaleString()}</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Send the test email
+    const result = await emailService.sendEmail(
+      to,
+      'Academic Scheduler - Test Email',
+      'This is a test email from the Academic Scheduler system. If you received this email, it means your email configuration is working correctly.',
+      htmlContent
+    );
+
+    if (result.success) {
+      return successResponse(
+        res,
+        'Test email sent successfully',
+        HTTP_STATUS.OK,
+        result
+      );
+    } else {
       return errorResponse(
         res,
-        'Email settings are incomplete. Please check your configuration.',
-        HTTP_STATUS.BAD_REQUEST
+        `Failed to send test email: ${result.message}`,
+        HTTP_STATUS.BAD_REQUEST,
+        result
       );
     }
-    
-    // Set up the transporter
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: emailSettings.email,
-        pass: emailSettings.password,
-      },
-    });
-    
-    // Send a test email
-    await transporter.sendMail({
-      from: emailSettings.email,
-      to: testEmail,
-      subject: 'Academic Scheduler - Test Email',
-      text: `This is a test email from the Academic Scheduler system.
-      
-If you received this email, it means your email configuration is working correctly.
-
-Best regards,
-Academic Scheduler Team`,
-    });
-    
-    return successResponse(
-      res,
-      'Test email sent successfully',
-      HTTP_STATUS.OK,
-      {}
-    );
   } catch (error) {
     console.error('Error sending test email:', error);
     return errorResponse(
       res,
-      `Failed to send test email: ${error.message}`,
+      'Server error',
       HTTP_STATUS.SERVER_ERROR
     );
   }
