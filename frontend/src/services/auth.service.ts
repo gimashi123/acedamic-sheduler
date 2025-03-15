@@ -60,6 +60,30 @@ class AuthService {
     }
   }
 
+  async resetPassword(): Promise<{ defaultPassword: string }> {
+    try {
+      const response = await api.post<ApiResponse<{ defaultPassword: string }>>('/auth/reset-password');
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to reset password');
+      }
+      
+      // Update the user object to set the passwordChangeRequired flag
+      const user = this.getCurrentUser();
+      if (user) {
+        user.passwordChangeRequired = true;
+        user.defaultPassword = response.data.data.defaultPassword;
+        this.setUser(user);
+      }
+      
+      return response.data.data;
+    } catch (error: any) {
+      if (error.response) {
+        throw new Error(error.response.data.message || 'Failed to reset password');
+      }
+      throw error;
+    }
+  }
+
   logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');

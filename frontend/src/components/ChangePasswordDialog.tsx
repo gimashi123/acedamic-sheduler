@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -10,8 +10,10 @@ import {
   Alert,
   Box,
   CircularProgress,
+  InputAdornment,
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -24,12 +26,16 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   defaultPassword,
   onClose,
 }) => {
-  const { changePassword, error, loading, clearError } = useAuth();
+  const { changePassword, error, loading, clearError, logout } = useAuth();
+  const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState(defaultPassword || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  
+  // Create a masked version of the current password for display
+  const [maskedPassword] = useState('••••••••');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,9 +74,10 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
       await changePassword(currentPassword, newPassword);
       setSuccess(true);
       
-      // Close the dialog after 2 seconds
+      // Redirect to login page after 2 seconds
       setTimeout(() => {
-        onClose();
+        logout();
+        navigate('/login');
       }, 2000);
     } catch (err) {
       // Error is handled by the auth context
@@ -79,16 +86,24 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={success ? onClose : undefined} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      // Make dialog non-dismissible
+      onClose={() => {}} // Empty function prevents closing
+      maxWidth="sm" 
+      fullWidth
+      disableEscapeKeyDown
+    >
       <DialogTitle>Change Your Password</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>
           For security reasons, you need to change your password before continuing.
+          You cannot dismiss this dialog until you change your password.
         </DialogContentText>
         
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {localError && <Alert severity="error" sx={{ mb: 2 }}>{localError}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>Password changed successfully!</Alert>}
+        {success && <Alert severity="success" sx={{ mb: 2 }}>Password changed successfully! Redirecting to login page...</Alert>}
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <TextField
@@ -97,10 +112,13 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
             fullWidth
             label="Current Password"
             type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            disabled={loading || success}
-            autoFocus
+            // Display masked password but keep actual value in state
+            value={maskedPassword}
+            // Disable editing of current password
+            disabled={true}
+            InputProps={{
+              readOnly: true,
+            }}
           />
           <TextField
             margin="normal"
@@ -111,6 +129,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             disabled={loading || success}
+            autoFocus
           />
           <TextField
             margin="normal"
@@ -135,17 +154,19 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                 color="primary" 
                 variant="contained"
                 disabled={loading}
+                fullWidth
               >
                 Change Password
               </Button>
             )}
             {success && (
               <Button 
-                onClick={onClose} 
                 color="primary" 
                 variant="contained"
+                disabled
+                fullWidth
               >
-                Continue
+                Redirecting...
               </Button>
             )}
           </>
