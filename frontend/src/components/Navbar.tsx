@@ -110,6 +110,9 @@ const Navbar: React.FC = () => {
                   <MenuItem onClick={handleCloseNavMenu} component={Link} to="/register">
                     <Typography textAlign="center">Register</Typography>
                   </MenuItem>
+                  <MenuItem onClick={handleCloseNavMenu} component={Link} to="/request-status">
+                    <Typography textAlign="center">Check Status</Typography>
+                  </MenuItem>
                 </>
               )}
             </Menu>
@@ -165,6 +168,13 @@ const Navbar: React.FC = () => {
                   sx={{ my: 2, color: 'white', display: 'block' }}
                 >
                   Register
+                </Button>
+                <Button
+                  component={Link}
+                  to="/request-status"
+                  sx={{ my: 2, color: 'white', display: 'block' }}
+                >
+                  Check Status
                 </Button>
               </>
             )}

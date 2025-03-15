@@ -52,6 +52,16 @@ const Home: React.FC = () => {
               >
                 Register
               </Button>
+              <Button
+                component={Link}
+                to="/request-status"
+                variant="outlined"
+                color="inherit"
+                size="large"
+                sx={{ mx: 1 }}
+              >
+                Check Registration Status
+              </Button>
             </Box>
           )}
           {isAuthenticated() && (
@@ -118,16 +128,26 @@ const Home: React.FC = () => {
             Ready to get started?
           </Typography>
           {!isAuthenticated() && (
-            <Button
-              component={Link}
-              to="/register"
-              variant="contained"
-              color="primary"
-              size="large"
-              sx={{ mt: 2 }}
-            >
-              Create an Account
-            </Button>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Button
+                component={Link}
+                to="/register"
+                variant="contained"
+                color="primary"
+                size="large"
+              >
+                Create an Account
+              </Button>
+              <Button
+                component={Link}
+                to="/request-status"
+                variant="outlined"
+                color="primary"
+                size="large"
+              >
+                Check Registration Status
+              </Button>
+            </Box>
           )}
           {isAuthenticated() && (
             <Button

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   Container,
@@ -13,14 +13,27 @@ import {
   Divider,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import ChangePasswordDialog from '../components/ChangePasswordDialog';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+
+  useEffect(() => {
+    // Check if the user needs to change their password
+    if (user?.passwordChangeRequired) {
+      setShowPasswordDialog(true);
+    }
+  }, [user]);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handlePasswordDialogClose = () => {
+    setShowPasswordDialog(false);
   };
 
   if (!user) {
@@ -92,6 +105,21 @@ const Dashboard: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
+                      Registration Requests
+                    </Typography>
+                    <Typography variant="body2">
+                      Review and approve pending registration requests.
+                    </Typography>
+                  </CardContent>
+                  <CardActions>
+                    <Button size="small" onClick={() => navigate('/manage-requests')}>Manage Requests</Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
                       System Settings
                     </Typography>
                     <Typography variant="body2">
@@ -99,7 +127,7 @@ const Dashboard: React.FC = () => {
                     </Typography>
                   </CardContent>
                   <CardActions>
-                    <Button size="small">Settings</Button>
+                    <Button size="small" onClick={() => navigate('/settings')}>Settings</Button>
                   </CardActions>
                 </Card>
               </Grid>
@@ -196,6 +224,13 @@ const Dashboard: React.FC = () => {
           </Grid>
         </Grid>
       </Box>
+
+      {/* Password Change Dialog */}
+      <ChangePasswordDialog
+        open={showPasswordDialog}
+        defaultPassword={user.defaultPassword}
+        onClose={handlePasswordDialogClose}
+      />
     </Container>
   );
 };

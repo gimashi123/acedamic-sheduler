@@ -8,7 +8,7 @@ export const userResponseDto = (user) => {
   };
 };
 
-export const userLoginResponseDTO = (user, accessToken) => {
+export const userLoginResponseDTO = (user, accessToken, refreshToken) => {
   return {
     user: {
       id: user._id,
@@ -18,5 +18,6 @@ export const userLoginResponseDTO = (user, accessToken) => {
       role: user.role,
     },
     accessToken: accessToken,
+    refreshToken: refreshToken,
   };
 };

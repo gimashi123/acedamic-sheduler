@@ -2,9 +2,10 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { CircularProgress, Box } from '@mui/material';
+import { Role } from '../types';
 
 interface ProtectedRouteProps {
-  allowedRoles?: string[];
+  allowedRoles?: Role[];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
@@ -31,7 +32,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   }
 
   // Check if user has required role
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user && !allowedRoles.includes(user.role as Role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
