@@ -33,10 +33,7 @@ const Dashboard: React.FC = () => {
   };
 
   const handlePasswordDialogClose = () => {
-    // Only allow closing if not a required password change
-    if (!user?.passwordChangeRequired) {
-      setShowPasswordDialog(false);
-    }
+    setShowPasswordDialog(false);
   };
 
   if (!user) {

@@ -13,6 +13,7 @@ import {
   hashPassword,
 } from '../middleware/jwt.middleware.js';
 import dotenv from 'dotenv';
+import emailService from '../services/email.service.js';
 
 dotenv.config();
 
@@ -280,6 +281,9 @@ export const changePassword = async (req, res) => {
     
     await user.save();
     
+    // Send email notification about password change with the new password
+    await emailService.sendPasswordUpdateEmail(user.email, newPassword);
+    
     return successResponse(
       res,
       'Password changed successfully',
@@ -318,6 +322,9 @@ export const resetPassword = async (req, res) => {
     user.defaultPassword = randomPassword; // Store temporarily for display
     
     await user.save();
+    
+    // Send email notification with the new password
+    await emailService.sendPasswordUpdateEmail(user.email, randomPassword);
     
     return successResponse(
       res,

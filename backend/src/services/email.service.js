@@ -48,8 +48,6 @@ class EmailService {
       });
     }
 
-    // Add more providers as needed...
-
     // Add a fallback console provider that just logs emails (always available)
     this.addProvider('console', {
       name: 'console-transport',
@@ -220,7 +218,7 @@ class EmailService {
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #d32f2f; color: white; padding: 10px 20px; border-radius: 5px 5px 0 0; }
+          .header { background-color: #d9534f; color: white; padding: 10px 20px; border-radius: 5px 5px 0 0; }
           .content { padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 5px 5px; }
           .reason { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0; }
           .footer { font-size: 12px; color: #777; margin-top: 20px; text-align: center; }
@@ -229,11 +227,11 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h2>Academic Scheduler - Request Rejected</h2>
+            <h2>Academic Scheduler - Registration Request Rejected</h2>
           </div>
           <div class="content">
             <p>Dear ${firstName} ${lastName},</p>
-            <p>We regret to inform you that your account request for the Academic Scheduler system has been rejected.</p>
+            <p>We regret to inform you that your registration request for the Academic Scheduler system has been rejected.</p>
             
             ${reason ? `
             <div class="reason">
@@ -241,7 +239,7 @@ class EmailService {
             </div>
             ` : ''}
             
-            <p>If you believe this is an error or if you have any questions, please contact the administrator.</p>
+            <p>If you believe this is an error or would like to provide additional information, please contact the administrator.</p>
             
             <p>Best regards,<br>Academic Scheduler Team</p>
           </div>
@@ -252,6 +250,85 @@ class EmailService {
       </body>
       </html>
     `;
+  }
+
+  // Generate HTML email template for password change notification
+  generatePasswordChangeHtml(firstName, lastName, email, newPassword = null) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #5bc0de; color: white; padding: 10px 20px; border-radius: 5px 5px 0 0; }
+          .content { padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 5px 5px; }
+          .credentials { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 15px 0; }
+          .warning { color: #d9534f; font-weight: bold; }
+          .footer { font-size: 12px; color: #777; margin-top: 20px; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2>Academic Scheduler - Password ${newPassword ? 'Updated' : 'Changed'}</h2>
+          </div>
+          <div class="content">
+            <p>Dear ${firstName} ${lastName},</p>
+            
+            <p>Your password has been ${newPassword ? 'updated' : 'changed'} in the Academic Scheduler system.</p>
+            
+            <div class="credentials">
+              <p><strong>Username:</strong> ${email}</p>
+              <p><strong>Password:</strong> ${newPassword || '[Your new password]'}</p>
+            </div>
+            
+            <p class="warning">Important: Please keep this information secure. Do not share your password with anyone.</p>
+            
+            <p>If you did not make this change, please contact the administrator immediately.</p>
+            
+            <p>If you have any questions or need assistance, please contact the administrator.</p>
+            
+            <p>Best regards,<br>Academic Scheduler Team</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  // Send password update notification email with the new password
+  async sendPasswordUpdateEmail(email, newPassword) {
+    try {
+      // Find user by email to get their name
+      const User = (await import('../models/user.model.js')).default;
+      const user = await User.findOne({ email });
+      
+      if (!user) {
+        console.error(`User with email ${email} not found for password update notification`);
+        return {
+          success: false,
+          message: 'User not found',
+          provider: null
+        };
+      }
+      
+      const subject = 'Academic Scheduler - Password Update';
+      const text = `Dear ${user.firstName} ${user.lastName},\n\nYour password has been updated in the Academic Scheduler system.\n\nUsername: ${email}\nPassword: ${newPassword}\n\nImportant: Please keep this information secure. Do not share your password with anyone.\n\nIf you did not make this change, please contact the administrator immediately.\n\nBest regards,\nAcademic Scheduler Team`;
+      const html = this.generatePasswordChangeHtml(user.firstName, user.lastName, user.email, newPassword);
+      
+      return await this.sendEmail(email, subject, text, html);
+    } catch (error) {
+      console.error('Error sending password update notification:', error);
+      return {
+        success: false,
+        message: error.message,
+        provider: null
+      };
+    }
   }
 }
 

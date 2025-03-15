@@ -11,9 +11,11 @@ import {
   Box,
   CircularProgress,
   InputAdornment,
+  IconButton,
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -26,7 +28,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   defaultPassword,
   onClose,
 }) => {
-  const { changePassword, error, loading, clearError, logout } = useAuth();
+  const { changePassword, error, loading, clearError, logout, user } = useAuth();
   const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState(defaultPassword || '');
   const [newPassword, setNewPassword] = useState('');
@@ -34,8 +36,17 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   const [localError, setLocalError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   
-  // Create a masked version of the current password for display
-  const [maskedPassword] = useState('••••••••');
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      setCurrentPassword(defaultPassword || '');
+      setNewPassword('');
+      setConfirmPassword('');
+      setLocalError(null);
+      setSuccess(false);
+      clearError();
+    }
+  }, [open, defaultPassword, clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,25 +96,55 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
     }
   };
 
+  // Handle close based on whether password change is required
+  const handleClose = () => {
+    if (user?.passwordChangeRequired) {
+      // Show warning but still allow closing
+      setLocalError('Warning: You will need to change your password on next login.');
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <Dialog 
       open={open} 
-      // Make dialog non-dismissible
-      onClose={() => {}} // Empty function prevents closing
+      onClose={handleClose}
       maxWidth="sm" 
       fullWidth
-      disableEscapeKeyDown
+      disableEscapeKeyDown={!!user?.passwordChangeRequired}
     >
-      <DialogTitle>Change Your Password</DialogTitle>
+      <DialogTitle>
+        Change Your Password
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>
-          For security reasons, you need to change your password before continuing.
-          You cannot dismiss this dialog until you change your password.
+          {user?.passwordChangeRequired 
+            ? 'For security reasons, you need to change your password before continuing. You cannot dismiss this dialog until you change your password.'
+            : 'Please enter your current password and choose a new password.'}
         </DialogContentText>
         
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {localError && <Alert severity="error" sx={{ mb: 2 }}>{localError}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>Password changed successfully! Redirecting to login page...</Alert>}
+        {success && <Alert severity="success" sx={{ mb: 2 }}>
+          Password changed successfully! A confirmation email has been sent to your email address. 
+          Redirecting to login page...
+        </Alert>}
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <TextField
@@ -112,13 +153,10 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
             fullWidth
             label="Current Password"
             type="password"
-            // Display masked password but keep actual value in state
-            value={maskedPassword}
-            // Disable editing of current password
-            disabled={true}
-            InputProps={{
-              readOnly: true,
-            }}
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            disabled={loading || success}
+            autoFocus
           />
           <TextField
             margin="normal"
@@ -129,7 +167,6 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             disabled={loading || success}
-            autoFocus
           />
           <TextField
             margin="normal"
@@ -149,15 +186,23 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
         ) : (
           <>
             {!success && (
-              <Button 
-                onClick={handleSubmit} 
-                color="primary" 
-                variant="contained"
-                disabled={loading}
-                fullWidth
-              >
-                Change Password
-              </Button>
+              <>
+                <Button 
+                  onClick={handleClose} 
+                  color="inherit"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSubmit} 
+                  color="primary" 
+                  variant="contained"
+                  disabled={loading}
+                  fullWidth={user?.passwordChangeRequired}
+                >
+                  Change Password
+                </Button>
+              </>
             )}
             {success && (
               <Button 
