@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  resetPassword: () => Promise<{ defaultPassword: string }>;
   isAuthenticated: () => boolean;
   clearError: () => void;
 }
@@ -73,6 +74,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const resetPassword = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await authService.resetPassword();
+      // Update the user object with the new passwordChangeRequired flag
+      if (user) {
+        setUser({
+          ...user,
+          passwordChangeRequired: true,
+          defaultPassword: result.defaultPassword
+        });
+      }
+      return result;
+    } catch (err: any) {
+      setError(err.message || 'Failed to reset password');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const isAuthenticated = () => {
     return authService.isAuthenticated();
   };
@@ -88,6 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     changePassword,
+    resetPassword,
     isAuthenticated,
     clearError,
   };

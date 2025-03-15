@@ -13,6 +13,7 @@ import {
   hashPassword,
 } from '../middleware/jwt.middleware.js';
 import dotenv from 'dotenv';
+import emailService from '../services/email.service.js';
 
 dotenv.config();
 
@@ -280,6 +281,9 @@ export const changePassword = async (req, res) => {
     
     await user.save();
     
+    // Send email notification about password change with the new password
+    await emailService.sendPasswordUpdateEmail(user.email, newPassword);
+    
     return successResponse(
       res,
       'Password changed successfully',
@@ -287,6 +291,51 @@ export const changePassword = async (req, res) => {
     );
   } catch (error) {
     console.error('Change password error:', error);
+    return errorResponse(
+      res,
+      'Server error',
+      HTTP_STATUS.SERVER_ERROR
+    );
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return errorResponse(
+        res,
+        'User not found',
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    // Generate a random password
+    const randomPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await hashPassword(randomPassword);
+    
+    // Update user with new password and require password change
+    user.password = hashedPassword;
+    user.passwordChangeRequired = true;
+    user.defaultPassword = randomPassword; // Store temporarily for display
+    
+    await user.save();
+    
+    // Send email notification with the new password
+    await emailService.sendPasswordUpdateEmail(user.email, randomPassword);
+    
+    return successResponse(
+      res,
+      'Password has been reset. You will need to change it on next login.',
+      {
+        defaultPassword: randomPassword
+      },
+      HTTP_STATUS.OK
+    );
+  } catch (error) {
+    console.error('Reset password error:', error);
     return errorResponse(
       res,
       'Server error',

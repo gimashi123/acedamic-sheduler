@@ -225,11 +225,44 @@ const Dashboard: React.FC = () => {
         </Grid>
       </Box>
 
-      {/* Password Change Dialog */}
+      {/* Account Settings section */}
+      <Box sx={{ mt: 4 }}>
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Account Settings
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Grid container spacing={2}>
+            {/* Only show Change Password button for Lecturers and Students */}
+            {(user.role === 'Lecturer' || user.role === 'Student') && (
+              <Grid item>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setShowPasswordDialog(true)}
+                >
+                  Change Password
+                </Button>
+              </Grid>
+            )}
+            <Grid item>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Box>
+
+      {/* Password change dialog */}
       <ChangePasswordDialog
         open={showPasswordDialog}
-        defaultPassword={user.defaultPassword}
         onClose={handlePasswordDialogClose}
+        defaultPassword={user.defaultPassword}
       />
     </Container>
   );

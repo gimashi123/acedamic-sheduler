@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -10,8 +10,12 @@ import {
   Alert,
   Box,
   CircularProgress,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -24,12 +28,25 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   defaultPassword,
   onClose,
 }) => {
-  const { changePassword, error, loading, clearError } = useAuth();
+  const { changePassword, error, loading, clearError, logout, user } = useAuth();
+  const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState(defaultPassword || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      setCurrentPassword(defaultPassword || '');
+      setNewPassword('');
+      setConfirmPassword('');
+      setLocalError(null);
+      setSuccess(false);
+      clearError();
+    }
+  }, [open, defaultPassword, clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,9 +85,10 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
       await changePassword(currentPassword, newPassword);
       setSuccess(true);
       
-      // Close the dialog after 2 seconds
+      // Redirect to login page after 2 seconds
       setTimeout(() => {
-        onClose();
+        logout();
+        navigate('/login');
       }, 2000);
     } catch (err) {
       // Error is handled by the auth context
@@ -78,17 +96,55 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
     }
   };
 
+  // Handle close based on whether password change is required
+  const handleClose = () => {
+    if (user?.passwordChangeRequired) {
+      // Show warning but still allow closing
+      setLocalError('Warning: You will need to change your password on next login.');
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onClose={success ? onClose : undefined} maxWidth="sm" fullWidth>
-      <DialogTitle>Change Your Password</DialogTitle>
+    <Dialog 
+      open={open} 
+      onClose={handleClose}
+      maxWidth="sm" 
+      fullWidth
+      disableEscapeKeyDown={!!user?.passwordChangeRequired}
+    >
+      <DialogTitle>
+        Change Your Password
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>
-          For security reasons, you need to change your password before continuing.
+          {user?.passwordChangeRequired 
+            ? 'For security reasons, you need to change your password before continuing. You cannot dismiss this dialog until you change your password.'
+            : 'Please enter your current password and choose a new password.'}
         </DialogContentText>
         
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {localError && <Alert severity="error" sx={{ mb: 2 }}>{localError}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>Password changed successfully!</Alert>}
+        {success && <Alert severity="success" sx={{ mb: 2 }}>
+          Password changed successfully! A confirmation email has been sent to your email address. 
+          Redirecting to login page...
+        </Alert>}
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <TextField
@@ -130,22 +186,32 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
         ) : (
           <>
             {!success && (
-              <Button 
-                onClick={handleSubmit} 
-                color="primary" 
-                variant="contained"
-                disabled={loading}
-              >
-                Change Password
-              </Button>
+              <>
+                <Button 
+                  onClick={handleClose} 
+                  color="inherit"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSubmit} 
+                  color="primary" 
+                  variant="contained"
+                  disabled={loading}
+                  fullWidth={user?.passwordChangeRequired}
+                >
+                  Change Password
+                </Button>
+              </>
             )}
             {success && (
               <Button 
-                onClick={onClose} 
                 color="primary" 
                 variant="contained"
+                disabled
+                fullWidth
               >
-                Continue
+                Redirecting...
               </Button>
             )}
           </>
