@@ -21,6 +21,18 @@ const userSchema = new Schema(
       type: String,
       default: '',
     },
+    isFirstLogin: {
+      type: Boolean,
+      default: true,
+    },
+    passwordChangeRequired: {
+      type: Boolean,
+      default: true,
+    },
+    defaultPassword: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true },
 );

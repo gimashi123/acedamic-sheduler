@@ -18,7 +18,7 @@ const senderPassword = process.env.EMAIL_SERVICE_PASSWORD;
 // Admin registers an approved user
 export const registerUser = async (req, res) => {
   try {
-    const { requestId } = req.param;
+    const { requestId } = req.params;
     // Find approved request
 
     const formRequest = await UserRequest.findById(requestId);
@@ -59,9 +59,10 @@ export const registerUser = async (req, res) => {
       res,
       'User registered successfully',
       HTTP_STATUS.CREATED,
-      newUser,
+      userResponseDto(newUser),
     );
   } catch (error) {
+    console.error('Error registering user:', error);
     errorResponse(res, 'Server error', HTTP_STATUS.SERVER_ERROR, error);
   }
 };
