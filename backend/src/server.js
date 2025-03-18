@@ -10,6 +10,7 @@ import requestRoute from './routes/request.route.js';
 import groupRoutes from './routes/group.route.js';
 import venueRoutes from './routes/venue.route.js';
 import settingsRoutes from './routes/settings.routes.js';
+import subjectRoutes from './routes/subject.route.js';
 import { authenticateToken } from './middleware/jwt.middleware.js';
 
 const app = express();
@@ -23,10 +24,10 @@ const PORT = process.env.BACKEND_PORT || 5001;
 try {
   await connect_db();
   console.log('Connected to the database');
-  
+
   // Initialize admin account
   await initializeAdmin();
-  
+
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
@@ -47,6 +48,8 @@ app.use('/api/request', requestRoute);
 app.use('/api/group', authenticateToken, groupRoutes);
 app.use('/api/venue', authenticateToken, venueRoutes);
 app.use('/api/settings', settingsRoutes);
+// Add Subject API route
+app.use('/api/subject', authenticateToken, subjectRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -54,6 +57,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({
     success: false,
     message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 });
