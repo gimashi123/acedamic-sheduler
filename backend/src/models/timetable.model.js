@@ -7,30 +7,25 @@ const timetableSchema = new mongoose.Schema({
             ref: 'Slot'
         }
     ],
-    course: {
+    description: {
         type: String,
         required: true
     },
-    instructor: {
+    title: {
         type: String,
         required: true
     },
-    day: {
-        type: String,
-        required: true
+
+    isPublished: {
+        type: Boolean,
+        default: false
     },
-    startTime: {
-        type: String,
-        required: true
+
+    group: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'Group'
     },
-    endTime: {
-        type: String,
-        required: true
-    },
-    venue: {
-        type: String,
-        required: true
-    }
+
 });
 
 const TimeTable = mongoose.model('TimeTable', timetableSchema);

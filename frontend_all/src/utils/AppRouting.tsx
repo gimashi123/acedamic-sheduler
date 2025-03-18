@@ -5,6 +5,7 @@ import AdminDashboardPage from "@/pages/dashboard/AdminDashboard.tsx";
 import {TimeTablePage} from "@/pages/timetable/TimeTablePage.tsx";
 import {UserPage} from "@/pages/user/UserPage.tsx";
 import {AddTimeTablePage} from "@/pages/timetable/AddTimeTablePage.tsx";
+import {ViewTimeTablePage} from "@/pages/timetable/ViewTimeTablePage.tsx";
 
 
 export const AppRouting = () => {
@@ -16,6 +17,7 @@ export const AppRouting = () => {
                     <Route path={'timetable'} >
                         <Route path={''} element={<TimeTablePage/>}/>
                         <Route path={'add'} element={<AddTimeTablePage/>}/>
+                        <Route path={'view'} element={<ViewTimeTablePage/>}/>
                     </Route>
                     <Route path={'user'} element={<UserPage/>}/>
 

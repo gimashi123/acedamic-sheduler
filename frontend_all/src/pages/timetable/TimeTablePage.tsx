@@ -33,7 +33,7 @@ export const TimeTablePage = () => {
             <div>
                 <div className={'flex flex-row justify-end items-center'}>
                     <Button className={'cursor-pointer'} onClick={() => navigate('/admin/dashboard/timetable/add')}>Add
-                        Timetable</Button>
+                        Details</Button>
                 </div>
             </div>
             <div className={'mt-5'}>
@@ -41,13 +41,22 @@ export const TimeTablePage = () => {
                     {timetables?.map((item) => (
                         <Card key={item.id}>
                             <CardHeader>
-                                <CardTitle>{item.course}</CardTitle>
+                                <CardTitle>{item.title}</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <CardDescription>{item.endTime}</CardDescription>
+                                <CardDescription>{item.description}</CardDescription>
+                            </CardContent>
+                            <CardContent>
+                                <CardDescription>{item.group}</CardDescription>
+                            </CardContent>
+                            <CardContent>
+                                <CardDescription>{item.isPublished ? 'Published' : 'Not Published'}</CardDescription>
                             </CardContent>
                             <CardFooter>
-                                <Button className={'cursor-pointer'} onClick={() => navigate(`/admin/dashboard/timetable/${item.id}`)}>View</Button>
+                                <div className="flex gap-x-4">
+                                    <Button className={'cursor-pointer'} onClick={() => navigate(`/admin/dashboard/timetable/view`)}>View</Button>
+                                    <Button className={'cursor-pointer'} onClick={() => navigate(`/admin/dashboard/timetable/add`)}>Add TimeTable</Button>
+                                </div>
                             </CardFooter>
                         </Card>
                     ))
