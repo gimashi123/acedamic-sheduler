@@ -3,3 +3,6 @@
 frontend_all/.env
 frontend_all/node_modules
 frontend_all/package-lock.json
+node_modules/
+frontend/.env
+
