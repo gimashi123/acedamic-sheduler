@@ -13,6 +13,12 @@ import ManageRequests from './pages/ManageRequests';
 import Settings from './pages/Settings';
 import Unauthorized from './pages/Unauthorized';
 import { Role } from './types';
+import NAVIGATION from "./pages/AdminDashboardPage";
+import {TimeTablePage} from "./pages/TimeTablePage";
+import { AddTimeTable } from './pages/AddTimeTable';
+import {ViewTimeTable} from "./pages/ViewTimeTable";
+
+
 
 // Create a theme
 const theme = createTheme({
@@ -26,6 +32,8 @@ const theme = createTheme({
   },
 });
 
+<Navbar/>
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -33,7 +41,7 @@ function App() {
       <AuthProvider>
         <RequestProvider>
           <Router>
-            <Navbar />
+
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Home />} />
@@ -52,6 +60,8 @@ function App() {
                 <Route path="/manage-requests" element={<ManageRequests />} />
                 <Route path="/settings" element={<Settings />} />
                 {/* Add other admin-specific routes here */}
+
+
               </Route>
 
               {/* Lecturer routes */}
@@ -62,6 +72,12 @@ function App() {
               {/* Student routes */}
               <Route element={<ProtectedRoute allowedRoles={[Role.STUDENT]} />}>
                 {/* Add student-specific routes here */}
+              </Route>
+              <Route path="/admin/dashboard/" element={<NAVIGATION/>}>
+                <Route path="/admin/dashboard/timetable" element={<TimeTablePage/>}>
+                  <Route path="/admin/dashboard/timetable/add" element={<AddTimeTable/>}/>
+                  <Route path="/admin/dashboard/timetable/view" element={<ViewTimeTable/>}/>
+                </Route>
               </Route>
             </Routes>
           </Router>

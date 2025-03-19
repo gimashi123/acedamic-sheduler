@@ -1,8 +1,8 @@
 .idea
 .vscode
-frontend_all/.env
-frontend_all/node_modules
-frontend_all/package-lock.json
+web-client/.env
+web-client/node_modules
+web-client/package-lock.json
 node_modules/
-frontend/.env
+frontend_old/.env
 

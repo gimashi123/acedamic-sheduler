@@ -32,7 +32,7 @@ export const TimeTablePage = () => {
         <div>
             <div>
                 <div className={'flex flex-row justify-end items-center'}>
-                    <Button className={'cursor-pointer'} onClick={() => navigate('/admin/dashboard/timetable/add')}>Add
+                    <Button className={'cursor-pointer'} onClick={() => navigate('/admin/dashboard/timetable/add-details')}>Add
                         Details</Button>
                 </div>
             </div>
