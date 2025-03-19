@@ -60,7 +60,7 @@ const Venues: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {venues.map((venue) => (
-          <div key={venue.id} className="bg-white rounded-lg shadow-md p-6">
+          <div key={venue._id} className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-lg font-semibold text-gray-900">{venue.hallName}</h3>
               <div className="flex gap-2">

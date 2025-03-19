@@ -60,7 +60,7 @@ const Groups: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {groups.map((group) => (
-          <div key={group.id} className="bg-white rounded-lg shadow-md p-6">
+          <div key={group._id} className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-lg font-semibold text-gray-900">{group.name}</h3>
               <div className="flex gap-2">

@@ -1,35 +1,41 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
-import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import RegisterRequestForm from '../components/RegisterRequestForm';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useAuthStore();
+  
+  const { 
+    login, 
+    isAuthenticated, 
+    error: authError, 
+    isLoading, 
+    passwordChangeRequired,
+    clearError
+  } = useAuthStore();
+
+  useEffect(() => {
+    // If user is authenticated, redirect to dashboard
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearError();
+    
     try {
-      const response = await api.post('/auth/login', { email, password });
-      const { accessToken, refreshToken, user } = response.data;
-      
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      setUser(user);
-      
-      if (user.isFirstLogin || user.passwordChangeRequired) {
-        navigate('/change-password');
-      } else {
-        navigate('/');
-      }
+      await login(email, password);
+      // Navigation will be handled by the useEffect above
     } catch (err) {
-      setError('Invalid email or password');
+      // Error is handled by the auth store
+      console.error('Login error:', err);
     }
   };
 
@@ -48,9 +54,9 @@ const Login: React.FC = () => {
             </div>
             
             <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-              {error && (
+              {authError && (
                 <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">
-                  {error}
+                  {authError}
                 </div>
               )}
               
@@ -68,6 +74,7 @@ const Login: React.FC = () => {
                     placeholder="Email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
                 <div>
@@ -83,6 +90,7 @@ const Login: React.FC = () => {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -90,9 +98,12 @@ const Login: React.FC = () => {
               <div>
                 <button
                   type="submit"
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  disabled={isLoading}
+                  className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                    isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Sign in
+                  {isLoading ? 'Signing in...' : 'Sign in'}
                 </button>
               </div>
             </form>
@@ -109,7 +120,7 @@ const Login: React.FC = () => {
         ) : (
           <>
             <RegisterRequestForm />
-            <div className="text-center">
+            <div className="text-center mt-4">
               <button
                 onClick={() => setShowRegisterForm(false)}
                 className="text-indigo-600 hover:text-indigo-500"

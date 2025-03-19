@@ -52,7 +52,7 @@ export const initializeAdmin = async () => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
+    
     if (!email || !password) {
       return errorResponse(
         res,
@@ -96,31 +96,32 @@ export const login = async (req, res) => {
     // Update refresh token in database
     user.refreshToken = refreshToken;
     
-    // If this is the first login, mark it as no longer the first login
-    // but keep the passwordChangeRequired flag
+    // Update first login flag but don't require password change
     if (user.isFirstLogin) {
       user.isFirstLogin = false;
+      // Make sure passwordChangeRequired is set to false
+      user.passwordChangeRequired = false;
     }
     
     await user.save();
 
-    // Include the passwordChangeRequired flag in the response
+    // Don't include password change requirement for any users
     return successResponse(
       res,
       'Login Successful',
       HTTP_STATUS.OK,
       {
         ...userLoginResponseDTO(user, accessToken, refreshToken),
-        passwordChangeRequired: user.passwordChangeRequired,
-        defaultPassword: user.defaultPassword
+        passwordChangeRequired: false,
+        defaultPassword: null
       },
     );
-  } catch (e) {
-    console.error('Login error:', e);
+  } catch (error) {
+    console.error('Login error:', error);
     return errorResponse(
       res,
-      'Internal Server Error',
-      HTTP_STATUS.SERVER_ERROR,
+      'Login failed',
+      HTTP_STATUS.BAD_REQUEST
     );
   }
 };
@@ -339,6 +340,36 @@ export const resetPassword = async (req, res) => {
     return errorResponse(
       res,
       'Server error',
+      HTTP_STATUS.SERVER_ERROR
+    );
+  }
+};
+
+// Get current user details for token validation
+export const getUserDetails = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return errorResponse(
+        res,
+        'User not found',
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    return successResponse(
+      res,
+      'User details retrieved successfully',
+      HTTP_STATUS.OK,
+      userResponseDto(user)
+    );
+  } catch (error) {
+    console.error('Error getting user details:', error);
+    return errorResponse(
+      res,
+      'Internal Server Error',
       HTTP_STATUS.SERVER_ERROR
     );
   }

@@ -11,7 +11,7 @@ const Users: React.FC = () => {
   const { user } = useAuthStore();
 
   useEffect(() => {
-    if (user?.role === 'admin') {
+    if (user?.role === 'Admin') {
       fetchUsers();
     }
   }, [user]);
@@ -28,7 +28,7 @@ const Users: React.FC = () => {
     }
   };
 
-  if (user?.role !== 'admin') {
+  if (user?.role !== 'Admin') {
     return (
       <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg">
         You don't have permission to view this page.
@@ -71,7 +71,7 @@ const Users: React.FC = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
-              <tr key={user.id}>
+              <tr key={user._id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {user.firstName} {user.lastName}
                 </td>

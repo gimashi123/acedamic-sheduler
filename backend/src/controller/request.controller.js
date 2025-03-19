@@ -201,8 +201,8 @@ export const updateRequestStatus = async (req, res) => {
           email: request.email,
           password: hashedPassword,
           role: request.role,
-          isFirstLogin: true,
-          passwordChangeRequired: true,
+          isFirstLogin: false,
+          passwordChangeRequired: false,
           defaultPassword: defaultPassword, // Store the plain text password temporarily
         });
 
@@ -228,8 +228,6 @@ Your account request has been approved. You can now log in to the Academic Sched
 
 Username: ${request.email}
 Password: ${defaultPassword}
-
-Please change your password after your first login.
 
 Best regards,
 Academic Scheduler Team`;
@@ -362,6 +360,44 @@ export const getRequestStatus = async (req, res) => {
   }
 };
 
+// Check request status by email (Public API)
+export const checkRequestStatusByEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    if (!email) {
+      return errorResponse(
+        res,
+        'Email is required',
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+    
+    const request = await UserRequest.findOne({ email });
+    if (!request) {
+      return errorResponse(
+        res,
+        'No request found with this email',
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    return successResponse(
+      res,
+      'Request status retrieved successfully',
+      HTTP_STATUS.OK,
+      { status: request.status }
+    );
+  } catch (error) {
+    console.error('Error checking request status by email:', error);
+    return errorResponse(
+      res,
+      'Server error',
+      HTTP_STATUS.SERVER_ERROR
+    );
+  }
+};
+
 // Helper function to send emails
 const sendEmail = async (to, subject, text) => {
   // Check if email is enabled in settings
@@ -397,5 +433,182 @@ const sendEmail = async (to, subject, text) => {
   } catch (error) {
     console.error('Error sending email:', error);
     return false; // Return false to indicate email was not sent
+  }
+};
+
+export const approveRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Find the request
+    const request = await UserRequest.findById(id);
+    if (!request) {
+      return errorResponse(
+        res,
+        'Request not found',
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+
+    // Check if request is already approved
+    if (request.status === REQUEST_STATUS.APPROVED) {
+      return errorResponse(
+        res,
+        'Request is already approved',
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+
+    // Generate default password
+    const defaultPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await hashPassword(defaultPassword);
+
+    // Create new user
+    const newUser = new User({
+      firstName: request.firstName,
+      lastName: request.lastName,
+      email: request.email,
+      password: hashedPassword,
+      role: request.role,
+      isFirstLogin: false,
+      passwordChangeRequired: false,
+      defaultPassword: defaultPassword, // Store the plain text password temporarily
+    });
+
+    await newUser.save();
+
+    // Update request status
+    request.status = REQUEST_STATUS.APPROVED;
+    request.isApproved = true;
+    await request.save();
+
+    // Send email notification
+    try {
+      const htmlContent = emailService.generateAccountCreationHtml(
+        request.firstName,
+        request.lastName,
+        request.email,
+        defaultPassword
+      );
+
+      const textContent = `Dear ${request.firstName} ${request.lastName},
+
+Your account request has been approved. You can now log in to the Academic Scheduler system with the following credentials:
+
+Username: ${request.email}
+Password: ${defaultPassword}
+
+Best regards,
+Academic Scheduler Team`;
+
+      await emailService.sendEmail(
+        request.email,
+        'Your Account Has Been Approved',
+        textContent,
+        htmlContent
+      );
+
+      request.isEmailSent = true;
+      await request.save();
+    } catch (emailError) {
+      console.error('Error sending approval email:', emailError);
+    }
+
+    return successResponse(
+      res,
+      'Request approved successfully',
+      HTTP_STATUS.OK,
+      {
+        requestId: request._id,
+        userId: newUser._id
+      }
+    );
+  } catch (error) {
+    console.error('Error approving request:', error);
+    return errorResponse(
+      res,
+      'Server error',
+      HTTP_STATUS.SERVER_ERROR
+    );
+  }
+};
+
+export const rejectRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    // Find the request
+    const request = await UserRequest.findById(id);
+    if (!request) {
+      return errorResponse(
+        res,
+        'Request not found',
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+
+    // Check if request is already rejected
+    if (request.status === REQUEST_STATUS.REJECTED) {
+      return errorResponse(
+        res,
+        'Request is already rejected',
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+
+    // Update request status
+    request.status = REQUEST_STATUS.REJECTED;
+    await request.save();
+
+    // Send email notification
+    try {
+      const htmlContent = emailService.generateRejectionHtml(
+        request.firstName,
+        request.lastName,
+        reason
+      );
+
+      // Plain text version as fallback
+      let textContent = `Dear ${request.firstName} ${request.lastName},
+
+We regret to inform you that your account request for the Academic Scheduler system has been rejected.`;
+
+      // Add reason if provided
+      if (reason) {
+        textContent += `\n\nReason: ${reason}`;
+      }
+
+      textContent += `\n\nIf you believe this is an error or if you have any questions, please contact the administrator.
+
+Best regards,
+Academic Scheduler Team`;
+
+      await emailService.sendEmail(
+        request.email,
+        'Your Account Request Has Been Rejected',
+        textContent,
+        htmlContent
+      );
+
+      request.isEmailSent = true;
+      await request.save();
+    } catch (emailError) {
+      console.error('Error sending rejection email:', emailError);
+    }
+
+    return successResponse(
+      res,
+      'Request rejected successfully',
+      HTTP_STATUS.OK,
+      { requestId: request._id }
+    );
+  } catch (error) {
+    console.error('Error rejecting request:', error);
+    return errorResponse(
+      res,
+      'Server error',
+      HTTP_STATUS.SERVER_ERROR
+    );
   }
 };

@@ -23,7 +23,7 @@ const Settings: React.FC = () => {
   const { user } = useAuthStore();
 
   useEffect(() => {
-    if (user?.role === 'admin') {
+    if (user?.role === 'Admin') {
       fetchEmailSettings();
     }
   }, [user]);
@@ -61,7 +61,7 @@ const Settings: React.FC = () => {
     }
   };
 
-  if (user?.role !== 'admin') {
+  if (user?.role !== 'Admin') {
     return (
       <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg">
         You don't have permission to view this page.

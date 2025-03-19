@@ -1,7 +1,7 @@
-export type UserRole = 'admin' | 'lecturer' | 'student';
+export type UserRole = 'Admin' | 'Lecturer' | 'Student';
 
 export interface User {
-  id: string;
+  _id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -11,7 +11,7 @@ export interface User {
 }
 
 export interface Venue {
-  id: string;
+  _id: string;
   faculty: string;
   department: string;
   building: string;
@@ -22,7 +22,7 @@ export interface Venue {
 }
 
 export interface Group {
-  id: string;
+  _id: string;
   name: string;
   faculty: string;
   department: string;
@@ -33,17 +33,26 @@ export interface Group {
 }
 
 export interface UserRequest {
-  id: string;
+  _id: string;
   firstName: string;
   lastName: string;
   email: string;
   role: UserRole;
   additionalDetails: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'Pending' | 'Approved' | 'Rejected';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: User;
+  passwordChangeRequired: boolean;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
 }
