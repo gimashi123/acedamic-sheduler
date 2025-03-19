@@ -1,69 +1,49 @@
-// User roles
-export enum Role {
-  ADMIN = 'Admin',
-  LECTURER = 'Lecturer',
-  STUDENT = 'Student',
-}
+export type UserRole = 'admin' | 'lecturer' | 'student';
 
-// User interface
 export interface User {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  role: Role;
-  passwordChangeRequired?: boolean;
-  defaultPassword?: string;
+  role: UserRole;
+  isFirstLogin: boolean;
+  passwordChangeRequired: boolean;
 }
 
-// Authentication response
-export interface AuthResponse {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
+export interface Venue {
+  id: string;
+  faculty: string;
+  department: string;
+  building: string;
+  hallName: string;
+  type: 'lecture' | 'tutorial' | 'lab';
+  capacity: number;
+  bookedSlots: string[];
 }
 
-// Login credentials
-export interface LoginCredentials {
-  email: string;
-  password: string;
+export interface Group {
+  id: string;
+  name: string;
+  faculty: string;
+  department: string;
+  year: number;
+  semester: number;
+  groupType: 'weekday' | 'weekend';
+  students: string[];
 }
 
-// Registration request
-export interface RegistrationRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: Role;
-  additionalDetails?: string;
-}
-
-// Request status
-export enum RequestStatus {
-  PENDING = 'Pending',
-  APPROVED = 'Approved',
-  REJECTED = 'Rejected',
-}
-
-// User request
 export interface UserRequest {
   id: string;
-  _id?: string; // Keep for backward compatibility
   firstName: string;
   lastName: string;
   email: string;
-  role: Role;
-  additionalDetails?: string;
-  status: RequestStatus;
-  isApproved: boolean;
-  isEmailSent: boolean;
-  createdAt: string;
-  updatedAt: string;
+  role: UserRole;
+  additionalDetails: string;
+  status: 'pending' | 'approved' | 'rejected';
 }
 
-// API response
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-} 
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}

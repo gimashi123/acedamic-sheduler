@@ -1,73 +1,54 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { AuthProvider } from './context/AuthContext';
-import { RequestProvider } from './context/RequestContext';
-import Navbar from './components/Navbar';
-import ProtectedRoute from './components/ProtectedRoute';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import RequestStatus from './pages/RequestStatus';
-import Dashboard from './pages/Dashboard';
-import ManageRequests from './pages/ManageRequests';
-import Settings from './pages/Settings';
-import Unauthorized from './pages/Unauthorized';
-import { Role } from './types';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout';
+import useAuthStore from './store/authStore';
 
-// Create a theme
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#f50057',
-    },
-  },
-});
+// Lazy load pages
+const Login = React.lazy(() => import('./pages/Login'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Venues = React.lazy(() => import('./pages/Venues'));
+const Groups = React.lazy(() => import('./pages/Groups'));
+const Requests = React.lazy(() => import('./pages/Requests'));
+const Settings = React.lazy(() => import('./pages/Settings'));
+const Users = React.lazy(() => import('./pages/Users'));
+
+// Protected Route component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuthStore();
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+};
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <RequestProvider>
-          <Router>
-            <Navbar />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/request-status" element={<RequestStatus />} />
-              <Route path="/unauthorized" element={<Unauthorized />} />
-
-              {/* Protected routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-              </Route>
-
-              {/* Admin routes */}
-              <Route element={<ProtectedRoute allowedRoles={[Role.ADMIN]} />}>
-                <Route path="/manage-requests" element={<ManageRequests />} />
-                <Route path="/settings" element={<Settings />} />
-                {/* Add other admin-specific routes here */}
-              </Route>
-
-              {/* Lecturer routes */}
-              <Route element={<ProtectedRoute allowedRoles={[Role.LECTURER]} />}>
-                {/* Add lecturer-specific routes here */}
-              </Route>
-
-              {/* Student routes */}
-              <Route element={<ProtectedRoute allowedRoles={[Role.STUDENT]} />}>
-                {/* Add student-specific routes here */}
-              </Route>
-            </Routes>
-          </Router>
-        </RequestProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <Router>
+      <React.Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          </div>
+        }
+      >
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="venues" element={<Venues />} />
+            <Route path="groups" element={<Groups />} />
+            <Route path="requests" element={<Requests />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="users" element={<Users />} />
+          </Route>
+        </Routes>
+      </React.Suspense>
+    </Router>
   );
 }
 
