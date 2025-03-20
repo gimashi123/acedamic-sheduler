@@ -130,3 +130,68 @@ export const registerAdmin = async (req, res) => {
     errorResponse(res, 'Server error', HTTP_STATUS.SERVER_ERROR, error);
   }
 };
+
+// Get users by role
+export const getUsersByRole = async (req, res) => {
+  try {
+    const { role } = req.params;
+    
+    // Validate role parameter
+    if (!Object.values(ROLES).includes(role)) {
+      return errorResponse(
+        res,
+        'Invalid role specified',
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+    
+    const users = await User.find({ role }).select('-password -refreshToken');
+    
+    // Return data in the format expected by the frontend
+    successResponse(
+      res,
+      `${role}s retrieved successfully`,
+      HTTP_STATUS.OK,
+      users
+    );
+  } catch (error) {
+    console.error(`Error getting users by role ${req.params.role}:`, error);
+    errorResponse(res, 'Server error', HTTP_STATUS.SERVER_ERROR, error);
+  }
+};
+
+// Remove a user
+export const removeUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return errorResponse(
+        res,
+        'User not found',
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    // Send email notification to user
+    await sendEmail(
+      user.email,
+      'Account Removal Notification',
+      `Dear ${user.firstName} ${user.lastName},\n\nYour account has been removed from the Academic Scheduler System. Your user credentials are no longer valid for this website.\n\nIf you believe this is a mistake, please contact the administrator.\n\nRegards,\nAcademic Scheduler Admin Team`
+    );
+    
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+    
+    successResponse(
+      res,
+      'User removed successfully',
+      HTTP_STATUS.OK,
+      { userId }
+    );
+  } catch (error) {
+    console.error('Error removing user:', error);
+    errorResponse(res, 'Server error', HTTP_STATUS.SERVER_ERROR, error);
+  }
+};

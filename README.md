@@ -1466,3 +1466,33 @@ Here's how to implement the frontend components to consume the new backend endpo
    - Validate data integrity
 
 By following these detailed steps and best practices, you can efficiently add new features to the Academic Scheduler system while maintaining code quality and consistency. 
+
+
+#commiting changes
+
+Backend Changes:
+Added two new controller functions in user.controller.js:
+getUsersByRole - Returns users filtered by their role (Student or Lecturer)
+removeUser - Removes a user and sends an email notification
+Added two new routes in user.route.js:
+GET /users/by-role/:role - Get users by role
+DELETE /users/:userId - Remove a user
+Frontend Changes:
+Created a new service in userService.ts to handle API calls:
+getUsersByRole - Gets users by role from the API
+removeUser - Sends a request to remove a user
+Created a reusable UserTable.tsx component for displaying users with:
+User information (name, email)
+Remove button with confirmation dialog
+Consistent styling
+Updated the Users.tsx component to:
+Fetch students and lecturers separately
+Display them in tabbed interface
+Handle user removal with notifications
+Show loading and error states
+Key Features:
+Role-Based Display: Students and lecturers are shown in separate tabs
+User Removal: Admin can remove users with confirmation
+Email Notification: System sends an email to removed users
+User Experience: Loading indicators, error handling, and success/failure notifications
+The implementation follows the existing project structure and conventions, integrating seamlessly with the rest of the application.
