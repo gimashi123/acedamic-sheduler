@@ -5,9 +5,9 @@ import Layout from '../components/Layout';
 import NotFound from '../components/NotFound';
 import Login from '../features/auth/Login';
 import ChangePassword from '../features/auth/ChangePassword';
+import DashboardRouter from '../components/dashboards/DashboardRouter';
 
-// Import dashboard feature components 
-import Dashboard from '../features/dashboard/Dashboard';
+// Import feature components 
 import Venues from '../features/venues/Venues';
 import Groups from '../features/groups/Groups'; 
 import Requests from '../features/requests/Requests';
@@ -47,7 +47,7 @@ export const AppRouter: React.FC = () => {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Dashboard />} />
+            <Route index element={<DashboardRouter />} />
             <Route path="venues" element={<Venues />} />
             <Route path="groups" element={<Groups />} />
             <Route path="requests" element={<Requests />} />

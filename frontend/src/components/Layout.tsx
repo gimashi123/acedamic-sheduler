@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { LogOut, Calendar, Users, Building2, UserPlus, Settings, User } from 'lucide-react';
+import { LogOut, Calendar, Users, Building2, UserPlus, Settings, User, BookOpen, MessageSquare, ClipboardList } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import ChangePasswordModal from './ChangePasswordModal';
 
@@ -12,6 +12,72 @@ const Layout: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const renderNavItems = () => {
+    if (!user) return null;
+
+    switch (user.role) {
+      case 'Admin':
+        return (
+          <>
+            <Link to="/venues" className="text-gray-700 hover:text-gray-900">
+              <Building2 className="h-5 w-5" />
+            </Link>
+            <Link to="/groups" className="text-gray-700 hover:text-gray-900">
+              <Users className="h-5 w-5" />
+            </Link>
+            <Link to="/users" className="text-gray-700 hover:text-gray-900">
+              <User className="h-5 w-5" />
+            </Link>
+            <Link to="/requests" className="text-gray-700 hover:text-gray-900">
+              <UserPlus className="h-5 w-5" />
+            </Link>
+            <Link to="/settings" className="text-gray-700 hover:text-gray-900">
+              <Settings className="h-5 w-5" />
+            </Link>
+          </>
+        );
+      case 'Lecturer':
+        return (
+          <>
+            <Link to="/schedule" className="text-gray-700 hover:text-gray-900">
+              <Calendar className="h-5 w-5" />
+            </Link>
+            <Link to="/classes" className="text-gray-700 hover:text-gray-900">
+              <Users className="h-5 w-5" />
+            </Link>
+            <Link to="/attendance" className="text-gray-700 hover:text-gray-900">
+              <ClipboardList className="h-5 w-5" />
+            </Link>
+            <Link to="/materials" className="text-gray-700 hover:text-gray-900">
+              <BookOpen className="h-5 w-5" />
+            </Link>
+            <Link to="/messages" className="text-gray-700 hover:text-gray-900">
+              <MessageSquare className="h-5 w-5" />
+            </Link>
+          </>
+        );
+      case 'Student':
+        return (
+          <>
+            <Link to="/schedule" className="text-gray-700 hover:text-gray-900">
+              <Calendar className="h-5 w-5" />
+            </Link>
+            <Link to="/courses" className="text-gray-700 hover:text-gray-900">
+              <BookOpen className="h-5 w-5" />
+            </Link>
+            <Link to="/attendance" className="text-gray-700 hover:text-gray-900">
+              <ClipboardList className="h-5 w-5" />
+            </Link>
+            <Link to="/messages" className="text-gray-700 hover:text-gray-900">
+              <MessageSquare className="h-5 w-5" />
+            </Link>
+          </>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -28,25 +94,7 @@ const Layout: React.FC = () => {
             
             {user && (
               <div className="flex items-center space-x-4">
-                <Link to="/venues" className="text-gray-700 hover:text-gray-900">
-                  <Building2 className="h-5 w-5" />
-                </Link>
-                <Link to="/groups" className="text-gray-700 hover:text-gray-900">
-                  <Users className="h-5 w-5" />
-                </Link>
-                {user.role === 'Admin' && (
-                  <>
-                    <Link to="/users" className="text-gray-700 hover:text-gray-900">
-                      <User className="h-5 w-5" />
-                    </Link>
-                    <Link to="/requests" className="text-gray-700 hover:text-gray-900">
-                      <UserPlus className="h-5 w-5" />
-                    </Link>
-                    <Link to="/settings" className="text-gray-700 hover:text-gray-900">
-                      <Settings className="h-5 w-5" />
-                    </Link>
-                  </>
-                )}
+                {renderNavItems()}
                 <button
                   onClick={() => setIsChangePasswordModalOpen(true)}
                   className="text-gray-700 hover:text-gray-900"
