@@ -5,6 +5,7 @@ import {
   successResponse,
 } from '../config/http.config.js';
 import User, { ROLES } from '../models/user.model.js';
+import RemovedUser from '../models/removed_user.model.js';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { userResponseDto } from '../dto/user.response.dto.js';
@@ -164,6 +165,7 @@ export const getUsersByRole = async (req, res) => {
 export const removeUser = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { reason = 'Not specified' } = req.body;
     
     const user = await User.findById(userId);
     if (!user) {
@@ -181,6 +183,21 @@ export const removeUser = async (req, res) => {
       `Dear ${user.firstName} ${user.lastName},\n\nYour account has been removed from the Academic Scheduler System. Your user credentials are no longer valid for this website.\n\nIf you believe this is a mistake, please contact the administrator.\n\nRegards,\nAcademic Scheduler Admin Team`
     );
     
+    // Get admin user info safely
+    const adminId = req.user ? req.user._id : null;
+    
+    // Create record of removed user
+    const removedUser = new RemovedUser({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      removedBy: adminId, // ID of admin who removed the user
+      reason
+    });
+    
+    await removedUser.save();
+    
     // Delete the user
     await User.findByIdAndDelete(userId);
     
@@ -193,5 +210,103 @@ export const removeUser = async (req, res) => {
   } catch (error) {
     console.error('Error removing user:', error);
     errorResponse(res, 'Server error', HTTP_STATUS.SERVER_ERROR, error);
+  }
+};
+
+// Get removed users
+export const getRemovedUsers = async (req, res) => {
+  try {
+    console.log('Attempting to fetch removed users');
+    
+    // First try to find all removed users
+    const removedUsers = await RemovedUser.find()
+      .sort({ removedAt: -1 });
+      
+    console.log(`Found ${removedUsers.length} removed user records`);
+    
+    // Process each user to ensure proper formatting, even if the admin user is no longer in the system
+    const processedUsers = await Promise.all(removedUsers.map(async (user) => {
+      try {
+        // Convert to plain object for manipulation
+        const userObj = user.toObject();
+        
+        // Handle the removedBy relationship
+        if (userObj.removedBy) {
+          try {
+            // Try to find the admin who removed this user
+            const adminUser = await User.findById(userObj.removedBy)
+              .select('firstName lastName email')
+              .lean();
+              
+            if (adminUser) {
+              // If admin exists, use their info
+              userObj.removedBy = adminUser;
+            } else {
+              // Admin no longer exists, provide default info
+              userObj.removedBy = {
+                _id: userObj.removedBy.toString(),
+                firstName: 'Former',
+                lastName: 'Admin',
+                email: 'admin@system.com'
+              };
+            }
+          } catch (err) {
+            console.log('Error finding admin user:', err);
+            // Set default admin info if lookup fails
+            userObj.removedBy = {
+              _id: 'unknown',
+              firstName: 'System',
+              lastName: 'Admin',
+              email: 'admin@system.com'
+            };
+          }
+        } else {
+          // If no removedBy field, set default
+          userObj.removedBy = {
+            _id: 'unknown',
+            firstName: 'System',
+            lastName: 'Admin',
+            email: 'admin@system.com'
+          };
+        }
+        
+        return userObj;
+      } catch (err) {
+        console.error('Error processing removed user:', err);
+        // Return a safe default object if processing fails
+        return {
+          _id: user._id || 'unknown',
+          firstName: user.firstName || 'Unknown',
+          lastName: user.lastName || 'User',
+          email: user.email || 'unknown@example.com',
+          role: user.role || 'Unknown',
+          removedAt: user.removedAt || new Date(),
+          reason: user.reason || 'Not specified',
+          removedBy: {
+            _id: 'unknown',
+            firstName: 'System',
+            lastName: 'Admin',
+            email: 'admin@system.com'
+          }
+        };
+      }
+    }));
+    
+    // Always return a valid array
+    successResponse(
+      res,
+      'Removed users retrieved successfully',
+      HTTP_STATUS.OK,
+      processedUsers || []
+    );
+  } catch (error) {
+    console.error('Error getting removed users:', error);
+    // Return empty array instead of error for better UX
+    successResponse(
+      res,
+      'Unable to retrieve removed users, returning empty list',
+      HTTP_STATUS.OK,
+      []
+    );
   }
 };

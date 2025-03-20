@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, ApiResponse } from '../../types';
+import { User, ApiResponse, RemovedUser } from '../../types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -52,12 +52,64 @@ export const userService = {
     }
   },
 
+  // Get removed users
+  getRemovedUsers: async (): Promise<RemovedUser[]> => {
+    try {
+      console.log('Fetching removed users from API');
+      const response = await axios.get<ApiResponse<RemovedUser[]>>(
+        `${API_URL}/user/removed`,
+        getAuthHeader()
+      );
+      console.log('Removed users API response status:', response.status);
+      
+      // Validate response structure
+      if (!response.data) {
+        console.error('Invalid response format - missing data property');
+        return [];
+      }
+
+      if (!response.data.data) {
+        console.log('No removed users data returned from API');
+        return [];
+      }
+      
+      // Make sure response.data.data is an array before returning
+      if (!Array.isArray(response.data.data)) {
+        console.error('Expected array of removed users but got:', typeof response.data.data);
+        return [];
+      }
+      
+      console.log(`Successfully fetched ${response.data.data.length} removed users`);
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error fetching removed users:', {
+          message: error.message,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data
+        });
+        
+        // Check for specific error types
+        if (error.response?.status === 401) {
+          console.error('Authentication error - token may be invalid or expired');
+        }
+      } else {
+        console.error('Unknown error fetching removed users:', error);
+      }
+      throw error;
+    }
+  },
+
   // Remove a user
-  removeUser: async (userId: string): Promise<boolean> => {
+  removeUser: async (userId: string, reason?: string): Promise<boolean> => {
     try {
       await axios.delete(
         `${API_URL}/user/${userId}`,
-        getAuthHeader()
+        { 
+          ...getAuthHeader(),
+          data: { reason } // Send reason in request body
+        }
       );
       return true;
     } catch (error) {

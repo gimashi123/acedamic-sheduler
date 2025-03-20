@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { User } from '../../types';
 import { 
   Table, 
@@ -13,22 +13,25 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  TextField
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 
 interface UserTableProps {
   users: User[];
   title: string;
-  onRemoveUser: (userId: string) => void;
+  onRemoveUser: (userId: string, reason?: string) => void;
 }
 
 const UserTable: React.FC<UserTableProps> = ({ users, title, onRemoveUser }) => {
-  const [open, setOpen] = React.useState(false);
-  const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
+  const [open, setOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [reason, setReason] = useState('');
 
   const handleClickOpen = (user: User) => {
     setSelectedUser(user);
+    setReason('');
     setOpen(true);
   };
 
@@ -38,7 +41,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, title, onRemoveUser }) => 
 
   const handleConfirmRemove = () => {
     if (selectedUser) {
-      onRemoveUser(selectedUser._id);
+      onRemoveUser(selectedUser._id, reason);
       setOpen(false);
     }
   };
@@ -92,6 +95,17 @@ const UserTable: React.FC<UserTableProps> = ({ users, title, onRemoveUser }) => 
             Are you sure you want to remove {selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : 'this user'}? 
             This action cannot be undone and the user will be notified via email.
           </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="reason"
+            label="Reason for removal (optional)"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">

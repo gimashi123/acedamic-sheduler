@@ -1468,7 +1468,7 @@ Here's how to implement the frontend components to consume the new backend endpo
 By following these detailed steps and best practices, you can efficiently add new features to the Academic Scheduler system while maintaining code quality and consistency. 
 
 
-#commiting changes
+############commiting changes
 
 Backend Changes:
 Added two new controller functions in user.controller.js:

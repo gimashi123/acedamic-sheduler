@@ -56,3 +56,21 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
 }
+
+export interface RemovedUser {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: UserRole;
+  removedAt: string;
+  removedBy: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  reason: string;
+  createdAt: string;
+  updatedAt: string;
+}

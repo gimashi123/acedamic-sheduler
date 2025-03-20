@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { userService } from './userService';
-import { User } from '../../types';
+import { User, RemovedUser } from '../../types';
 import UserTable from './UserTable';
+import RemovedUsersTable from './RemovedUsersTable';
 import { Alert, CircularProgress, Snackbar, Paper, Tabs, Tab, Button } from '@mui/material';
 import { Refresh } from '@mui/icons-material';
+import axios from 'axios';
 
 const Users: React.FC = () => {
   const [students, setStudents] = useState<User[]>([]);
   const [lecturers, setLecturers] = useState<User[]>([]);
+  const [removedUsers, setRemovedUsers] = useState<RemovedUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [removedUsersError, setRemovedUsersError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -24,6 +28,7 @@ const Users: React.FC = () => {
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
+    setRemovedUsersError(null);
     
     let errorMessages = [];
     
@@ -46,6 +51,16 @@ const Users: React.FC = () => {
         errorMessages.push('Failed to load lecturers');
       }
       
+      // Then, try to fetch removed users
+      try {
+        const removedData = await userService.getRemovedUsers();
+        setRemovedUsers(removedData);
+      } catch (removedError) {
+        console.error('Failed to fetch removed users:', removedError);
+        // Don't add to main error messages, handle separately
+        setRemovedUsersError('Could not load removed users. The feature may not be fully set up yet.');
+      }
+      
       // Set error message if any errors occurred
       if (errorMessages.length > 0) {
         setError(errorMessages.join('; '));
@@ -58,20 +73,56 @@ const Users: React.FC = () => {
     }
   };
 
+  // Separate function to refresh only the removed users list
+  const refreshRemovedUsers = async () => {
+    setRemovedUsersError(null);
+    try {
+      console.log('Attempting to refresh removed users list');
+      const removedData = await userService.getRemovedUsers();
+      setRemovedUsers(removedData);
+      console.log(`Successfully loaded ${removedData.length} removed users`);
+    } catch (error) {
+      console.error('Error refreshing removed users:', error);
+      // Provide a more detailed error message based on the error type
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          setRemovedUsersError('Authentication error. Please try logging out and back in.');
+        } else if (error.response?.status === 404) {
+          setRemovedUsersError('The removed users endpoint was not found. The backend may need to be updated.');
+        } else if (error.response?.status >= 500) {
+          setRemovedUsersError('Server error occurred. Please try again later or contact the administrator.');
+        } else {
+          setRemovedUsersError(`Could not load removed users: ${error.response?.statusText || error.message}`);
+        }
+      } else {
+        setRemovedUsersError('Could not load removed users. The feature may not be fully set up yet.');
+      }
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  const handleRemoveUser = async (userId: string) => {
+  const handleRemoveUser = async (userId: string, reason?: string) => {
     try {
-      await userService.removeUser(userId);
+      await userService.removeUser(userId, reason);
+      
+      // Find the removed user before updating state
+      const removedStudent = students.find(student => student._id === userId);
+      const removedLecturer = lecturers.find(lecturer => lecturer._id === userId);
+      const removedUser = removedStudent || removedLecturer;
+      
       // Update local state
       setStudents(prevStudents => prevStudents.filter(student => student._id !== userId));
       setLecturers(prevLecturers => prevLecturers.filter(lecturer => lecturer._id !== userId));
       
+      // Refresh removed users list
+      refreshRemovedUsers();
+      
       setSnackbar({
         open: true,
-        message: 'User removed successfully. An email notification has been sent.',
+        message: `${removedUser?.firstName} ${removedUser?.lastName} was removed successfully. An email notification has been sent.`,
         severity: 'success'
       });
     } catch (error) {
@@ -90,6 +141,11 @@ const Users: React.FC = () => {
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    
+    // If switching to removed users tab, try to refresh the data
+    if (newValue === 2 && removedUsersError) {
+      refreshRemovedUsers();
+    }
   };
 
   if (loading) {
@@ -133,6 +189,7 @@ const Users: React.FC = () => {
         >
           <Tab label={`Students (${students.length})`} />
           <Tab label={`Lecturers (${lecturers.length})`} />
+          <Tab label={`Removed Users (${removedUsers.length})`} />
         </Tabs>
       </Paper>
 
@@ -150,6 +207,32 @@ const Users: React.FC = () => {
           title="Lecturers" 
           onRemoveUser={handleRemoveUser} 
         />
+      )}
+      
+      {tabValue === 2 && (
+        <>
+          {removedUsersError && (
+            <Alert 
+              severity="warning" 
+              className="mb-4"
+              action={
+                <Button 
+                  color="inherit" 
+                  size="small"
+                  startIcon={<Refresh />}
+                  onClick={refreshRemovedUsers}
+                >
+                  Retry
+                </Button>
+              }
+            >
+              {removedUsersError}
+            </Alert>
+          )}
+          <RemovedUsersTable 
+            removedUsers={removedUsers} 
+          />
+        </>
       )}
 
       <Snackbar 
