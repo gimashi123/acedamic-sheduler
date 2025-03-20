@@ -6,6 +6,7 @@ import NotFound from '../components/NotFound';
 import Login from '../features/auth/Login';
 import ChangePassword from '../features/auth/ChangePassword';
 import DashboardRouter from '../components/dashboards/DashboardRouter';
+import RegisterRequestForm from '../features/auth/RegisterRequestForm';
 
 // Import feature components 
 import Venues from '../features/venues/Venues';
@@ -54,6 +55,7 @@ export const AppRouter: React.FC = () => {
             <Route path="settings" element={<Settings />} />
             <Route path="users" element={<Users />} />
             <Route path="change-password" element={<ChangePassword />} />
+            <Route path="register-request" element={<RegisterRequestForm />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />

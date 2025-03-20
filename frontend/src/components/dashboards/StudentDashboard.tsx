@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, BookOpen, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, BookOpen, Clock, AlertCircle, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const StudentDashboard: React.FC = () => {
@@ -30,6 +30,12 @@ const StudentDashboard: React.FC = () => {
             <AlertCircle className="h-8 w-8 text-yellow-600 mb-2" />
             <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
             <p className="text-gray-600">Stay updated with important announcements</p>
+          </Link>
+
+          <Link to="/register-request" className="bg-purple-50 p-6 rounded-lg hover:bg-purple-100 transition-colors">
+            <UserPlus className="h-8 w-8 text-purple-600 mb-2" />
+            <h3 className="text-lg font-semibold text-gray-900">Request Registration</h3>
+            <p className="text-gray-600">Send a registration request to join courses</p>
           </Link>
         </div>
       </div>
