@@ -1,8 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Building2, Calendar, Settings, UserPlus, FileText, BarChart } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { requestService } from '../../features/requests/requestService';
+import { UserRequest } from '../../types/request';
+import { format } from 'date-fns';
+import { CircularProgress, Typography, Box } from '@mui/material';
+import useAuthStore from '../../store/authStore';
+import { UserRole } from '../../types';
 
 const AdminDashboard: React.FC = () => {
+  const [pendingRequests, setPendingRequests] = useState<UserRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuthStore();
+
+  const fetchPendingRequests = async () => {
+    if (!user || user.role !== 'Admin') return;
+    
+    setIsLoading(true);
+    try {
+      const requests = await requestService.getPendingRequests();
+      console.log('Fetched pending requests:', requests);
+      setPendingRequests(requests);
+    } catch (error) {
+      console.error('Failed to fetch pending requests:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.role === 'Admin') {
+      fetchPendingRequests();
+    }
+  }, [user]);
+
+  if (!user || user.role !== 'Admin') {
+    return (
+      <div className="p-4">
+        <Typography color="error">Access denied. Admin privileges required.</Typography>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">
@@ -54,21 +93,47 @@ const AdminDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Recent User Requests</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-gray-900">Recent User Requests</h3>
+            <button 
+              onClick={fetchPendingRequests}
+              className="text-purple-600 hover:text-purple-700"
+            >
+              Refresh
+            </button>
+          </div>
           <div className="space-y-4">
-            {/* Placeholder for recent user requests */}
-            <div className="border-l-4 border-indigo-500 pl-4">
-              <p className="text-gray-600">No pending user requests</p>
-            </div>
+            {isLoading ? (
+              <Box display="flex" justifyContent="center" p={2}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : pendingRequests.length > 0 ? (
+              pendingRequests.slice(0, 5).map((request) => (
+                <div key={request._id} className="border-l-4 border-purple-500 pl-4">
+                  <Typography variant="subtitle1" className="font-medium">
+                    {request.firstName} {request.lastName}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {request.email} • {request.role}
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    Submitted: {format(new Date(request.createdAt), 'MMM dd, yyyy HH:mm')}
+                  </Typography>
+                </div>
+              ))
+            ) : (
+              <div className="border-l-4 border-gray-500 pl-4">
+                <Typography color="textSecondary">No pending user requests</Typography>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="bg-white shadow rounded-lg p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">System Status</h3>
           <div className="space-y-4">
-            {/* Placeholder for system status */}
             <div className="border-l-4 border-green-500 pl-4">
-              <p className="text-gray-600">All systems operational</p>
+              <Typography color="textSecondary">All systems operational</Typography>
             </div>
           </div>
         </div>

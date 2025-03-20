@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Users, ClipboardList, MessageSquare, BookOpen, UserPlus } from 'lucide-react';
+import { Calendar, Users, ClipboardList, MessageSquare, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const LecturerDashboard: React.FC = () => {
@@ -36,12 +36,6 @@ const LecturerDashboard: React.FC = () => {
             <MessageSquare className="h-8 w-8 text-yellow-600 mb-2" />
             <h3 className="text-lg font-semibold text-gray-900">Messages</h3>
             <p className="text-gray-600">Communicate with your students</p>
-          </Link>
-
-          <Link to="/register-request" className="bg-red-50 p-6 rounded-lg hover:bg-red-100 transition-colors">
-            <UserPlus className="h-8 w-8 text-red-600 mb-2" />
-            <h3 className="text-lg font-semibold text-gray-900">Request Registration</h3>
-            <p className="text-gray-600">Send a registration request for new courses</p>
           </Link>
         </div>
       </div>
