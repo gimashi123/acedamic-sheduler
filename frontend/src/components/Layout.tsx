@@ -34,7 +34,7 @@ const Layout: React.FC = () => {
                 <Link to="/groups" className="text-gray-700 hover:text-gray-900">
                   <Users className="h-5 w-5" />
                 </Link>
-                {user.role === 'admin' && (
+                {user.role === 'Admin' && (
                   <>
                     <Link to="/users" className="text-gray-700 hover:text-gray-900">
                       <User className="h-5 w-5" />
@@ -77,4 +77,4 @@ const Layout: React.FC = () => {
   );
 };
 
-export default Layout;
+export default Layout; 

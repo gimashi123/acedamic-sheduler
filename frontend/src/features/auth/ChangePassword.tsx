@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ChangePasswordModal from '../components/ChangePasswordModal';
-import useAuthStore from '../store/authStore';
+import ChangePasswordModal from '../../components/ChangePasswordModal';
+import useAuthStore from '../../store/authStore';
 
 const ChangePassword: React.FC = () => {
   const { user, isAuthenticated, passwordChangeRequired } = useAuthStore();

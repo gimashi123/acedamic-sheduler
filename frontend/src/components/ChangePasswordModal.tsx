@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { authApi } from '../services/api';
+import { authApi } from '../utils/api';
 import useAuthStore from '../store/authStore';
 
 interface ChangePasswordModalProps {
@@ -159,4 +159,4 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   );
 };
 
-export default ChangePasswordModal;
+export default ChangePasswordModal; 

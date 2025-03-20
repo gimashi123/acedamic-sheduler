@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
-import useAuthStore from '../store/authStore';
-import RegisterRequestForm from '../components/RegisterRequestForm';
+import useAuthStore from '../../store/authStore';
+import RegisterRequestForm from './RegisterRequestForm';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +15,6 @@ const Login: React.FC = () => {
     isAuthenticated, 
     error: authError, 
     isLoading, 
-    passwordChangeRequired,
     clearError
   } = useAuthStore();
 
@@ -135,4 +134,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default Login; 
