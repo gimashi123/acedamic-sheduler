@@ -16,7 +16,7 @@ interface AuthState {
   clearError: () => void;
 }
 
-const useAuthStore = create<AuthState>((set, get) => ({
+const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,

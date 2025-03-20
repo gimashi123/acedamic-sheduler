@@ -6,7 +6,6 @@ import { UserRequest } from '../../types/request';
 import { format } from 'date-fns';
 import { CircularProgress, Typography, Box } from '@mui/material';
 import useAuthStore from '../../store/authStore';
-import { UserRole } from '../../types';
 
 const AdminDashboard: React.FC = () => {
   const [pendingRequests, setPendingRequests] = useState<UserRequest[]>([]);
