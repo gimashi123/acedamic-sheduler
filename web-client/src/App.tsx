@@ -1,15 +1,16 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import GroupManagement from "@/pages/group/GroupManagement";
 
 
-import {AppRouting} from "@/utils/AppRouting.tsx";
-
-function App() {
-
-
+const App = () => {
   return (
-    <>
-        <AppRouting/>
-    </>
-  )
-}
+    <Router>
+      <Routes>
+        <Route path="/groups" element={<GroupManagement/>}/>
+      </Routes>
+    </Router>
+  );
+};
 
-export default App
+export default App;
+
