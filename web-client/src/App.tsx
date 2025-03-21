@@ -1,15 +1,11 @@
-
-
-import {AppRouting} from "@/utils/AppRouting.tsx";
+import { AppRouting } from '@/utils/AppRouting.tsx';
 
 function App() {
-
-
   return (
     <>
-        <AppRouting/>
+      <AppRouting />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
