@@ -48,19 +48,24 @@ export default function VenueManagement() {
   };
 
   return (
-    <div className="p-4 space-y-6">
-      <Card>
-        <CardContent>
-          <h2 className="text-xl font-semibold">Manage Venues</h2>
-          <VenueForm onSubmit={handleAddOrUpdate} initialData={editingVenue} />
-        </CardContent>
-      </Card>
+    <div className="p-4 space-y-6 justify-center">
+     
+     <div className="h-screen flex justify-center items-center">
+            <CardContent>
+                <h2 className="text-xl font-bold mb-3">Manage Venues</h2>
+                <VenueForm onSubmit={handleAddOrUpdate} initialData={editingVenue} />
+            </CardContent>
+     </div>
+
+      <div className="flex justify-center items-center">
+        <Card className="w-240">
+            <CardContent>
+            <h2 className="text-xl font-bold mb-3">Allocated Venues</h2>
+            <VenueTable venues={venues} onEdit={handleEdit} onDelete={handleDelete} />
+            </CardContent>
+        </Card>
+      </div>
       
-      <Card>
-        <CardContent>
-          <VenueTable venues={venues} onEdit={handleEdit} onDelete={handleDelete} />
-        </CardContent>
-      </Card>
     </div>
   );
 }

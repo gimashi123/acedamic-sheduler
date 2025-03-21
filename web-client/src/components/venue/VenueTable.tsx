@@ -17,7 +17,7 @@ export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps
           <TableHead>Hall</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Capacity</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead className="flex justify-center items-center">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -28,10 +28,12 @@ export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps
             <TableCell>{venue.hall}</TableCell>
             <TableCell>{venue.type}</TableCell>
             <TableCell>{venue.capacity}</TableCell>
-            <TableCell>
+
+            <TableCell className="flex flex-row justify-center items-center gap-3">
               <Button variant="outline" onClick={() => onEdit(venue)}>Edit</Button>
               <Button variant="destructive" onClick={() => onDelete(venue.id)}>Delete</Button>
             </TableCell>
+            
           </TableRow>
         ))}
       </TableBody>

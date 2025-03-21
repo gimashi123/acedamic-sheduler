@@ -28,7 +28,7 @@ export default function VenueForm({ onSubmit, initialData }: VenueFormProps) {
   });
 
   return (
-    <Card className="w-full p-4">
+    <Card className="w-150 p-5">
       <CardContent className="space-y-4">
         {/* Faculty/Department */}
         <Label>Faculty/Department</Label>
