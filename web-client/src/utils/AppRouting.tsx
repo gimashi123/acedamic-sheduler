@@ -7,6 +7,7 @@ import {UserPage} from "@/pages/user/UserPage.tsx";
 import {AddTimeTablePage} from "@/pages/timetable/AddTimeTablePage.tsx";
 import {ViewTimeTablePage} from "@/pages/timetable/ViewTimeTablePage.tsx";
 import {AddDetails} from "@/pages/timetable/AddDetails.tsx";
+import GroupManagement from "@/pages/group/GroupManagement.tsx";
 
 
 export const AppRouting = () => {
@@ -14,6 +15,7 @@ export const AppRouting = () => {
         <BrowserRouter>
             <Routes>
                 <Route path={'/'} element={<HomePage/>}/>
+                <Route path="/groups" element={<GroupManagement/>}/>
                 <Route path={'/admin/dashboard/*'} element={<AdminDashboardPage/>}>
                     <Route path={'timetable'} >
                         <Route path={''} element={<TimeTablePage/>}/>
@@ -22,6 +24,7 @@ export const AppRouting = () => {
                         <Route path={'view'} element={<ViewTimeTablePage/>}/>
                     </Route>
                     <Route path={'user'} element={<UserPage/>}/>
+                    
 
                 </Route>
             </Routes>
