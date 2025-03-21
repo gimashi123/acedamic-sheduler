@@ -28,46 +28,65 @@ export default function VenueForm({ onSubmit, initialData }: VenueFormProps) {
   });
 
   return (
-    <Card className="w-150 p-5">
-      <CardContent className="space-y-4">
-        {/* Faculty/Department */}
-        <Label>Faculty/Department</Label>
-        <Input {...register("faculty", { required: "Faculty is required" })} placeholder="Enter faculty/department" />
-        {errors.faculty && <p className="text-red-500 text-sm">{String(errors.faculty.message)}</p>}
+    <Card className="w-140 p-6">
+      <CardContent className="space-y-4 flex flex-col gap-3">
 
-        {/* Building */}
-        <Label>Building</Label>
-        <Input {...register("building", { required: "Building name is required" })} placeholder="Enter building name" />
-        {errors.building && <p className="text-red-500 text-sm">{String(errors.building.message)}</p>}
+        <div className="flex flex-row gap-5 align-middle">
 
-        {/* Hall Name */}
-        <Label>Hall Name</Label>
-        <Input {...register("hall", { required: "Hall name is required" })} placeholder="Enter hall name" />
-        {errors.hall && <p className="text-red-500 text-sm">{String(errors.hall.message)}</p>}
+          {/* Faculty */}
+          <div className="flex flex-col gap-2">
+            <Label>Faculty</Label>
+            <Input {...register("faculty", { required: "Faculty is required" })} placeholder="Enter faculty" className="w-55"/>
+            {errors.faculty && <p className="text-red-500 text-sm">{String(errors.faculty.message)}</p>}
+          </div>
+          
+          {/* Building */}
+          <div className="flex flex-col gap-2">
+            <Label>Building</Label>
+            <Input {...register("building", { required: "Building name is required" })} placeholder="Enter building name" className="w-55"/>
+            {errors.building && <p className="text-red-500 text-sm">{String(errors.building.message)}</p>}
+          </div>
+          
+        </div>
+       
+        <div className="flex flex-row gap-5 align-middle">
 
-        {/* Type */}
-        <Label>Type</Label>
-        <Select onValueChange={(value) => setValue("type", value)} value={watch("type")}>
-          <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="lecture">Lecture</SelectItem>
-            <SelectItem value="tutorial">Tutorial</SelectItem>
-            <SelectItem value="lab">Lab</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.type && <p className="text-red-500 text-sm">Type is required</p>}
+          {/* Hall Name */}
+          <div className="flex flex-col gap-2">
+            <Label>Hall Name</Label>
+            <Input {...register("hall", { required: "Hall name is required" })} placeholder="Enter hall name" className="w-55"/>
+            {errors.hall && <p className="text-red-500 text-sm">{String(errors.hall.message)}</p>}
+          </div>
+          
+          {/* Type */}
+          <div className="flex flex-col gap-2">
+            <Label>Type</Label>
+            <Select onValueChange={(value) => setValue("type", value)} value={watch("type")}>
+              <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lecture">Lecture</SelectItem>
+                <SelectItem value="tutorial">Tutorial</SelectItem>
+                <SelectItem value="lab">Lab</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.type && <p className="text-red-500 text-sm">Type is required</p>}
+          </div>
 
+        </div>
+        
         {/* Capacity */}
-        <Label>Capacity</Label>
-        <Input type="number" {...register("capacity", { 
-          required: "Capacity is required", 
-          min: { value: 10, message: "Minimum capacity is 10" }, 
-          max: { value: 500, message: "Maximum capacity is 500" } 
-        })} placeholder="Enter capacity" />
-        {errors.capacity && <p className="text-red-500 text-sm">{String(errors.capacity.message)}</p>}
-
+        <div className="flex flex-col gap-2">
+          <Label>Capacity</Label>
+          <Input type="number" {...register("capacity", { 
+            required: "Capacity is required", 
+            min: { value: 10, message: "Minimum capacity is 10" }, 
+            max: { value: 500, message: "Maximum capacity is 500" } 
+          })} placeholder="Enter capacity" className="w-115"/>
+          {errors.capacity && <p className="text-red-500 text-sm">{String(errors.capacity.message)}</p>}
+        </div>
+        
         {/* Submit Button */}
-        <Button className="w-full" onClick={handleSubmit(onSubmit)}>Submit</Button>
+        <Button className="w-115" onClick={handleSubmit(onSubmit)}>Submit</Button>
       </CardContent>
     </Card>
   );
