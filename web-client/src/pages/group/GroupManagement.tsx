@@ -52,18 +52,23 @@ export default function GroupManagement() {
 
   return (
     <div className="p-4 space-y-6 justify-center align-middle">
-      <Card className="w-174 flex justify-center">
+      
+      <div className="h-screen flex justify-center items-center">
         <CardContent>
           <h2 className="text-xl font-bold mb-5">Add Groups</h2>
           <GroupForm onSubmit={handleAddOrUpdate} initialData={editingGroup} />
         </CardContent>
-      </Card>
-      
-      <Card>
-        <CardContent>
-          <GroupTable groups={groups} onEdit={handleEdit} onDelete={handleDelete} />
-        </CardContent>
-      </Card>
+      </div>
+        
+      <div className="flex justify-center items-center">
+        <Card className="w-240">
+          <CardContent>
+            <h2 className="text-xl font-bold mb-5">Existing Groups</h2>
+            <GroupTable groups={groups} onEdit={handleEdit} onDelete={handleDelete} />
+          </CardContent>
+        </Card>
+      </div>
+    
     </div>
   );
 }

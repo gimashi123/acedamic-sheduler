@@ -11,12 +11,12 @@ export default function GroupTable({ groups, onEdit, onDelete }: GroupTableProps
   return (
     <Table className="w-full border">
       <TableHeader>
-        <TableRow>
+        <TableRow className="">
           <TableHead>Name</TableHead>
           <TableHead>Year</TableHead>
           <TableHead>Semester</TableHead>
           <TableHead>Type</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead className="flex justify-center items-center">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -26,10 +26,12 @@ export default function GroupTable({ groups, onEdit, onDelete }: GroupTableProps
             <TableCell>{group.year}</TableCell>
             <TableCell>{group.semester}</TableCell>
             <TableCell>{group.type}</TableCell>
-            <TableCell>
+
+            <TableCell className="flex flex-row justify-center items-center gap-3">
               <Button variant="outline" onClick={() => onEdit(group)}>Edit</Button>
               <Button variant="destructive" onClick={() => onDelete(group.id)}>Delete</Button>
             </TableCell>
+
           </TableRow>
         ))}
       </TableBody>

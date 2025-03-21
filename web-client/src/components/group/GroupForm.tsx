@@ -29,8 +29,8 @@ export default function GroupForm({ onSubmit, initialData }: GroupFormProps) {
   });
 
   return (
-    <Card className="w-160 p-6">
-      <CardContent className="space-y-4 flex flex-col">
+    <Card className="w-200 p-5">
+      <CardContent className="space-y-4 flex flex-col gap-3">
         {/* Group Name */}
         <Label>Group Name</Label>
         <Input {...register("groupName", { required: "Group name is required" })} placeholder="Enter group name" />
