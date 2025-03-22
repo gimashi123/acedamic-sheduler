@@ -1,5 +1,10 @@
 export type UserRole = 'Admin' | 'Lecturer' | 'Student';
 
+export interface ProfilePicture {
+  key: string | null;
+  url: string | null;
+}
+
 export interface User {
   _id: string;
   firstName: string;
@@ -8,6 +13,7 @@ export interface User {
   role: UserRole;
   isFirstLogin: boolean;
   passwordChangeRequired: boolean;
+  profilePicture?: ProfilePicture;
 }
 
 export interface Venue {

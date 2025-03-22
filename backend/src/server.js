@@ -10,6 +10,7 @@ import requestRoute from './routes/request.route.js';
 import groupRoutes from './routes/group.route.js';
 import venueRoutes from './routes/venue.route.js';
 import settingsRoutes from './routes/settings.routes.js';
+import profileRoutes from './routes/profile.route.js';
 import { authenticateToken } from './middleware/jwt.middleware.js';
 
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/request', requestRoute);
 app.use('/api/group', authenticateToken, groupRoutes);
 app.use('/api/venue', authenticateToken, venueRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

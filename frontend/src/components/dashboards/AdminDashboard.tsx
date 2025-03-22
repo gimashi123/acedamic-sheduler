@@ -6,11 +6,17 @@ import { UserRequest } from '../../types/request';
 import { format } from 'date-fns';
 import { CircularProgress, Typography, Box } from '@mui/material';
 import useAuthStore from '../../store/authStore';
+import { useDispatch } from 'react-redux';
+import { setProfilePicture } from '../../features/profile/profileSlice';
+import { profileService } from '../../features/profile/profileService';
+import ProfilePicture from '../../components/ProfilePicture';
+import { ProfilePicture as ProfilePictureType } from '../../types';
 
 const AdminDashboard: React.FC = () => {
   const [pendingRequests, setPendingRequests] = useState<UserRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuthStore();
+  const dispatch = useDispatch();
 
   const fetchPendingRequests = async () => {
     if (!user || user.role !== 'Admin') return;
@@ -27,11 +33,25 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchProfilePicture = async () => {
+    try {
+      const profilePicture = await profileService.getProfilePicture();
+      dispatch(setProfilePicture(profilePicture));
+    } catch (error) {
+      console.error('Failed to fetch profile picture:', error);
+    }
+  };
+
   useEffect(() => {
     if (user?.role === 'Admin') {
       fetchPendingRequests();
+      fetchProfilePicture();
     }
   }, [user]);
+
+  const handleProfileUpdate = (newProfilePicture: ProfilePictureType | null) => {
+    dispatch(setProfilePicture(newProfilePicture));
+  };
 
   if (!user || user.role !== 'Admin') {
     return (
@@ -44,7 +64,21 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome, Administrator!</h2>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+          <div className="flex items-center space-x-4 mb-4 md:mb-0">
+            <ProfilePicture 
+              profilePicture={user.profilePicture} 
+              size="large" 
+              editable={true}
+              onUpdate={handleProfileUpdate}
+            />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Welcome, Administrator!</h2>
+              <p className="text-gray-600">{user.email}</p>
+            </div>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Link to="/users" className="bg-indigo-50 p-6 rounded-lg hover:bg-indigo-100 transition-colors">
             <Users className="h-8 w-8 text-indigo-600 mb-2" />

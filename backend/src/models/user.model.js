@@ -17,6 +17,10 @@ const userSchema = new Schema(
       enum: [ROLES.LECTURER, ROLES.STUDENT, ROLES.ADMIN],
       required: true,
     },
+    profilePicture: {
+      key: { type: String, default: null },
+      url: { type: String, default: null },
+    },
     refreshToken: {
       type: String,
       default: '',

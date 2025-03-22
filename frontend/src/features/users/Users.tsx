@@ -89,7 +89,7 @@ const Users: React.FC = () => {
           setRemovedUsersError('Authentication error. Please try logging out and back in.');
         } else if (error.response?.status === 404) {
           setRemovedUsersError('The removed users endpoint was not found. The backend may need to be updated.');
-        } else if (error.response?.status >= 500) {
+        } else if (error.response && error.response.status >= 500) {
           setRemovedUsersError('Server error occurred. Please try again later or contact the administrator.');
         } else {
           setRemovedUsersError(`Could not load removed users: ${error.response?.statusText || error.message}`);
@@ -197,7 +197,8 @@ const Users: React.FC = () => {
         <UserTable 
           users={students} 
           title="Students" 
-          onRemoveUser={handleRemoveUser} 
+          onRemoveUser={handleRemoveUser}
+          onUserUpdated={fetchUsers}
         />
       )}
       
@@ -205,7 +206,8 @@ const Users: React.FC = () => {
         <UserTable 
           users={lecturers} 
           title="Lecturers" 
-          onRemoveUser={handleRemoveUser} 
+          onRemoveUser={handleRemoveUser}
+          onUserUpdated={fetchUsers}
         />
       )}
       
