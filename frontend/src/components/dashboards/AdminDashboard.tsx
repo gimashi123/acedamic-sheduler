@@ -6,17 +6,20 @@ import { UserRequest } from '../../types/request';
 import { format } from 'date-fns';
 import { CircularProgress, Typography, Box } from '@mui/material';
 import useAuthStore from '../../store/authStore';
-import { useDispatch } from 'react-redux';
-import { setProfilePicture } from '../../features/profile/profileSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProfilePicture, setProfilePicture } from '../../features/profile/profileSlice';
 import { profileService } from '../../features/profile/profileService';
 import ProfilePicture from '../../components/ProfilePicture';
 import { ProfilePicture as ProfilePictureType } from '../../types';
+import { RootState } from '../../store/store';
+import { AppDispatch } from '../../store/store';
 
 const AdminDashboard: React.FC = () => {
   const [pendingRequests, setPendingRequests] = useState<UserRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuthStore();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const profilePicture = useSelector((state: RootState) => state.profile.profilePicture);
 
   const fetchPendingRequests = async () => {
     if (!user || user.role !== 'Admin') return;
@@ -33,21 +36,12 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const fetchProfilePicture = async () => {
-    try {
-      const profilePicture = await profileService.getProfilePicture();
-      dispatch(setProfilePicture(profilePicture));
-    } catch (error) {
-      console.error('Failed to fetch profile picture:', error);
-    }
-  };
-
   useEffect(() => {
     if (user?.role === 'Admin') {
       fetchPendingRequests();
-      fetchProfilePicture();
+      dispatch(fetchProfilePicture());
     }
-  }, [user]);
+  }, [user, dispatch]);
 
   const handleProfileUpdate = (newProfilePicture: ProfilePictureType | null) => {
     dispatch(setProfilePicture(newProfilePicture));
@@ -67,7 +61,7 @@ const AdminDashboard: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <div className="flex items-center space-x-4 mb-4 md:mb-0">
             <ProfilePicture 
-              profilePicture={user.profilePicture} 
+              profilePicture={profilePicture} 
               size="large" 
               editable={true}
               onUpdate={handleProfileUpdate}

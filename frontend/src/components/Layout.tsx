@@ -8,6 +8,22 @@ import { RootState } from '../store/store';
 import { fetchProfilePicture } from '../features/profile/profileSlice';
 import ProfilePicture from './ProfilePicture';
 import { AppDispatch } from '../store/store';
+import {
+  AppBar, Box, CssBaseline, Divider, Drawer, IconButton,
+  List, ListItem, ListItemButton, ListItemIcon, ListItemText,
+  Toolbar, Typography, Menu, MenuItem, Tooltip, Avatar
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  School as SchoolIcon,
+  Event as EventIcon,
+  People as PeopleIcon,
+  Assignment as AssignmentIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+  Person as PersonIcon
+} from '@mui/icons-material';
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -15,6 +31,8 @@ const Layout: React.FC = () => {
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const profilePicture = useSelector((state: RootState) => state.profile.profilePicture);
   const dispatch = useDispatch<AppDispatch>();
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
   
   useEffect(() => {
     if (user) {
@@ -25,6 +43,16 @@ const Layout: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileAnchorEl(event.currentTarget);
+    setIsProfileMenuOpen(true);
+  };
+
+  const handleProfileMenuClose = () => {
+    setProfileAnchorEl(null);
+    setIsProfileMenuOpen(false);
   };
 
   const renderNavItems = () => {
@@ -95,22 +123,54 @@ const Layout: React.FC = () => {
 
   const renderProfileSection = () => {
     if (!user) return null;
-
+    
     return (
-      <div className="flex items-center space-x-4">
-        <div className="hidden md:block">
-          <p className="text-sm font-medium">{`${user.firstName} ${user.lastName}`}</p>
-          <p className="text-xs text-gray-500">{user.role}</p>
-        </div>
-        <div className="relative">
-          <Link to="/profile">
-            <ProfilePicture 
+      <div className="flex items-center">
+        <Tooltip title="Account settings">
+          <IconButton
+            onClick={handleProfileMenuOpen}
+            size="small"
+            sx={{ ml: 2 }}
+            aria-controls={isProfileMenuOpen ? 'account-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={isProfileMenuOpen ? 'true' : undefined}
+          >
+            <ProfilePicture
               profilePicture={profilePicture}
               size="small"
               editable={false}
             />
-          </Link>
-        </div>
+          </IconButton>
+        </Tooltip>
+        <Menu
+          anchorEl={profileAnchorEl}
+          id="account-menu"
+          open={isProfileMenuOpen}
+          onClose={handleProfileMenuClose}
+          onClick={handleProfileMenuClose}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        >
+          <MenuItem onClick={() => navigate('/profile')}>
+            <ListItemIcon>
+              <PersonIcon fontSize="small" />
+            </ListItemIcon>
+            Profile
+          </MenuItem>
+          <MenuItem onClick={() => setIsChangePasswordModalOpen(true)}>
+            <ListItemIcon>
+              <SettingsIcon fontSize="small" />
+            </ListItemIcon>
+            Change Password
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={handleLogout}>
+            <ListItemIcon>
+              <LogoutIcon fontSize="small" />
+            </ListItemIcon>
+            Logout
+          </MenuItem>
+        </Menu>
       </div>
     );
   };
@@ -130,27 +190,6 @@ const Layout: React.FC = () => {
             
             <div className="flex items-center space-x-4">
               {renderProfileSection()}
-              
-              <Link 
-                to="/profile"
-                className="text-gray-700 hover:text-gray-900 text-xs p-2 hover:bg-gray-100 rounded"
-              >
-                Profile
-              </Link>
-              
-              <button
-                onClick={() => setIsChangePasswordModalOpen(true)}
-                className="text-gray-700 hover:text-gray-900 text-xs p-2 hover:bg-gray-100 rounded"
-              >
-                Change Password
-              </button>
-              
-              <button
-                onClick={handleLogout}
-                className="text-gray-700 hover:text-gray-900"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
             </div>
           </div>
         )}

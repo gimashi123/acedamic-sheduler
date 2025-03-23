@@ -2,47 +2,45 @@ import React, { useEffect } from 'react';
 import { Calendar, BookOpen, Clock, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
-import { useDispatch } from 'react-redux';
-import { setProfilePicture } from '../../features/profile/profileSlice';
-import { profileService } from '../../features/profile/profileService';
+import { Typography } from '@mui/material';
 import ProfilePicture from '../../components/ProfilePicture';
-import { ProfilePicture as ProfilePictureType } from '../../types';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProfilePicture } from '../../features/profile/profileSlice';
+import { RootState } from '../../store/store';
+import { AppDispatch } from '../../store/store';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuthStore();
-  const dispatch = useDispatch();
-
-  const fetchProfilePicture = async () => {
-    try {
-      const profilePicture = await profileService.getProfilePicture();
-      dispatch(setProfilePicture(profilePicture));
-    } catch (error) {
-      console.error('Failed to fetch profile picture:', error);
-    }
-  };
+  const dispatch = useDispatch<AppDispatch>();
+  const profilePicture = useSelector((state: RootState) => state.profile.profilePicture);
 
   useEffect(() => {
-    fetchProfilePicture();
-  }, []);
+    if (user?.role === 'Student') {
+      dispatch(fetchProfilePicture());
+    }
+  }, [user, dispatch]);
 
-  const handleProfileUpdate = (newProfilePicture: ProfilePictureType | null) => {
-    dispatch(setProfilePicture(newProfilePicture));
-  };
+  if (!user || user.role !== 'Student') {
+    return (
+      <div className="p-4">
+        <Typography color="error">Access denied. Student privileges required.</Typography>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <div className="flex items-center space-x-4 mb-4 md:mb-0">
-            <ProfilePicture 
-              profilePicture={user?.profilePicture} 
-              size="large" 
-              editable={true}
-              onUpdate={handleProfileUpdate}
+            <ProfilePicture
+              profilePicture={profilePicture}
+              size="large"
+              editable={false}
             />
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Welcome, Student!</h2>
-              <p className="text-gray-600">{user?.email}</p>
+              <h2 className="text-2xl font-bold text-gray-900">Welcome, {user.firstName}!</h2>
+              <p className="text-gray-600">{user.email}</p>
             </div>
           </div>
         </div>
