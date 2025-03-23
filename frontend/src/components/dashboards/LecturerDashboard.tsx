@@ -5,9 +5,10 @@ import useAuthStore from '../../store/authStore';
 import { Typography } from '@mui/material';
 import ProfilePicture from '../../components/ProfilePicture';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchProfilePicture } from '../../features/profile/profileSlice';
+import { fetchProfilePicture, setProfilePicture } from '../../features/profile/profileSlice';
 import { RootState } from '../../store/store';
 import { AppDispatch } from '../../store/store';
+import { ProfilePicture as ProfilePictureType } from '../../types';
 
 const LecturerDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -36,7 +37,10 @@ const LecturerDashboard: React.FC = () => {
             <ProfilePicture
               profilePicture={profilePicture}
               size="large"
-              editable={false}
+              editable={true}
+              onUpdate={(newProfilePic: ProfilePictureType | null) => {
+                dispatch(setProfilePicture(newProfilePic));
+              }}
             />
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Welcome, {user.firstName}!</h2>

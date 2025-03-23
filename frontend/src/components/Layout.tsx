@@ -5,9 +5,10 @@ import useAuthStore from '../store/authStore';
 import ChangePasswordModal from './ChangePasswordModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import { fetchProfilePicture } from '../features/profile/profileSlice';
+import { fetchProfilePicture, setProfilePicture } from '../features/profile/profileSlice';
 import ProfilePicture from './ProfilePicture';
 import { AppDispatch } from '../store/store';
+import { ProfilePicture as ProfilePictureType } from '../types';
 import {
   AppBar, Box, CssBaseline, Divider, Drawer, IconButton,
   List, ListItem, ListItemButton, ListItemIcon, ListItemText,

@@ -60,11 +60,13 @@ const AdminDashboard: React.FC = () => {
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <div className="flex items-center space-x-4 mb-4 md:mb-0">
-            <ProfilePicture 
-              profilePicture={profilePicture} 
-              size="large" 
+            <ProfilePicture
+              profilePicture={profilePicture}
+              size="large"
               editable={true}
-              onUpdate={handleProfileUpdate}
+              onUpdate={(newProfilePic: ProfilePictureType | null) => {
+                dispatch(setProfilePicture(newProfilePic));
+              }}
             />
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Welcome, Administrator!</h2>
