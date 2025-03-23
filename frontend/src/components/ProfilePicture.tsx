@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar, Badge, Tooltip, CircularProgress } from '@mui/material';
-import { Add, Delete } from '@mui/icons-material';
+import { Add, Delete, Person } from '@mui/icons-material';
 import { ProfilePicture as ProfilePictureType } from '../types';
 import { profileService } from '../features/profile/profileService';
+import { toast } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { uploadProfilePicture, deleteProfilePicture, fetchProfilePicture } from '../features/profile/profileSlice';
+import { AppDispatch } from '../store/store';
 
 interface ProfilePictureProps {
   profilePicture: ProfilePictureType | undefined | null;
@@ -25,7 +29,8 @@ const getAvatarSize = (size: string): number => {
   }
 };
 
-const defaultPicUrl = '/default-avatar.png';
+// We'll use the Material-UI Avatar fallback instead of a custom default image
+const defaultPicUrl = '';
 
 const ProfilePicture: React.FC<ProfilePictureProps> = ({
   profilePicture,
@@ -36,7 +41,20 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
   isAdmin = false,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [imgSrc, setImgSrc] = useState<string>('');
   const avatarSize = getAvatarSize(size);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Update the image source when the profilePicture prop changes
+  useEffect(() => {
+    if (profilePicture?.url) {
+      // Add a timestamp parameter to avoid browser caching
+      const timestamp = new Date().getTime();
+      setImgSrc(`${profilePicture.url}${profilePicture.url.includes('?') ? '&' : '?'}t=${timestamp}`);
+    } else {
+      setImgSrc(defaultPicUrl);
+    }
+  }, [profilePicture]);
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -46,36 +64,66 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
     
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('File size should not exceed 5MB');
+      toast.error('File size should not exceed 5MB');
       return;
     }
     
     // Validate file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!validTypes.includes(file.type)) {
-      alert('Only JPEG, JPG and PNG files are allowed');
+      toast.error('Only JPEG, JPG and PNG files are allowed');
       return;
     }
     
     setLoading(true);
     
     try {
-      let newProfilePicture: ProfilePictureType | null = null;
-      
       if (isAdmin && userId) {
         // Admin updating a user's profile picture
-        newProfilePicture = await profileService.updateUserProfilePicture(userId, file);
+        const newProfilePicture = await profileService.updateUserProfilePicture(userId, file);
+        toast.success('User profile picture updated successfully');
+        if (onUpdate) {
+          onUpdate(newProfilePicture);
+        }
       } else {
         // User updating their own profile picture
-        newProfilePicture = await profileService.uploadProfilePicture(file);
+        console.log('Uploading profile picture...', file);
+        const result = await dispatch(uploadProfilePicture(file)).unwrap();
+        console.log('Upload result:', result);
+        
+        // Manually update the image source with the new URL and a cache-busting parameter
+        if (result && result.url) {
+          const timestamp = new Date().getTime();
+          setImgSrc(`${result.url}${result.url.includes('?') ? '&' : '?'}t=${timestamp}`);
+        }
+        
+        toast.success('Profile picture updated successfully');
+        
+        // Force a refetch to ensure state is consistent
+        setTimeout(() => {
+          dispatch(fetchProfilePicture());
+        }, 500);
+      }
+    } catch (error: any) {
+      console.error('Error uploading profile picture:', error);
+      let errorMessage = 'Failed to upload profile picture. Please try again.';
+      
+      // More detailed error messages
+      if (error.response) {
+        console.error('Error response:', error.response);
+        if (error.response.status === 401) {
+          errorMessage = 'Authentication error. Please log in again.';
+        } else if (error.response.status === 413) {
+          errorMessage = 'File is too large. Maximum size is 5MB.';
+        } else if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+        errorMessage = 'Network error. Please check your connection.';
       }
       
-      if (onUpdate) {
-        onUpdate(newProfilePicture);
-      }
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
-      alert('Failed to upload profile picture. Please try again.');
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -91,14 +139,21 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
     setLoading(true);
     
     try {
-      await profileService.deleteProfilePicture();
-      
-      if (onUpdate) {
-        onUpdate(null);
+      if (isAdmin && userId) {
+        // Admin deleting a user's profile picture
+        await profileService.deleteProfilePicture();
+        toast.success('User profile picture deleted successfully');
+        if (onUpdate) {
+          onUpdate(null);
+        }
+      } else {
+        // User deleting their own profile picture
+        await dispatch(deleteProfilePicture()).unwrap();
+        toast.success('Profile picture deleted successfully');
       }
     } catch (error) {
       console.error('Error deleting profile picture:', error);
-      alert('Failed to delete profile picture. Please try again.');
+      toast.error('Failed to delete profile picture. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -142,17 +197,21 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
           }
         >
           <Avatar
-            src={profilePicture?.url || defaultPicUrl}
+            src={imgSrc}
             alt="Profile"
-            sx={{ width: avatarSize, height: avatarSize }}
-          />
+            sx={{ width: avatarSize, height: avatarSize, bgcolor: 'primary.main' }}
+          >
+            {!imgSrc && <Person />}
+          </Avatar>
         </Badge>
       ) : (
         <Avatar
-          src={profilePicture?.url || defaultPicUrl}
+          src={imgSrc}
           alt="Profile"
-          sx={{ width: avatarSize, height: avatarSize }}
-        />
+          sx={{ width: avatarSize, height: avatarSize, bgcolor: 'primary.main' }}
+        >
+          {!imgSrc && <Person />}
+        </Avatar>
       )}
     </div>
   );

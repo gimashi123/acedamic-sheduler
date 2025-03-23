@@ -18,8 +18,8 @@ const userSchema = new Schema(
       required: true,
     },
     profilePicture: {
-      key: { type: String, default: null },
-      url: { type: String, default: null },
+      type: String,
+      default: 'default-profile.jpg'
     },
     refreshToken: {
       type: String,

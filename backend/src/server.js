@@ -3,6 +3,12 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connect_db } from './config/db.config.js';
 import { initializeAdmin } from './controller/auth.controller.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 import authRoute from './routes/auth.route.js';
 import userRoute from './routes/user.route.js';
@@ -10,7 +16,7 @@ import requestRoute from './routes/request.route.js';
 import groupRoutes from './routes/group.route.js';
 import venueRoutes from './routes/venue.route.js';
 import settingsRoutes from './routes/settings.routes.js';
-import profileRoutes from './routes/profile.route.js';
+import profileRoutes from './routes/profileRoutes.js';
 import { authenticateToken } from './middleware/jwt.middleware.js';
 
 const app = express();
@@ -25,6 +31,10 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+console.log('Serving uploads from:', path.join(__dirname, '../uploads'));
 
 const PORT = process.env.BACKEND_PORT || 5001;
 
@@ -56,7 +66,7 @@ app.use('/api/request', requestRoute);
 app.use('/api/group', authenticateToken, groupRoutes);
 app.use('/api/venue', authenticateToken, venueRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/profile', profileRoutes);
+app.use('/api/profile', authenticateToken, profileRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

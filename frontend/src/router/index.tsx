@@ -7,6 +7,7 @@ import Login from '../features/auth/Login';
 import ChangePassword from '../features/auth/ChangePassword';
 import DashboardRouter from '../components/dashboards/DashboardRouter';
 import RegisterRequestForm from '../features/auth/RegisterRequestForm';
+import ProfilePage from '../features/profile/ProfilePage';
 
 // Import feature components 
 import Venues from '../features/venues/Venues';
@@ -54,6 +55,7 @@ export const AppRouter: React.FC = () => {
             <Route path="requests" element={<Requests />} />
             <Route path="settings" element={<Settings />} />
             <Route path="users" element={<Users />} />
+            <Route path="profile" element={<ProfilePage />} />
             <Route path="change-password" element={<ChangePassword />} />
             <Route path="register-request" element={<RegisterRequestForm />} />
           </Route>

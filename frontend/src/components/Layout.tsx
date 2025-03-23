@@ -5,35 +5,22 @@ import useAuthStore from '../store/authStore';
 import ChangePasswordModal from './ChangePasswordModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import { setProfilePicture } from '../features/profile/profileSlice';
-import { profileService } from '../features/profile/profileService';
+import { fetchProfilePicture } from '../features/profile/profileSlice';
 import ProfilePicture from './ProfilePicture';
+import { AppDispatch } from '../store/store';
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const profilePicture = useSelector((state: RootState) => state.profile.profilePicture);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   
   useEffect(() => {
     if (user) {
-      fetchProfilePicture();
+      dispatch(fetchProfilePicture());
     }
-  }, [user]);
-
-  const fetchProfilePicture = async () => {
-    try {
-      const result = await profileService.getProfilePicture();
-      dispatch(setProfilePicture(result));
-    } catch (error) {
-      console.error('Failed to fetch profile picture:', error);
-    }
-  };
-
-  const handleProfileUpdate = (newProfilePicture: any) => {
-    dispatch(setProfilePicture(newProfilePicture));
-  };
+  }, [user, dispatch]);
 
   const handleLogout = () => {
     logout();
@@ -116,11 +103,13 @@ const Layout: React.FC = () => {
           <p className="text-xs text-gray-500">{user.role}</p>
         </div>
         <div className="relative">
-          <ProfilePicture 
-            profilePicture={profilePicture}
-            size="small"
-            editable={false}
-          />
+          <Link to="/profile">
+            <ProfilePicture 
+              profilePicture={profilePicture}
+              size="small"
+              editable={false}
+            />
+          </Link>
         </div>
       </div>
     );
@@ -141,6 +130,13 @@ const Layout: React.FC = () => {
             
             <div className="flex items-center space-x-4">
               {renderProfileSection()}
+              
+              <Link 
+                to="/profile"
+                className="text-gray-700 hover:text-gray-900 text-xs p-2 hover:bg-gray-100 rounded"
+              >
+                Profile
+              </Link>
               
               <button
                 onClick={() => setIsChangePasswordModalOpen(true)}
