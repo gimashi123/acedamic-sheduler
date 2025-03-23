@@ -8,7 +8,6 @@ import { CircularProgress, Typography, Box } from '@mui/material';
 import useAuthStore from '../../store/authStore';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProfilePicture, setProfilePicture } from '../../features/profile/profileSlice';
-import { profileService } from '../../features/profile/profileService';
 import ProfilePicture from '../../components/ProfilePicture';
 import { ProfilePicture as ProfilePictureType } from '../../types';
 import { RootState } from '../../store/store';

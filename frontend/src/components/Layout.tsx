@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { LogOut, Calendar, Users, Building2, UserPlus, Settings, User, BookOpen, MessageSquare, ClipboardList } from 'lucide-react';
+import { Calendar, Users, Building2, UserPlus, Settings, User, BookOpen, MessageSquare, ClipboardList } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import ChangePasswordModal from './ChangePasswordModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import { fetchProfilePicture, setProfilePicture } from '../features/profile/profileSlice';
+import { fetchProfilePicture } from '../features/profile/profileSlice';
 import ProfilePicture from './ProfilePicture';
 import { AppDispatch } from '../store/store';
-import { ProfilePicture as ProfilePictureType } from '../types';
 import {
   AppBar, Box, CssBaseline, Divider, Drawer, IconButton,
   List, ListItem, ListItemButton, ListItemIcon, ListItemText,
