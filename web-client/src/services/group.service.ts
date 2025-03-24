@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Set your backend API URL
-const API_URL = "http://localhost:5001/api/groups"; // Change this if your backend URL is different
+const API_URL = "http://localhost:5001/api/group"; // Change this if your backend URL is different
 
 // Fetch all groups
 export const getGroups = async () => {
