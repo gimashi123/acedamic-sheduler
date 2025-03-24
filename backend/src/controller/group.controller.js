@@ -39,7 +39,7 @@ export const createGroup = async (req, res) => {
         await newGroup.save();
 
         res.status(201).json({
-            message: "Group created successfull!",
+            message: "Group created successfully!",
             group: newGroup
         });
 
