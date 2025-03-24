@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5001/api/venues"; // Adjust based on your backend
+const API_URL = "http://localhost:5000/api/venue"; // Adjust based on your backend
 
 // Fetch all venues
 export const getVenues = async () => {

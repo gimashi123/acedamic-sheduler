@@ -4,13 +4,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { useState } from "react";
+import { addVenue } from "@/services/venue.service";
 
 interface VenueFormProps {
   onSubmit: (data: any) => void;
   initialData?: any;
 }
 
-export default function VenueForm({ onSubmit, initialData }: VenueFormProps) {
+interface Venue {
+  _id?: string,
+  faculty: string,
+  building: string,
+  hallName: string,
+  type: "lecture" | "tutorial" | "lab",
+  capacity: number
+}
+
+export default function VenueForm({ initialData }: VenueFormProps) {
+  const [formData, setFormData] = useState<Venue>({
+    faculty: "",
+    building: "",
+    hallName: "",
+    type: "lecture",
+    capacity: 0
+  });
+
   const {
     register,
     handleSubmit,
@@ -26,6 +45,27 @@ export default function VenueForm({ onSubmit, initialData }: VenueFormProps) {
       capacity: "",
     },
   });
+
+  // handle input field changes 
+  const handleChnage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({...formData, [e.target.name]: e.target.value});
+  };
+
+  // handle form submission
+  const onSubmit = async() => {
+    try {
+      await addVenue(formData);
+      setFormData({
+        faculty: "",
+        building: "",
+        hallName: "",
+        type: "lecture",
+        capacity: 0
+      });
+    } catch(error) {
+      console.error("Error submitting form: ", error);
+    }
+  };
 
   return (
     <Card className="w-140 p-6">

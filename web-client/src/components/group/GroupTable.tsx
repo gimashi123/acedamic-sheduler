@@ -16,7 +16,7 @@ interface Group {
   faculty: string;
   year: number;
   semester: number;
-  type: string,
+  type: "weeday" | "weekend",
   maxStudents: number;
 }
 
@@ -35,12 +35,15 @@ export default function GroupTable({ onEdit }: GroupTableProps) {
   }
 
   // handle delete
-const handleDelete = async (id?: string) => {
-  if(id) {
-    await deleteGroup(id);
+const handleDelete = async (_id?: string) => {
+  if(_id) {
+    await deleteGroup(_id);
     fetchGroups();
   }
 }
+
+
+// handle update
 
   return (
     <Table className="w-full border">

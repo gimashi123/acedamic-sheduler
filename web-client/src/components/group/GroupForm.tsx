@@ -18,7 +18,7 @@ interface Group {
   faculty: string;
   year: number;
   semester: number;
-  type: string;
+  type: "weekday" | "weekend",
   maxStudent: number;
 }
 
@@ -28,7 +28,7 @@ export default function GroupForm({ initialData }: GroupFormProps) {
     faculty: "",
     year: 0,
     semester: 0,
-    type: "",
+    type: "weekday",
     maxStudent: 60,
   });
 
@@ -61,7 +61,7 @@ export default function GroupForm({ initialData }: GroupFormProps) {
         faculty: "",
         year: 0,
         semester: 0,
-        type: "",
+        type: "weekday",
         maxStudent: 60,
       });
     } catch (error) {
@@ -139,7 +139,7 @@ export default function GroupForm({ initialData }: GroupFormProps) {
           <div className="flex flex-col gap-2">
             <Label>Type</Label>
             <Select
-              onValueChange={(value) => setFormData({ ...formData, type: value })}
+              onValueChange={(value) => setFormData({ ...formData, type: value as "weekday" | "weekend" })}
               value={formData.type}
             >
               <SelectTrigger className="w-40"><SelectValue placeholder="Group Type" /></SelectTrigger>
