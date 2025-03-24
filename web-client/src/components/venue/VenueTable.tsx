@@ -30,10 +30,12 @@ interface VenueTableProps {
 export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps) {
   const [venueToDelete, setVenueToDelete] = useState<Venue | null>(null);
 
+  // delete handler
   const handleDeleteClick = (venue: Venue) => {
     setVenueToDelete(venue);
   };
 
+  // delete confirmation message handler
   const handleConfirmDelete = () => {
     if (venueToDelete?._id) {
       onDelete(venueToDelete._id);
@@ -71,9 +73,10 @@ export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps
         </TableBody>
       </Table>
 
-      {/* Delete Confirmation Dialog */}
+      {/* delete confirmation pop up message*/}
       <AlertDialog open={!!venueToDelete} onOpenChange={() => setVenueToDelete(null)}>
         <AlertDialogContent>
+
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
             <AlertDialogDescription>
@@ -84,10 +87,12 @@ export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter>
             <AlertDialogCancel>No, Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete}>Yes, Delete</AlertDialogAction>
           </AlertDialogFooter>
+
         </AlertDialogContent>
       </AlertDialog>
     </>

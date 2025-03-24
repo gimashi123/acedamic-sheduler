@@ -71,7 +71,7 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
     }));
   };
 
-  // Handle form validation and show confirmation
+  // validation handler - to fill all the fields 
   const handleFormSubmit = () => {
     if (!formData.faculty || !formData.department || !formData.building || !formData.hallName || !formData.type || !formData.capacity) {
       toast.error("Please fill in all required fields");
@@ -80,7 +80,7 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
     setShowConfirmation(true);
   };
 
-  // Handle final submission
+  // final submission handler (venue adding confirmation message)
   const handleConfirmSubmit = async () => {
     try {
       setIsSubmitting(true);
@@ -225,9 +225,10 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
         </CardContent>
       </Card>
 
-      {/* Confirmation Dialog */}
+      {/* venue adding confirmatio pop up message */}
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <AlertDialogContent>
+
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Venue Addition</AlertDialogTitle>
             <AlertDialogDescription>
@@ -242,12 +243,14 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmSubmit} disabled={isSubmitting}>
               {isSubmitting ? "Adding..." : "Confirm"}
             </AlertDialogAction>
           </AlertDialogFooter>
+
         </AlertDialogContent>
       </AlertDialog>
     </>
