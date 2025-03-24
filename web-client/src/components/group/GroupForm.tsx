@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import React, { useState } from "react";
 import { addGroup } from "@/services/group.service";
+import { toast } from "sonner";
 
 interface GroupFormProps {
   onSubmit?: (data: any) => void;
   initialData?: any;
+  onSuccess?: () => void;
 }
 
 interface Group {
@@ -18,11 +20,11 @@ interface Group {
   faculty: string;
   year: number;
   semester: number;
-  type: "weekday" | "weekend",
+  type: "weekday" | "weekend";
   maxStudent: number;
 }
 
-export default function GroupForm({ initialData }: GroupFormProps) {
+export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
   const [formData, setFormData] = useState<Group>({
     name: "",
     faculty: "",
@@ -36,6 +38,7 @@ export default function GroupForm({ initialData }: GroupFormProps) {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     defaultValues: initialData || {
       name: "",
@@ -53,9 +56,11 @@ export default function GroupForm({ initialData }: GroupFormProps) {
   };
 
   // Handle form submission
-  const onSubmit = async() => {
+  const onSubmit = async () => {
     try {
       await addGroup(formData);
+      toast.success("Group added successfully!");
+      reset();
       setFormData({
         name: "",
         faculty: "",
@@ -64,8 +69,12 @@ export default function GroupForm({ initialData }: GroupFormProps) {
         type: "weekday",
         maxStudent: 60,
       });
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast.error("Failed to add group. Please try again.");
     }
   };
 

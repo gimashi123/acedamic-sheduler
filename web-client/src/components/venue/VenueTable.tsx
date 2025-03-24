@@ -1,82 +1,96 @@
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { deleteVenue, getVenues, updateVenue } from "@/services/venue.service";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-// newly added
 interface Venue {
-  _id?: string,
-  faculty: string,
-  building: string,
-  hallName: string,
-  type: "lecture" | "tutorial" | "lab",
-  capacity: number
-};
+  _id?: string;
+  faculty: string;
+  building: string;
+  hallName: string;
+  type: "lecture" | "tutorial" | "lab";
+  capacity: number;
+}
 
-export default function VenueTable() {
+interface VenueTableProps {
+  venues: Venue[];
+  onEdit: (venue: Venue) => void;
+  onDelete: (id: string) => void;
+}
 
-  const [venues, setVenues] = useState<Venue[]>([]);
+export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps) {
+  const [venueToDelete, setVenueToDelete] = useState<Venue | null>(null);
 
-  useEffect(() => {
-    fetchVenues();
-  }, []);
+  const handleDeleteClick = (venue: Venue) => {
+    setVenueToDelete(venue);
+  };
 
-  // declaration of the fetchVenues()
-  const fetchVenues = async() => {
-    const data = await getVenues();
-    setVenues(data);
-  }
-
-  // handle delete
-  const handleDelete = async(_id?: string) => {
-    if(_id) {
-      await deleteVenue(_id);
-      fetchVenues();
+  const handleConfirmDelete = () => {
+    if (venueToDelete?._id) {
+      onDelete(venueToDelete._id);
+      setVenueToDelete(null);
     }
-  }
-
-  // handle update
-  const handleUpdate = async(_id?: string) => {
-    if(_id) {
-      const venueData = venues.find(venue => venue._id === _id);
-      if (venueData) {
-        await updateVenue(_id, venueData);
-      }
-      fetchVenues();
-    }
-  }
+  };
 
   return (
-    <Table className="w-full border">
-      <TableHeader>
-        <TableRow>
-          <TableHead>Faculty</TableHead>
-          <TableHead>Building</TableHead>
-          <TableHead>Hall</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Capacity</TableHead>
-          <TableHead className="flex justify-center items-center">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {venues.map((venue) => (
-          <TableRow key={venue._id}>
-            
-            <TableCell>{venue.faculty}</TableCell>
-            <TableCell>{venue.building}</TableCell>
-            <TableCell>{venue.hallName}</TableCell>
-            <TableCell>{venue.type}</TableCell>
-            <TableCell>{venue.capacity}</TableCell>
-
-            <TableCell className="flex flex-row justify-center items-center gap-3">
-              <Button variant="outline" onClick={() => handleUpdate(venue._id)}>Edit</Button>
-              <Button variant="destructive" onClick={() => handleDelete(venue._id)}>Delete</Button>
-            </TableCell>
-            
+    <>
+      <Table className="w-full border">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Faculty</TableHead>
+            <TableHead>Building</TableHead>
+            <TableHead>Hall</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Capacity</TableHead>
+            <TableHead className="flex justify-center items-center">Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {venues.map((venue) => (
+            <TableRow key={venue._id}>
+              <TableCell>{venue.faculty}</TableCell>
+              <TableCell>{venue.building}</TableCell>
+              <TableCell>{venue.hallName}</TableCell>
+              <TableCell>{venue.type}</TableCell>
+              <TableCell>{venue.capacity}</TableCell>
+              <TableCell className="flex flex-row justify-center items-center gap-3">
+                <Button variant="outline" onClick={() => onEdit(venue)}>Edit</Button>
+                <Button variant="destructive" onClick={() => handleDeleteClick(venue)}>Delete</Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!venueToDelete} onOpenChange={() => setVenueToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this venue?
+              <div className="mt-2 space-y-1">
+                <p><strong>Hall Name:</strong> {venueToDelete?.hallName}</p>
+                <p><strong>Type:</strong> {venueToDelete?.type}</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>Yes, Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
