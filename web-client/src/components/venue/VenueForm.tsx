@@ -33,8 +33,6 @@ export default function VenueForm({ initialData }: VenueFormProps) {
   const {
     register,
     handleSubmit,
-    setValue,
-    watch,
     formState: { errors },
   } = useForm({
     defaultValues: initialData || {
@@ -47,7 +45,7 @@ export default function VenueForm({ initialData }: VenueFormProps) {
   });
 
   // handle input field changes 
-  const handleChnage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({...formData, [e.target.name]: e.target.value});
   };
 
@@ -76,14 +74,24 @@ export default function VenueForm({ initialData }: VenueFormProps) {
           {/* Faculty */}
           <div className="flex flex-col gap-2">
             <Label>Faculty</Label>
-            <Input {...register("faculty", { required: "Faculty is required" })} placeholder="Enter faculty" className="w-55"/>
+            <Input {...register("faculty", { required: "Faculty is required" })} 
+              placeholder="Enter faculty" 
+              className="w-55"
+              value={formData.faculty}
+              onChange={handleChange}
+            />
             {errors.faculty && <p className="text-red-500 text-sm">{String(errors.faculty.message)}</p>}
           </div>
           
           {/* Building */}
           <div className="flex flex-col gap-2">
             <Label>Building</Label>
-            <Input {...register("building", { required: "Building name is required" })} placeholder="Enter building name" className="w-55"/>
+            <Input {...register("building", { required: "Building name is required" })} 
+            placeholder="Enter building name" 
+            className="w-55"
+            value={formData.building}
+            onChange={handleChange}
+          />
             {errors.building && <p className="text-red-500 text-sm">{String(errors.building.message)}</p>}
           </div>
           
@@ -94,14 +102,21 @@ export default function VenueForm({ initialData }: VenueFormProps) {
           {/* Hall Name */}
           <div className="flex flex-col gap-2">
             <Label>Hall Name</Label>
-            <Input {...register("hall", { required: "Hall name is required" })} placeholder="Enter hall name" className="w-55"/>
-            {errors.hall && <p className="text-red-500 text-sm">{String(errors.hall.message)}</p>}
+            <Input {...register("hall", { required: "Hall name is required" })} 
+            placeholder="Enter hall name" 
+            className="w-55"
+            value={formData.hallName}
+            onChange={handleChange}
+          />
+            {errors.hallName && <p className="text-red-500 text-sm">{String(errors.hallName.message)}</p>}
           </div>
           
           {/* Type */}
           <div className="flex flex-col gap-2">
             <Label>Type</Label>
-            <Select onValueChange={(value) => setValue("type", value)} value={watch("type")}>
+            <Select onValueChange={(value) => setFormData({...formData, type: value as "lecture" | "tutorial" | "lab"})}
+              value={formData.type}
+            >
               <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="lecture">Lecture</SelectItem>

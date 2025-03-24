@@ -53,7 +53,7 @@ export default function GroupForm({ initialData }: GroupFormProps) {
   };
 
   // Handle form submission
-  const onSubmit = async () => {
+  const onSubmit = async() => {
     try {
       await addGroup(formData);
       setFormData({
