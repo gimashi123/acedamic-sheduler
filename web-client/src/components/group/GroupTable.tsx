@@ -1,5 +1,7 @@
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { deleteGroup, getGroups } from "@/services/group.service";
 
 interface GroupTableProps {
   groups: any[];
@@ -7,7 +9,39 @@ interface GroupTableProps {
   onDelete: (id: string) => void;
 }
 
-export default function GroupTable({ groups, onEdit, onDelete }: GroupTableProps) {
+// newly added
+interface Group {
+  _id?: string;
+  name: string;
+  faculty: string;
+  year: number;
+  semester: number;
+  type: string,
+  maxStudents: number;
+}
+
+export default function GroupTable({ onEdit }: GroupTableProps) {
+
+  const [groups, setGroups] = useState<Group[]>([]);
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  // declaration of the fetchGroups()
+  const fetchGroups = async() => {
+    const data = await getGroups();
+    setGroups(data);
+  }
+
+  // handle delete
+const handleDelete = async (id?: string) => {
+  if(id) {
+    await deleteGroup(id);
+    fetchGroups();
+  }
+}
+
   return (
     <Table className="w-full border">
       <TableHeader>
@@ -21,7 +55,7 @@ export default function GroupTable({ groups, onEdit, onDelete }: GroupTableProps
       </TableHeader>
       <TableBody>
         {groups.map((group) => (
-          <TableRow key={group.id}>
+          <TableRow key={group._id}>
             <TableCell>{group.name}</TableCell>
             <TableCell>{group.year}</TableCell>
             <TableCell>{group.semester}</TableCell>
@@ -29,7 +63,7 @@ export default function GroupTable({ groups, onEdit, onDelete }: GroupTableProps
 
             <TableCell className="flex flex-row justify-center items-center gap-3">
               <Button variant="outline" onClick={() => onEdit(group)}>Edit</Button>
-              <Button variant="destructive" onClick={() => onDelete(group.id)}>Delete</Button>
+              <Button variant="destructive" onClick={() => handleDelete(group._id)}>Delete</Button>
             </TableCell>
 
           </TableRow>
