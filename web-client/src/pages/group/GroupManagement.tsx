@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import GroupForm from "@/components/group/GroupForm";
 import GroupTable from "@/components/group/GroupTable";
 import { Card, CardContent } from "@/components/ui/card";
-import { getGroups, deleteGroup, updateGroup, addGroup } from "@/services/group.service";
+import { getGroups, deleteGroup, updateGroup } from "@/services/group.service";
 import { toast } from "sonner";
 
 export default function GroupManagement() {
