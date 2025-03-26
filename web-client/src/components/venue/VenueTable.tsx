@@ -61,7 +61,7 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
     setEditedVenue({ ...venue });
   };
 
-  // handle field changes
+  // field change handler
   const handleFieldChange = (field: keyof Venue, value: string | number) => {
     if (editedVenue) {
       setEditedVenue({
@@ -71,7 +71,7 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
     }
   };
 
-  // handle update confirmation
+  // update confirmation handler
   const handleConfirmUpdate = () => {
     if (editedVenue && editedVenue._id) {
       onUpdate(editedVenue._id, editedVenue);
@@ -81,7 +81,7 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
     }
   };
 
-  // handle cancel edit
+  // cancel modification handler
   const handleCancelEdit = () => {
     setEditingVenue(null);
     setEditedVenue(null);
