@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import VenueForm from "@/components/venue/VenueForm";
 import VenueTable from "@/components/venue/VenueTable";
 import { Card, CardContent } from "@/components/ui/card";
-import { getVenues, deleteVenue } from "@/services/venue.service";
+import { getVenues, deleteVenue, updateVenue } from "@/services/venue.service";
 import { toast } from "sonner";
 
 export default function VenueManagement() {
@@ -66,6 +66,17 @@ export default function VenueManagement() {
     }
   };
 
+  const handleUpdate = async (id: string, updatedVenue: any) => {
+    try {
+      await updateVenue(id, updatedVenue);
+      await fetchVenues(); // Refresh the venues list
+      toast.success("Venue updated successfully!");
+    } catch (error) {
+      console.error("Error updating venue:", error);
+      toast.error("Failed to update venue");
+    }
+  };
+
   return (
     <div className="p-4 space-y-6 justify-center">
       <div className="h-screen flex justify-center items-center">
@@ -79,7 +90,12 @@ export default function VenueManagement() {
         <Card className="w-240">
           <CardContent>
             <h2 className="text-xl font-bold mb-3">Allocated Venues</h2>
-            <VenueTable venues={venues} onEdit={handleEdit} onDelete={handleDelete} />
+            <VenueTable 
+              venues={venues} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete}
+              onUpdate={handleUpdate}
+            />
           </CardContent>
         </Card>
       </div>

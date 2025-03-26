@@ -1,6 +1,7 @@
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,6 +12,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Venue {
   _id?: string;
@@ -25,10 +33,14 @@ interface VenueTableProps {
   venues: Venue[];
   onEdit: (venue: Venue) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, updatedVenue: Venue) => void;
 }
 
-export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps) {
+export default function VenueTable({ venues, onDelete, onUpdate }: VenueTableProps) {
   const [venueToDelete, setVenueToDelete] = useState<Venue | null>(null);
+  const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
+  const [editedVenue, setEditedVenue] = useState<Venue | null>(null);
+  const [showUpdateConfirmation, setShowUpdateConfirmation] = useState(false);
 
   // delete handler
   const handleDeleteClick = (venue: Venue) => {
@@ -41,6 +53,38 @@ export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps
       onDelete(venueToDelete._id);
       setVenueToDelete(null);
     }
+  };
+
+  // edit handler
+  const handleEditClick = (venue: Venue) => {
+    setEditingVenue(venue);
+    setEditedVenue({ ...venue });
+  };
+
+  // handle field changes
+  const handleFieldChange = (field: keyof Venue, value: string | number) => {
+    if (editedVenue) {
+      setEditedVenue({
+        ...editedVenue,
+        [field]: value
+      });
+    }
+  };
+
+  // handle update confirmation
+  const handleConfirmUpdate = () => {
+    if (editedVenue && editedVenue._id) {
+      onUpdate(editedVenue._id, editedVenue);
+      setEditingVenue(null);
+      setEditedVenue(null);
+      setShowUpdateConfirmation(false);
+    }
+  };
+
+  // handle cancel edit
+  const handleCancelEdit = () => {
+    setEditingVenue(null);
+    setEditedVenue(null);
   };
 
   return (
@@ -59,14 +103,86 @@ export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps
         <TableBody>
           {venues.map((venue) => (
             <TableRow key={venue._id}>
-              <TableCell>{venue.faculty}</TableCell>
-              <TableCell>{venue.building}</TableCell>
-              <TableCell>{venue.hallName}</TableCell>
-              <TableCell>{venue.type}</TableCell>
-              <TableCell>{venue.capacity}</TableCell>
+              <TableCell>
+                {editingVenue?._id === venue._id ? (
+                  <Input
+                    value={editedVenue?.faculty || ""}
+                    onChange={(e) => handleFieldChange("faculty", e.target.value)}
+                  />
+                ) : (
+                  venue.faculty
+                )}
+              </TableCell>
+              <TableCell>
+                {editingVenue?._id === venue._id ? (
+                  <Input
+                    value={editedVenue?.building || ""}
+                    onChange={(e) => handleFieldChange("building", e.target.value)}
+                  />
+                ) : (
+                  venue.building
+                )}
+              </TableCell>
+              <TableCell>
+                {editingVenue?._id === venue._id ? (
+                  <Input
+                    value={editedVenue?.hallName || ""}
+                    onChange={(e) => handleFieldChange("hallName", e.target.value)}
+                  />
+                ) : (
+                  venue.hallName
+                )}
+              </TableCell>
+              <TableCell>
+                {editingVenue?._id === venue._id ? (
+                  <Select
+                    value={editedVenue?.type}
+                    onValueChange={(value) => handleFieldChange("type", value as "lecture" | "tutorial" | "lab")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lecture">Lecture</SelectItem>
+                      <SelectItem value="tutorial">Tutorial</SelectItem>
+                      <SelectItem value="lab">Lab</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  venue.type
+                )}
+              </TableCell>
+              <TableCell>
+                {editingVenue?._id === venue._id ? (
+                  <Input
+                    type="number"
+                    value={editedVenue?.capacity || ""}
+                    onChange={(e) => handleFieldChange("capacity", Number(e.target.value))}
+                  />
+                ) : (
+                  venue.capacity
+                )}
+              </TableCell>
               <TableCell className="flex flex-row justify-center items-center gap-3">
-                <Button variant="outline" onClick={() => onEdit(venue)}>Edit</Button>
-                <Button variant="destructive" onClick={() => handleDeleteClick(venue)}>Delete</Button>
+                {editingVenue?._id === venue._id ? (
+                  <>
+                    <Button variant="outline" onClick={() => setShowUpdateConfirmation(true)}>
+                      Save
+                    </Button>
+                    <Button variant="destructive" onClick={handleCancelEdit}>
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={() => handleEditClick(venue)}>
+                      Edit
+                    </Button>
+                    <Button variant="destructive" onClick={() => handleDeleteClick(venue)}>
+                      Delete
+                    </Button>
+                  </>
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -76,7 +192,6 @@ export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps
       {/* delete confirmation pop up message*/}
       <AlertDialog open={!!venueToDelete} onOpenChange={() => setVenueToDelete(null)}>
         <AlertDialogContent>
-
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
             <AlertDialogDescription>
@@ -87,12 +202,33 @@ export default function VenueTable({ venues, onEdit, onDelete }: VenueTableProps
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-
           <AlertDialogFooter>
             <AlertDialogCancel>No, Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete}>Yes, Delete</AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
+      {/* update confirmation pop up message */}
+      <AlertDialog open={showUpdateConfirmation} onOpenChange={setShowUpdateConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Update</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to update this venue?
+              <div className="mt-2 space-y-1">
+                <p><strong>Hall Name:</strong> {editedVenue?.hallName}</p>
+                <p><strong>Type:</strong> {editedVenue?.type}</p>
+                <p><strong>Faculty:</strong> {editedVenue?.faculty}</p>
+                <p><strong>Building:</strong> {editedVenue?.building}</p>
+                <p><strong>Capacity:</strong> {editedVenue?.capacity}</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmUpdate}>Yes, Update</AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
