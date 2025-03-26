@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { deleteGroup, getGroups } from "@/services/group.service";
 
 interface Group {
   _id?: string;
