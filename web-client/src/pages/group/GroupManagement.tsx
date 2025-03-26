@@ -2,52 +2,78 @@ import { useState, useEffect } from "react";
 import GroupForm from "@/components/group/GroupForm";
 import GroupTable from "@/components/group/GroupTable";
 import { Card, CardContent } from "@/components/ui/card";
+import { getGroups, deleteGroup, updateGroup, addGroup } from "@/services/group.service";
+import { toast } from "sonner";
 
 export default function GroupManagement() {
   const [groups, setGroups] = useState<any[]>([]);
   const [editingGroup, setEditingGroup] = useState<any | null>(null);
 
-  useEffect(() => {
-    fetch("/api/groups")
-      .then((res) => res.json())
-      .then((data) => setGroups(data));
-  }, []);
-
-  const handleAddOrUpdate = (group: any) => {
-    const duplicateGroup = groups.find(g => g.groupName.toLowerCase() === group.groupName.toLowerCase());
-  
-    if (duplicateGroup) {
-      alert("A group with this name already exists! Please use a different name.");
-      return;
-    }
-  
-    if (editingGroup) {
-      // Update existing group
-      setGroups(groups.map((g) => (g.id === group.id ? group : g)));
-      setEditingGroup(null);
-    } else {
-      // Add new group
-      setGroups([...groups, { ...group, id: Date.now().toString() }]);
-    }
-
-    if ((group.year === "3" || group.year === "4") && group.semester === "1") {
-      alert("3rd and 4th-year students cannot be in Semester 1!");
-      return;
-    }
-
-    if (group.year === "1" && group.semester === "2") {
-      alert("1st-year students cannot be in Semester 2!");
-      return;
+  const fetchGroups = async () => {
+    try {
+      const data = await getGroups();
+      setGroups(data);
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+      toast.error("Failed to fetch groups");
     }
   };
-  
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  const handleAddOrUpdate = async (group: any) => {
+    try {
+      const duplicateGroup = groups.find(g => g.name.toLowerCase() === group.name.toLowerCase());
+    
+      if (duplicateGroup) {
+        toast.error("A group with this name already exists! Please use a different name.");
+        return;
+      }
+    
+      if (editingGroup) {
+        // Update existing group
+        await updateGroup(editingGroup._id, group);
+        await fetchGroups();
+        setEditingGroup(null);
+        toast.success("Group updated successfully!");
+      } else {
+        // Add new group
+        await addGroup(group);
+        await fetchGroups();
+        toast.success("Group added successfully!");
+      }
+    } catch (error) {
+      console.error("Error handling group:", error);
+      toast.error("Failed to save group");
+    }
+  };
 
   const handleEdit = (group: any) => {
     setEditingGroup(group);
   };
 
-  const handleDelete = (id: string) => {
-    setGroups(groups.filter((g) => g.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteGroup(id);
+      await fetchGroups();
+      toast.success("Group deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      toast.error("Failed to delete group");
+    }
+  };
+
+  const handleUpdate = async (id: string, updatedGroup: any) => {
+    try {
+      await updateGroup(id, updatedGroup);
+      await fetchGroups();
+      toast.success("Group updated successfully!");
+    } catch (error) {
+      console.error("Error updating group:", error);
+      toast.error("Failed to update group");
+    }
   };
 
   return (
@@ -64,7 +90,12 @@ export default function GroupManagement() {
         <Card className="w-240">
           <CardContent>
             <h2 className="text-xl font-bold mb-5">Existing Groups</h2>
-            <GroupTable groups={groups} onEdit={handleEdit} onDelete={handleDelete} />
+            <GroupTable 
+              groups={groups} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete}
+              onUpdate={handleUpdate}
+            />
           </CardContent>
         </Card>
       </div>
