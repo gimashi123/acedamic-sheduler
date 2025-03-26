@@ -25,27 +25,20 @@ export default function GroupManagement() {
 
   const handleAddOrUpdate = async (group: any) => {
     try {
-      const duplicateGroup = groups.find(g => g.name.toLowerCase() === group.name.toLowerCase());
-    
-      if (duplicateGroup) {
+      // check for duplicate group names
+      const duplicateGroups = groups.find(v => v.name.toLowerCase() === group.name.toLowerCase());
+      if(duplicateGroups) {
         toast.error("A group with this name already exists! Please use a different name.");
         return;
       }
-    
-      if (editingGroup) {
-        // Update existing group
-        await updateGroup(editingGroup._id, group);
-        await fetchGroups();
-        setEditingGroup(null);
-        toast.success("Group updated successfully!");
-      } else {
-        // Add new group
-        await addGroup(group);
-        await fetchGroups();
-        toast.success("Group added successfully!");
-      }
+
+      // refresh group after adding / update
+      await fetchGroups();
+      setEditingGroup(null);
+      toast.success(editingGroup ? "Group Updated Successfull!" : "Group added successfully!");
+
     } catch (error) {
-      console.error("Error handling group:", error);
+      console.error("Error handling group: ", error);
       toast.error("Failed to save group");
     }
   };

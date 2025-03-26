@@ -7,6 +7,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import React, { useState } from "react";
 import { addGroup } from "@/services/group.service";
 import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@radix-ui/react-alert-dialog";
+import { AlertDialogFooter, AlertDialogHeader } from "../ui/alert-dialog";
 
 interface GroupFormProps {
   onSubmit?: (data: any) => void;
@@ -33,6 +35,8 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
     type: "weekday",
     maxStudent: 60,
   });
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
@@ -55,10 +59,25 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submission
-  const onSubmit = async () => {
+  // validation handler - to fill all the fields
+  const handleFormSubmit = () => {
+    if(!formData.name || !formData.faculty || !formData.year || !formData.semester || !formData.type || !formData.maxStudent) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    setShowConfirmation(true);
+  };
+
+  // final submission handler
+  const handleConfirmSubmit = async() => {
     try {
-      await addGroup(formData);
+      setIsSubmitting(true);
+      const groupData = {
+        ...formData,
+        maxStudent: Number(formData.maxStudent)
+      };
+
+      await addGroup(groupData);
       toast.success("Group added successfully!");
       reset();
       setFormData({
@@ -67,18 +86,46 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
         year: 0,
         semester: 0,
         type: "weekday",
-        maxStudent: 60,
+        maxStudent: 60
       });
-      if (onSuccess) {
+
+      if(onSuccess) {
         onSuccess();
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Failed to add group. Please try again.");
+      console.error("Error submitting form: ", error);
+      toast.error("Failed to add group, Please try again.");
+    } finally {
+      setIsSubmitting(false);
+      setShowConfirmation(false);
     }
   };
 
+  // Handle form submission
+  // const onSubmit = async () => {
+  //   try {
+  //     await addGroup(formData);
+  //     toast.success("Group added successfully!");
+  //     reset();
+  //     setFormData({
+  //       name: "",
+  //       faculty: "",
+  //       year: 0,
+  //       semester: 0,
+  //       type: "weekday",
+  //       maxStudent: 60,
+  //     });
+  //     if (onSuccess) {
+  //       onSuccess();
+  //     }
+  //   } catch (error) {
+  //     console.error("Error submitting form:", error);
+  //     toast.error("Failed to add group. Please try again.");
+  //   }
+  // };
+
   return (
+  <>
     <Card className="w-150 p-5">
       <CardContent className="space-y-4 flex flex-col gap-4">
 
@@ -181,9 +228,44 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
         </div>
 
         {/* Submit Button */}
-        <Button className="w-full" onClick={handleSubmit(onSubmit)}>Submit</Button>
+        <Button 
+          className="w-full" 
+          onClick={handleSubmit(handleFormSubmit)} 
+          disabled={isSubmitting}
+          >
+            {isSubmitting ? "Adding..." : "Add Group"}
+          </Button>
         
       </CardContent>
     </Card>
+
+    {/* group adding confirmation pop up message */}
+    <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Group Addition</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to add this Group? Please review the details:
+                  <div className="mt-2 space-y-1">
+                    <p><strong>Name:</strong> {formData.name}</p>
+                    <p><strong>Faculty:</strong> {formData.faculty}</p>
+                    <p><strong>Year:</strong> {formData.year}</p>
+                    <p><strong>Semester:</strong> {formData.semester}</p>
+                    <p><strong>Type:</strong> {formData.type}</p>
+                    <p><strong>Student Count:</strong> {formData.maxStudent}</p>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmSubmit} disabled={isSubmitting}>
+                  {isSubmitting ? "Adding..." : "Confirm"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+    </AlertDialog>
+
+  </>
   );
 }
