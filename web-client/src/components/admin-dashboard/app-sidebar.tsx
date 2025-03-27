@@ -1,11 +1,7 @@
 
 
 import * as React from "react"
-import {
-    AudioWaveform,
-    Command,
-    GalleryVerticalEnd,
-} from "lucide-react"
+
 
 
 import {
@@ -15,7 +11,7 @@ import {
     SidebarHeader,
     SidebarRail,
 } from "@/components/ui/sidebar"
-import {TeamSwitcher} from "@/components/admin-dashboard/team-switcher.tsx";
+
 import {NavUser} from "@/components/admin-dashboard/nav-user.tsx";
 import {NavPages} from "@/components/admin-dashboard/nav-pages.tsx";
 
@@ -27,31 +23,15 @@ const data = {
         email: "m@example.com",
         avatar: "/avatars/shadcn.jpg",
     },
-    teams: [
-        {
-            name: "Acme Inc",
-            logo: GalleryVerticalEnd,
-            plan: "Enterprise",
-        },
-        {
-            name: "Acme Corp.",
-            logo: AudioWaveform,
-            plan: "Startup",
-        },
-        {
-            name: "Evil Corp.",
-            logo: Command,
-            plan: "Free",
-        },
-    ],
+
 
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar collapsible="icon" {...props}>
-            <SidebarHeader>
-                <TeamSwitcher teams={data.teams} />
+            <SidebarHeader className={' text-amber-100xl, font-bold'}>
+                Academic Scheduler
             </SidebarHeader>
             <SidebarContent>
                 <NavPages/>
