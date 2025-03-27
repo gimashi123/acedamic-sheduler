@@ -9,6 +9,8 @@ import {ViewTimeTablePage} from "@/pages/timetable/ViewTimeTablePage.tsx";
 import {AddDetails} from "@/pages/timetable/AddDetails.tsx";
 import GroupManagement from "@/pages/group/GroupManagement.tsx";
 import VenueManagement from "@/pages/venue/VenueManagement.tsx";
+import StudentManagement from "@/pages/student/StudentManagement.tsx";
+import StudentDetails from "@/pages/student/StudentDetails.tsx";
 
 import SingUp from '@/pages/useraccess/SingUp.tsx';
 import LoginPage from '@/pages/auth/login/LoginPage.tsx';
@@ -44,6 +46,11 @@ export const AppRouting = () => {
             <Route path={'add-details'} element={<AddDetails />} />
             <Route path={'add'} element={<AddTimeTablePage />} />
             <Route path={'view'} element={<ViewTimeTablePage />} />
+          </Route>
+          <Route path={"student"}>
+            <Route path={""} element={<StudentManagement />} />
+            <Route path={":id"} element={<StudentDetails />} />
+            <Route path={"edit/:id"} element={<StudentManagement />} />
           </Route>
           <Route path={'subject'}>
             <Route path={''} element={<SubjectDashboard />} />
