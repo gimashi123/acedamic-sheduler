@@ -26,6 +26,7 @@ const AppRoutingContent = ({ children }: { children: ReactNode }) => {
 export const AppRouting = () => {
     return (
         <BrowserRouter>
+        <AppRoutingContent>
             <Routes>
                 <Route path={'/'} element={<HomePage/>}/>
                 <Route path="/groups" element={<GroupManagement/>}/>
@@ -44,6 +45,7 @@ export const AppRouting = () => {
 
                 </Route>
             </Routes>
+            </AppRoutingContent>
         </BrowserRouter>
     )
 }
