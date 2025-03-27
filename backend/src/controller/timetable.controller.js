@@ -9,42 +9,56 @@ import mongoose from "mongoose";
 // @route GET /timetables
 export const getTimetables = async (req, res) => {
     try {
-        const timetables = await Timetable.find().populate('group');
-        return successResponse(res , "Timetables fetched successfully", HTTP_STATUS.OK, timetables.map(timeTableResponseDto));
+        // Fetch all timetables from MongoDB
+        const timetables = await Timetable.find();
+        // If no timetables exist, return a 404 response
+        if (!timetables || timetables.length === 0) {
+            return errorResponse(res, "No timetables found", HTTP_STATUS.NOT_FOUND);
+        }
+
+        return successResponse(
+            res,
+            "Timetables fetched successfully",
+            HTTP_STATUS.OK,
+            timetables // Directly return the timetables
+        );
 
     } catch (error) {
+        console.error("Error fetching timetables:", error);
         return errorResponse(res, "Failed to fetch timetables", HTTP_STATUS.SERVER_ERROR);
     }
 };
+
 
 
 // @desc Create a new timetable
 // @route POST /timetables
 export const createTimetable = async (req, res) => {
     try {
-        const { title, description, groupId } = req.body;
+        const { title, description, groupName } = req.body;
 
-        if (!title || !description || !groupId ) {
+        // Validate request
+        if (!title || !description || !groupName) {
             return errorResponse(res, "All fields are required", HTTP_STATUS.BAD_REQUEST);
         }
 
-        const selected_group = await Group.findById(groupId);
-
-        if(!selected_group){
-            return errorResponse(res, "Group not found", HTTP_STATUS.BAD_REQUEST);
-        }
-
-        const newTimetable = new Timetable({ title, description, group: selected_group._id});
+        // Create and save the timetable
+        const newTimetable = new Timetable({ title, description, groupName });
         await newTimetable.save();
+
         return successResponse(
-            res,"Timetable created successfully",HTTP_STATUS.CREATED,timeTableResponseDto(newTimetable)
-        )
+            res,
+            "Timetable created successfully",
+            HTTP_STATUS.CREATED,
+            newTimetable
+        );
+
     } catch (error) {
-        return errorResponse(
-            res,"Failed to create timetable",HTTP_STATUS.SERVER_ERROR
-        )
+        console.error("Error creating timetable:", error);
+        return errorResponse(res, "Failed to create timetable", HTTP_STATUS.SERVER_ERROR);
     }
 };
+
 export const getTimetableById = async (req, res) => {
     try {
         const { id } = req.params;
