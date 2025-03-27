@@ -1,66 +1,64 @@
+import { PieChart, Map, CalendarRange } from 'lucide-react';
 
 import {
-     PieChart, Map,
-     CalendarRange,
-} from "lucide-react"
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import { useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
-
-import {
-    SidebarGroup,
-    SidebarGroupLabel,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import {useLocation} from "react-router-dom";
-import {useEffect, useState} from "react";
-
-const pages =  [
-    {
-        name: "Time Table Management",
-        url: "/admin/dashboard/timetable",
-        icon: CalendarRange,
-    },
-    {
-        name: "User Management",
-        url: "/admin/dashboard/user",
-        icon: PieChart,
-    },
-    {
-        name: "Travel",
-        url: "#",
-        icon: Map,
-    },
-
-]
+const pages = [
+  {
+    name: 'Time Table Management',
+    url: '/admin/dashboard/timetable',
+    icon: CalendarRange,
+  },
+  {
+    name: 'User Management',
+    url: '/admin/dashboard/user',
+    icon: PieChart,
+  },
+  {
+    name: 'Subject Management',
+    url: '/admin/dashboard/subject',
+    icon: Map,
+  },
+];
 
 export function NavPages() {
-    const [currentPath, setCurrentPath] = useState<string>('/')
-    const location = useLocation();
+  const [currentPath, setCurrentPath] = useState<string>('/');
+  const location = useLocation();
 
+  useEffect(() => {
+    const pathname = location.pathname;
+    setCurrentPath(pathname);
+  }, [location.pathname]);
 
-    useEffect(() => {
-        const pathname = location.pathname;
-        setCurrentPath(pathname);
-
-    }, [location.pathname]);
-
-    return (
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarGroupLabel>Projects</SidebarGroupLabel>
-            <SidebarMenu>
-                {pages.map((item) => (
-                    <SidebarMenuItem key={item.name} className={ currentPath === item.url ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''}>
-                        <SidebarMenuButton asChild>
-                            <a href={item.url}>
-                                <item.icon />
-                                <span>{item.name}</span>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                ))}
-
-            </SidebarMenu>
-        </SidebarGroup>
-    )
+  return (
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarMenu>
+        {pages.map((item) => (
+          <SidebarMenuItem
+            key={item.name}
+            className={
+              currentPath === item.url
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : ''
+            }
+          >
+            <SidebarMenuButton asChild>
+              <a href={item.url}>
+                <item.icon />
+                <span>{item.name}</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
+  );
 }

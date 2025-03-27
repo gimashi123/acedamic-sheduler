@@ -9,9 +9,9 @@ import { authenticateToken } from '../middleware/jwt.middleware.js';
 
 const router = express.Router();
 
-router.post('/', authenticateToken, addSubject);
-router.get('/', getSubjects);
-router.put('/:id', authenticateToken, updateSubject);
-router.delete('/:id', authenticateToken, deleteSubject);
+router.post('/add', addSubject);
+router.get('/get/all', getSubjects);
+router.put('/:id', updateSubject);
+router.delete('/delete/:id', deleteSubject);
 
 export default router;

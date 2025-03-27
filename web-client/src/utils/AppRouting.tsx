@@ -12,11 +12,16 @@ import SingUp from '@/pages/useraccess/SingUp.tsx';
 import LoginPage from '@/pages/auth/login/LoginPage.tsx';
 import { ReactNode } from 'react';
 import { AuthProvider } from '@/context/auth/auth-context.tsx';
+import { SubjectDashboard } from '@/pages/subject/SubjectDashboard..tsx';
+import { SubjectAdd } from '@/pages/subject/SubjectAdd.tsx';
+import { SubjectProvider } from '@/context/subject/subject.context.tsx';
 
 const AppRoutingContent = ({ children }: { children: ReactNode }) => {
   return (
     <BrowserRouter>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <SubjectProvider>{children}</SubjectProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 };
@@ -35,6 +40,10 @@ export const AppRouting = () => {
             <Route path={'add-details'} element={<AddDetails />} />
             <Route path={'add'} element={<AddTimeTablePage />} />
             <Route path={'view'} element={<ViewTimeTablePage />} />
+          </Route>
+          <Route path={'subject'}>
+            <Route path={''} element={<SubjectDashboard />} />
+            <Route path={'add'} element={<SubjectAdd />} />
           </Route>
           <Route path={'user'} element={<UserPage />} />
         </Route>
