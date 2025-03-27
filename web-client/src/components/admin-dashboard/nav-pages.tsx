@@ -1,4 +1,4 @@
-import { PieChart, Map, CalendarRange } from 'lucide-react';
+import { PieChart, Map, CalendarRange, Users } from 'lucide-react';
 
 import {
   SidebarGroup,
@@ -25,6 +25,11 @@ const pages = [
     name: 'Subject Management',
     url: '/admin/dashboard/subject',
     icon: Map,
+  },
+  {
+    name: 'Student Management',
+    url: '/admin/dashboard/student',
+    icon: Users,
   },
 ];
 
