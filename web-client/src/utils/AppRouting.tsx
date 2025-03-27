@@ -9,6 +9,7 @@ import {ViewTimeTablePage} from "@/pages/timetable/ViewTimeTablePage.tsx";
 import {AddDetails} from "@/pages/timetable/AddDetails.tsx";
 import GroupManagement from "@/pages/group/GroupManagement.tsx";
 import VenueManagement from "@/pages/venue/VenueManagement.tsx";
+
 import StudentManagement from "@/pages/student/StudentManagement.tsx";
 import StudentDetails from "@/pages/student/StudentDetails.tsx";
 import StudentAdd from "@/pages/student/StudentAdd";

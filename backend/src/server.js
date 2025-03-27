@@ -13,7 +13,6 @@ import settingsRoutes from './routes/settings.routes.js';
 import subjectRoutes from './routes/subject.route.js';
 import { authenticateToken } from './middleware/jwt.middleware.js';
 import studentRoutes from './routes/student.route.js';
-
 import timeTableRoutes from './routes/timetable.js';
 
 const app = express();
@@ -54,6 +53,8 @@ app.use('/api/venue', venueRoutes); // add authenticateToken after the testing
 app.use('/api/settings', settingsRoutes);
 // Add SubjectAdd API route
 app.use('/api/subject', authenticateToken, subjectRoutes);
+// Add StudentAdd API route
+app.use('/api/student', studentRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -65,5 +66,3 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Then add this route with your other app.use statements
-app.use('/api/student', studentRoutes);

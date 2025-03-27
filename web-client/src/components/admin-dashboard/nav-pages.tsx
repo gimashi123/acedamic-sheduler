@@ -50,7 +50,7 @@ export function NavPages() {
           <SidebarMenuItem
             key={item.name}
             className={
-              currentPath.startsWith(item.url)
+              currentPath === item.url
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                 : ''
             }
