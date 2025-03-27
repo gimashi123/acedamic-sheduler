@@ -1,12 +1,14 @@
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import HomePage from "../pages/Home.tsx";
 
-import AdminDashboardPage from '@/pages/dashboard/AdminDashboard.tsx';
-import { TimeTablePage } from '@/pages/timetable/TimeTablePage.tsx';
-import { UserPage } from '@/pages/user/UserPage.tsx';
-import { AddTimeTablePage } from '@/pages/timetable/AddTimeTablePage.tsx';
-import { ViewTimeTablePage } from '@/pages/timetable/ViewTimeTablePage.tsx';
-import { AddDetails } from '@/pages/timetable/AddDetails.tsx';
+import AdminDashboardPage from "@/pages/dashboard/AdminDashboard.tsx";
+import {TimeTablePage} from "@/pages/timetable/TimeTablePage.tsx";
+import {UserPage} from "@/pages/user/UserPage.tsx";
+import {AddTimeTablePage} from "@/pages/timetable/AddTimeTablePage.tsx";
+import {ViewTimeTablePage} from "@/pages/timetable/ViewTimeTablePage.tsx";
+import {AddDetails} from "@/pages/timetable/AddDetails.tsx";
+import GroupManagement from "@/pages/group/GroupManagement.tsx";
+import VenueManagement from "@/pages/venue/VenueManagement.tsx";
 
 import SingUp from '@/pages/useraccess/SingUp.tsx';
 import LoginPage from '@/pages/auth/login/LoginPage.tsx';
@@ -32,6 +34,8 @@ export const AppRouting = () => {
     <AppRoutingContent>
       <Routes>
         <Route path={'/'} element={<HomePage />} />
+        <Route path="/groups" element={<GroupManagement/>}/>
+        <Route path="/venues" element={<VenueManagement/>}/>
         <Route path={'/login'} element={<LoginPage />} />
         <Route path={'/signup'} element={<SingUp />} />
         <Route path={'/admin/dashboard/*'} element={<AdminDashboardPage />}>

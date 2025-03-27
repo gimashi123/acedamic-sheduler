@@ -1,11 +1,14 @@
-import { AppRouting } from '@/utils/AppRouting.tsx';
 
-function App() {
+import { AppRouting } from "./utils/AppRouting";
+
+
+
+const App = () => {
   return (
     <>
-      <AppRouting />
+     <AppRouting/>
     </>
   );
-}
+};
 
 export default App;

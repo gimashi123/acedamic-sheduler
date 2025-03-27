@@ -3,10 +3,10 @@ import { createVenue, deleteVenue, getVenueById, getVenues, updateVenue } from "
 
 const router = express.Router();
 
-router.get('/get/all', getVenues);
+router.get('/', getVenues);
 router.get('/:id', getVenueById);
-router.post('/create-venue', createVenue); // if an error thows up change this to '/'
-router.put('/update/:id', updateVenue);
-router.delete('/delete/:id', deleteVenue);
+router.post('/', createVenue); // if an error thows up change this to '/'
+router.put('/:id', updateVenue);
+router.delete('/:id', deleteVenue);
 
 export default router;
