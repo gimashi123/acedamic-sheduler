@@ -197,7 +197,7 @@ export default function StudentForm({ initialData, onSuccess }: StudentFormProps
   };
 
   return (
-    <>
+    <form onSubmit={handleFormSubmit} className="space-y-4">
       <Card className="w-full max-w-3xl p-6">
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -365,8 +365,8 @@ export default function StudentForm({ initialData, onSuccess }: StudentFormProps
           
           {/* Submit Button */}
           <Button 
+            type="submit" 
             className="w-full" 
-            onClick={handleFormSubmit} 
             disabled={isSubmitting}
           >
             {isSubmitting ? "Saving..." : initialData ? "Update Student" : "Add Student"}
@@ -398,6 +398,6 @@ export default function StudentForm({ initialData, onSuccess }: StudentFormProps
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </form>
   );
 }

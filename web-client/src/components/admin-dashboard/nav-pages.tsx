@@ -1,4 +1,4 @@
-import { PieChart, Map, CalendarRange } from 'lucide-react';
+import { PieChart, Map, CalendarRange, Users } from 'lucide-react';
 
 import {
   SidebarGroup,
@@ -26,6 +26,11 @@ const pages = [
     url: '/admin/dashboard/subject',
     icon: Map,
   },
+  {
+    name: 'Student Management',
+    url: '/admin/dashboard/student',
+    icon: Users,
+  },
 ];
 
 export function NavPages() {
@@ -45,7 +50,7 @@ export function NavPages() {
           <SidebarMenuItem
             key={item.name}
             className={
-              currentPath === item.url
+              currentPath.startsWith(item.url)
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                 : ''
             }

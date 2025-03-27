@@ -11,6 +11,8 @@ import GroupManagement from "@/pages/group/GroupManagement.tsx";
 import VenueManagement from "@/pages/venue/VenueManagement.tsx";
 import StudentManagement from "@/pages/student/StudentManagement.tsx";
 import StudentDetails from "@/pages/student/StudentDetails.tsx";
+import StudentAdd from "@/pages/student/StudentAdd";
+import StudentEdit from "@/pages/student/StudentEdit";
 
 import SingUp from '@/pages/useraccess/SingUp.tsx';
 import LoginPage from '@/pages/auth/login/LoginPage.tsx';
@@ -49,8 +51,9 @@ export const AppRouting = () => {
           </Route>
           <Route path={"student"}>
             <Route path={""} element={<StudentManagement />} />
+            <Route path={"add"} element={<StudentAdd />} />
+            <Route path={"edit/:id"} element={<StudentEdit />} />
             <Route path={":id"} element={<StudentDetails />} />
-            <Route path={"edit/:id"} element={<StudentManagement />} />
           </Route>
           <Route path={'subject'}>
             <Route path={''} element={<SubjectDashboard />} />

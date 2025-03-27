@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
-import StudentForm from "@/components/student/StudentForm";
+import { Button } from "@/components/ui/button";
 import StudentTable from "@/components/student/StudentTable";
 import { Card, CardContent } from "@/components/ui/card";
 import { getAllStudents, deleteStudent } from "@/services/student.service";
 import { toast } from "sonner";
 import { SubjectProvider } from "@/context/subject/subject.context";
 import { IStudent } from "@/data-types/student.tp";
+import { useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react"; // Import the Plus icon for the button
 
 export default function StudentManagement() {
   const [students, setStudents] = useState<IStudent[]>([]);
-  const [editingStudent, setEditingStudent] = useState<IStudent | null>(null);
+  const navigate = useNavigate();
 
   const fetchStudents = async () => {
     try {
@@ -26,9 +28,7 @@ export default function StudentManagement() {
   }, []);
 
   const handleEdit = (student: IStudent) => {
-    setEditingStudent(student);
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(`/admin/dashboard/student/edit/${student._id}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -42,50 +42,30 @@ export default function StudentManagement() {
     }
   };
 
-  const handleSuccess = () => {
-    fetchStudents();
-    setEditingStudent(null);
-  };
-
   return (
     <SubjectProvider>
-      <div className="p-4 space-y-8">
-        <div className="flex justify-center">
-          <Card className="w-full max-w-3xl">
-            <CardContent className="pt-6">
-              <h2 className="text-2xl font-bold mb-6">
-                {editingStudent ? "Update Student" : "Add New Student"}
-              </h2>
-              <StudentForm 
-                initialData={editingStudent} 
-                onSuccess={handleSuccess} 
-              />
-              {editingStudent && (
-                <div className="mt-4 flex justify-end">
-                  <button 
-                    onClick={() => setEditingStudent(null)}
-                    className="text-blue-500 hover:underline"
-                  >
-                    Cancel Editing
-                  </button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      <div className="p-6">
+        {/* Header with Add Button */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Student Management</h2>
+          <Button 
+            onClick={() => navigate('/admin/dashboard/student/add')} 
+            className="bg-black hover:bg-gray-800"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Add Student
+          </Button>
         </div>
         
-        <div className="mt-8">
-          <Card>
-            <CardContent className="pt-6">
-              <h2 className="text-2xl font-bold mb-6">Student List</h2>
-              <StudentTable 
-                students={students} 
-                onEdit={handleEdit} 
-                onDelete={handleDelete}
-              />
-            </CardContent>
-          </Card>
-        </div>
+        {/* Student Table */}
+        <Card>
+          <CardContent className="pt-6">
+            <StudentTable 
+              students={students} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete}
+            />
+          </CardContent>
+        </Card>
       </div>
     </SubjectProvider>
   );
