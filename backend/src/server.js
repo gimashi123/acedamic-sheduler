@@ -12,6 +12,7 @@ import venueRoutes from './routes/venue.route.js';
 import settingsRoutes from './routes/settings.routes.js';
 import subjectRoutes from './routes/subject.route.js';
 import { authenticateToken } from './middleware/jwt.middleware.js';
+import studentRoutes from './routes/student.route.js';
 
 import timeTableRoutes from './routes/timetable.js';
 
@@ -63,3 +64,6 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 });
+
+// Then add this route with your other app.use statements
+app.use('/api/student', studentRoutes);
