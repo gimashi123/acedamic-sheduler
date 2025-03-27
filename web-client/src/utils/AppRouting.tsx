@@ -12,21 +12,21 @@ import VenueManagement from "@/pages/venue/VenueManagement.tsx";
 
 import SingUp from '@/pages/useraccess/SingUp.tsx';
 import LoginPage from '@/pages/auth/login/LoginPage.tsx';
-// import { ReactNode } from 'react';
-// import { AuthProvider } from '@/context/auth/auth-context.tsx';
+import { ReactNode } from 'react';
+import { AuthProvider } from '@/context/auth/auth-context.tsx';
 
-// const AppRoutingContent = ({ children }: { children: ReactNode }) => {
-//   return (
-//     <BrowserRouter>
-//       <AuthProvider>{children}</AuthProvider>
-//     </BrowserRouter>
-//   );
-// };
+const AppRoutingContent = ({ children }: { children: ReactNode }) => {
+  return (
+    <BrowserRouter>
+      <AuthProvider>{children}</AuthProvider>
+    </BrowserRouter>
+  );
+};
 
 export const AppRouting = () => {
     return (
         <BrowserRouter>
-        {/* <AppRoutingContent> */}
+        <AppRoutingContent>
             <Routes>
                 <Route path={'/'} element={<HomePage/>}/>
                 <Route path="/groups" element={<GroupManagement/>}/>
@@ -45,7 +45,7 @@ export const AppRouting = () => {
 
                 </Route>
             </Routes>
-            {/* </AppRoutingContent> */}
+            </AppRoutingContent>
         </BrowserRouter>
     )
 }
