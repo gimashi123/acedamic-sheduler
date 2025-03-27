@@ -15,7 +15,6 @@ import { authenticateToken } from './middleware/jwt.middleware.js';
 
 import timeTableRoutes from './routes/timetable.js';
 
-
 const app = express();
 dotenv.config();
 app.use(express.json());
@@ -44,7 +43,7 @@ app.get('/hello', (_, res) => {
 });
 
 // Routes
-app.use('/auth', authRoute);
+app.use('/api/auth', authRoute);
 app.use('/user', userRoute);
 app.use('/api/timetable', timeTableRoutes);
 // API routes
@@ -52,7 +51,7 @@ app.use('/api/request', requestRoute);
 app.use('/api/group', groupRoutes); // add authenticateToken after the testing
 app.use('/api/venue', venueRoutes); // add authenticateToken after the testing
 app.use('/api/settings', settingsRoutes);
-// Add Subject API route
+// Add SubjectAdd API route
 app.use('/api/subject', authenticateToken, subjectRoutes);
 
 // Error handling middleware

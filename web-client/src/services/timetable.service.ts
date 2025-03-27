@@ -11,3 +11,14 @@ export const getTimetables = async () => {
         console.error("Failed to fetch timetables", error);
     }
 }
+
+export const deleteTimetable = async (id: string) => {
+    try {
+        const response = await api.delete(`/timetable/delete/${id}`);
+        if(response.data.success){
+            return response.data.result;
+        }
+    } catch (error) {
+        console.error("Failed to delete timetable", error);
+    }
+}
