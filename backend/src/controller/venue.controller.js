@@ -4,7 +4,7 @@ import Venue from "../models/venue.model.js";
 export const createVenue = async(req, res) => {
     try {
         const {
-            faculty,
+            // faculty,
             department, 
             building, 
             hallName,
@@ -12,14 +12,14 @@ export const createVenue = async(req, res) => {
             capacity
         } = req.body;
 
-        if(!faculty || !department || !building ||!hallName || !type || !capacity) {
+        if(!department || !building ||!hallName || !type || !capacity) {
             return res.status(400).json({
                 message: "All fields are required!"
             });
         }
 
         const newVenue = new Venue({
-            faculty, 
+            // faculty, 
             department, 
             building, 
             hallName, 
