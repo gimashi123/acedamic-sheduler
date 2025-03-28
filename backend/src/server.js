@@ -44,8 +44,8 @@ app.get('/hello', (_, res) => {
 });
 
 // Routes
-app.use('/auth', authRoute);
-app.use('/user', userRoute);
+app.use('/api/auth', authRoute);
+app.use('/api/user', userRoute);
 app.use('/api/timetable', timeTableRoutes);
 // API routes
 app.use('/api/request', requestRoute);

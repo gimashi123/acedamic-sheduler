@@ -20,7 +20,9 @@ export const getTimetables = async (req, res) => {
             res,
             "Timetables fetched successfully",
             HTTP_STATUS.OK,
-            timetables // Directly return the timetables
+            timetables.map((timetable) => {
+                return timeTableResponseDto(timetable);
+            })// Directly return the timetables
         );
 
     } catch (error) {
@@ -33,9 +35,14 @@ export const getTimetables = async (req, res) => {
 
 // @desc Create a new timetable
 // @route POST /timetables
+
+
+/**
+ * Controller to create a new timetable
+ */
 export const createTimetable = async (req, res) => {
     try {
-        const { title, description, groupName } = req.body;
+        const { title, description, groupName , isPublished} = req.body;
 
         // Validate request
         if (!title || !description || !groupName) {
@@ -43,7 +50,7 @@ export const createTimetable = async (req, res) => {
         }
 
         // Create and save the timetable
-        const newTimetable = new Timetable({ title, description, groupName });
+        const newTimetable = new Timetable({ title, description, groupName ,isPublished });
         await newTimetable.save();
 
         return successResponse(
@@ -58,6 +65,7 @@ export const createTimetable = async (req, res) => {
         return errorResponse(res, "Failed to create timetable", HTTP_STATUS.SERVER_ERROR);
     }
 };
+
 
 export const getTimetableById = async (req, res) => {
     try {
@@ -92,19 +100,40 @@ export const deleteTimetable = async (req, res) => {
 export const updateTimetable = async (req, res) => {
     try {
         const { id } = req.params;
-        const { course, instructor, day, startTime, endTime, venue } = req.body;
+        const { title, description, groupName , isPublished} = req.body;
 
-        if (!course || !instructor || !day || !startTime || !endTime || !venue) {
-            return res.status(400).json({ message: "All fields are required" });
+        const timetable = await Timetable.findById(id);
+
+        if(!timetable){
+            errorResponse(res, "Timetable not found", HTTP_STATUS.BAD_REQUEST, null);
         }
 
-        const updatedTimetable = { course, instructor, day, startTime, endTime, venue };
-        const timetable = await Timetable.findByIdAndUpdate(id, updatedTimetable, { new: true });
-        res.status(200).json(timetable);
+        if(title){
+            timetable.title = title;
+        }
+
+        if(description){
+            timetable.description = description;
+        }
+
+        if(groupName){
+            timetable.groupName = groupName;
+        }
+
+        if(isPublished){
+            timetable.isPublished = isPublished;
+        }
+
+
+        await timetable.save();
+
+        console.log("timetable updated successfully for id: ", id);
+
+        return successResponse(res, "Timetable updated successfully", HTTP_STATUS.OK, timeTableResponseDto(timetable));
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+
+        console.log("Error occured while updating timetable: ", error);
+        return errorResponse(res, "Server error occurred while updating timetable", HTTP_STATUS.SERVER_ERROR);
     }
 }
-
-
-

@@ -12,11 +12,18 @@ import SingUp from '@/pages/useraccess/SingUp.tsx';
 import LoginPage from '@/pages/auth/login/LoginPage.tsx';
 import { ReactNode } from 'react';
 import { AuthProvider } from '@/context/auth/auth-context.tsx';
+import {TimetableProvider} from "@/context/timetable/timetable-context.tsx";
+
+
 
 const AppRoutingContent = ({ children }: { children: ReactNode }) => {
   return (
     <BrowserRouter>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <TimetableProvider>
+          {children}
+        </TimetableProvider>
+        </AuthProvider>
     </BrowserRouter>
   );
 };
@@ -35,6 +42,10 @@ export const AppRouting = () => {
             <Route path={'add-details'} element={<AddDetails />} />
             <Route path={'add'} element={<AddTimeTablePage />} />
             <Route path={'view'} element={<ViewTimeTablePage />} />
+            {/*<Route path="update/:id" element={<UpdateTimetablePage />} />*/}
+
+
+
           </Route>
           <Route path={'user'} element={<UserPage />} />
         </Route>
