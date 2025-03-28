@@ -15,6 +15,7 @@ import { authenticateToken } from './middleware/jwt.middleware.js';
 import studentRoutes from './routes/student.route.js';
 import timeTableRoutes from './routes/timetable.js';
 
+
 const app = express();
 dotenv.config();
 app.use(express.json());
@@ -44,14 +45,14 @@ app.get('/hello', (_, res) => {
 
 // Routes
 app.use('/api/auth', authRoute);
-app.use('/user', userRoute);
+app.use('/api/user', userRoute);
 app.use('/api/timetable', timeTableRoutes);
 // API routes
 app.use('/api/request', requestRoute);
 app.use('/api/group', groupRoutes); // add authenticateToken after the testing
 app.use('/api/venue', venueRoutes); // add authenticateToken after the testing
 app.use('/api/settings', settingsRoutes);
-// Add SubjectAdd API route
+// Add Subject API route
 app.use('/api/subject', authenticateToken, subjectRoutes);
 // Add StudentAdd API route
 app.use('/api/student', studentRoutes);
@@ -65,4 +66,3 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 });
-

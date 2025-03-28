@@ -4,7 +4,6 @@ import {
     Dialog,
 
     DialogContent,
-    DialogDescription,
 
     DialogHeader,
     DialogTitle,
@@ -16,10 +15,14 @@ import {toast} from "react-hot-toast"
 import {z} from "zod";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
-import axios from "axios";
+import {useEffect, useState , useRef} from "react"
+
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form.tsx";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group.tsx";
 import {useTimetable} from "@/context/timetable/timetable-context.tsx";
+import {ITimetable} from "@/data-types/timetable.tp.ts";
+import {updateTimetable} from "@/services/timetable.service.ts";
+import {Pencil} from "lucide-react";
 
 const formSchema = z.object({
     title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -28,54 +31,61 @@ const formSchema = z.object({
     isPublished: z.boolean(),
 });
 
-
 type FormValues = z.infer<typeof formSchema>;
 
-export function AddTimeTableDetailsDialog() {
+export function UpdateTimeTableDetailsDialog({selectedTimetable} : {selectedTimetable: ITimetable}) {
 
     const {getTimetables} = useTimetable();
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+    const dialogContentRef = useRef<HTMLDivElement>(null);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            title: "",
-            description: "",
-            groupName: "",
-            isPublished: false,
+            title: selectedTimetable.title,
+            description: selectedTimetable.description,
+            groupName: selectedTimetable.group,
+            isPublished: selectedTimetable.isPublished,
         },
     });
 
     // ✅ Handle form submission
     const onSubmit = async (data: FormValues) => {
         try {
-            const response = await axios.post("/timetable/create", {
-                title: data.title,
-                description: data.description,
-                groupName: data.groupName,
-                isPublished: data.isPublished,
-            });
-            console.log("Submitted Data:", response.data);
-            toast.success("Timetable added successfully!");
+            await updateTimetable(selectedTimetable.id, data);
+            toast.success("Timetable updated successfully!");
             form.reset();
+            setIsOpen(false)
             await getTimetables(); // Refresh the list after adding
         } catch (error) {
-            console.error("Error adding timetable:", error);
-            toast.error("Error submitting timetable.");
+            console.error("Error updating timetable:", error);
+            toast.error("Error updating timetable.");
         }
     };
+    useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (dialogContentRef.current && !dialogContentRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, []);
 
 
     return (
-        <Dialog>
+        <Dialog open={isOpen}>
             <DialogTrigger asChild>
-                <Button variant="default">Add Details</Button>
+                <Button onClick={()=> setIsOpen(true)} variant={'outline'} size={"icon"} className={'cursor-pointer hover:text-white hover:bg-green-400'}>
+                    <Pencil/>
+                </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent ref={dialogContentRef} className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Add Time Table Details</DialogTitle>
-                    <DialogDescription>
-                        Add details to the time table
-                    </DialogDescription>
+                    <DialogTitle>Update Time Table Details</DialogTitle>
                 </DialogHeader>
                 <Form {...form} >
                     <form
