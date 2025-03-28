@@ -12,22 +12,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
 
-interface Group {
+interface Group { // removed faculty, semester and groupType fileds
   _id?: string;
   name: string;
-  faculty: string;
+  // faculty: string;
   department: string;
   year: number;
-  semester: number;
-  groupType: "weekday" | "weekend";
+  // semester: number;
+  // groupType: "weekday" | "weekend";
   students: string[];
 }
 
@@ -43,6 +43,8 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [editedGroup, setEditedGroup] = useState<Group | null>(null);
   const [showUpdateConfirmation, setShowUpdateConfirmation] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+  
 
   // delete handler
   const handleDeleteClick = (group: Group) => {
@@ -66,6 +68,20 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
   // field change handler
   const handleFieldChange = (field: keyof Group, value: string | number | string[]) => {
     if (editedGroup) {
+      // Validate name uniqueness when name is changed
+      if (field === 'name') {
+        const newName = value as string;
+        const isNameExists = groups.some(
+          group => group.name.toLowerCase() === newName.toLowerCase() && 
+                  group._id !== editedGroup._id
+        );
+        
+        if (isNameExists) {
+          setNameError('Group name already exists');
+        } else {
+          setNameError(null);
+        }
+      }
       setEditedGroup({
         ...editedGroup,
         [field]: value
@@ -75,6 +91,12 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
 
   // update confirmation handler
   const handleConfirmUpdate = () => {
+
+    // Check for name error before proceeding with update
+    if (nameError) {
+      return;
+    }
+    
     if (editedGroup && editedGroup._id) {
       onUpdate(editedGroup._id, editedGroup);
       setEditingGroup(null);
@@ -95,11 +117,11 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Faculty</TableHead>
+            {/* <TableHead>Faculty</TableHead> */}
             <TableHead>Department</TableHead>
             <TableHead>Year</TableHead>
-            <TableHead>Semester</TableHead>
-            <TableHead>Type</TableHead>
+            {/* <TableHead>Semester</TableHead> */}
+            {/* <TableHead>Type</TableHead> */}
             <TableHead className="flex justify-center items-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -116,7 +138,7 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
                   group.name
                 )}
               </TableCell>
-              <TableCell>
+              {/* <TableCell>
                 {editingGroup?._id === group._id ? (
                   <Input
                     value={editedGroup?.faculty || ""}
@@ -125,7 +147,7 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
                 ) : (
                   group.faculty
                 )}
-              </TableCell>
+              </TableCell> */}
               <TableCell>
                 {editingGroup?._id === group._id ? (
                   <Input
@@ -147,7 +169,7 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
                   group.year
                 )}
               </TableCell>
-              <TableCell>
+              {/* <TableCell>
                 {editingGroup?._id === group._id ? (
                   <Input
                     type="number"
@@ -157,8 +179,9 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
                 ) : (
                   group.semester
                 )}
-              </TableCell>
-              <TableCell>
+              </TableCell> */}
+
+              {/* <TableCell>
                 {editingGroup?._id === group._id ? (
                   <Select
                     value={editedGroup?.groupType}
@@ -175,7 +198,7 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
                 ) : (
                   group.groupType
                 )}
-              </TableCell>
+              </TableCell> */}
               <TableCell className="flex flex-row justify-center items-center gap-3">
                 {editingGroup?._id === group._id ? (
                   <>
@@ -211,7 +234,9 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
               Are you sure you want to delete this group?
               <div className="mt-2 space-y-1">
                 <p><strong>Group Name:</strong> {groupToDelete?.name}</p>
-                <p><strong>Type:</strong> {groupToDelete?.groupType}</p>
+                <p><strong>Department:</strong> {groupToDelete?.department}</p>
+                <p><strong>Year:</strong> {groupToDelete?.year}</p>
+                {/* <p><strong>Type:</strong> {groupToDelete?.groupType}</p> */}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -231,11 +256,11 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
               Are you sure you want to update this group?
               <div className="mt-2 space-y-1">
                 <p><strong>Group Name:</strong> {editedGroup?.name}</p>
-                <p><strong>Faculty:</strong> {editedGroup?.faculty}</p>
+                {/* <p><strong>Faculty:</strong> {editedGroup?.faculty}</p> */}
                 <p><strong>Department:</strong> {editedGroup?.department}</p>
                 <p><strong>Year:</strong> {editedGroup?.year}</p>
-                <p><strong>Semester:</strong> {editedGroup?.semester}</p>
-                <p><strong>Type:</strong> {editedGroup?.groupType}</p>
+                {/* <p><strong>Semester:</strong> {editedGroup?.semester}</p> */}
+                {/* <p><strong>Type:</strong> {editedGroup?.groupType}</p> */}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>

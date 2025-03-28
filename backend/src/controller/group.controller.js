@@ -5,23 +5,23 @@ export const createGroup = async (req, res) => {
     try {
         const {
             name,
-            faculty, 
+            // faculty, 
             department,
             year, 
-            semester,
-            groupType,
+            // semester,
+            // groupType,
             students
         } = req.body;
 
-        // validations for details 
-        if(!name || !faculty || !department || !year || !semester || !groupType) {
+        // validations for details - removed faculty, semester, groupType
+        if(!name || !department || !year) {
             return res.status(400).json({
                 message: "All fields are required!"
             });
         };
 
-        // validations for the student-count 
-        if(students && students.length > 60) {
+        // validations for the student-count - reduced limit to 20
+        if(students && students.length > 20) {
             return res.status(400).json({
                 message: "A group cannot have more than 60 students!"
             });
@@ -29,11 +29,11 @@ export const createGroup = async (req, res) => {
 
         const newGroup = new Group ({
             name,
-            faculty,
+            // faculty,
             department,
             year,
-            semester,
-            groupType,
+            // semester,
+            // groupType,
             students
         });
         await newGroup.save();
@@ -89,7 +89,7 @@ export const updateGroup = async(req, res) => {
             });
          }
 
-         if(req.body.students && req.body.students.length > 60) {
+         if(req.body.students && req.body.students.length > 20) { // reduced limit to 20
             return res.status(400).json({
                 message: "Agroup cannot have more than 60 students!"
             });

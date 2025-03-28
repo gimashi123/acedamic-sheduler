@@ -24,31 +24,31 @@ interface GroupFormProps {
   onSuccess?: () => void;
 }
 
-interface Group {
+interface Group { // removed faculty, semester and groupType fileds
   _id?: string;
   name: string;
-  faculty: string;
+  // faculty: string;
   department: string;
   year: number;
-  semester: number;
-  groupType: "weekday" | "weekend";
+  // semester: number;
+  // groupType: "weekday" | "weekend";
   students: string[];
 }
 
-export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
+export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { // removed faculty, semester and groupType fileds
   const [formData, setFormData] = useState<Group>({
     name: "",
-    faculty: "",
+    // faculty: "",
     department: "",
     year: 0,
-    semester: 0,
-    groupType: "weekday",
+    // semester: 0,
+    // groupType: "weekday",
     students: []
   });
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
+  const { // removed faculty, semester and groupType fileds
     register,
     handleSubmit,
     formState: { errors },
@@ -56,11 +56,11 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
   } = useForm({
     defaultValues: initialData || {
       name: "",
-      faculty: "",
+      // faculty: "",
       department: "",
       year: "",
-      semester: "",
-      groupType: "",
+      // semester: "",
+      // groupType: "",
       students: []
     },
   });
@@ -70,26 +70,26 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // validation handler - to fill all the fields
+  // validation handler - to fill all the fields - removed faculty, semester and groupType fileds
   const handleFormSubmit = () => {
-    if(!formData.name || !formData.faculty || !formData.department || !formData.year || !formData.semester || !formData.groupType) {
+    if(!formData.name || !formData.department || !formData.year) {
       toast.error("Please fill in all required fields");
       return;
     }
     setShowConfirmation(true);
   };
 
-  // final submission handler
+  // final submission handler - removed faculty, semester and groupType fileds
   const handleConfirmSubmit = async() => {
     try {
       setIsSubmitting(true);
       const groupData = {
         name: formData.name,
-        faculty: formData.faculty,
+        // faculty: formData.faculty,
         department: formData.department,
         year: Number(formData.year),
-        semester: Number(formData.semester),
-        groupType: formData.groupType,
+        // semester: Number(formData.semester),
+        // groupType: formData.groupType,
         students: []
       };
 
@@ -98,11 +98,11 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
       reset();
       setFormData({
         name: "",
-        faculty: "",
+        // faculty: "",
         department: "",
         year: 0,
-        semester: 0,
-        groupType: "weekday",
+        // semester: 0,
+        // groupType: "weekday",
         students: []
       });
 
@@ -120,7 +120,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
 
   return (
     <>
-      <Card className="w-150 p-5">
+      <Card className="w-150 p-5"> {/*removed faculty, semester and groupType fileds*/}
         <CardContent className="space-y-4 flex flex-col gap-4">
 
           {/* Group Name */}
@@ -137,7 +137,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
           </div>
 
           {/* Faculty */}
-          <div className="flex flex-col gap-2">
+          {/* <div className="flex flex-col gap-2">
             <Label>Faculty</Label>
             <Input
               {...register("faculty", { required: "Faculty is required" })}
@@ -147,7 +147,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
               onChange={handleChange}
             />
             {errors.faculty && <p className="text-red-500 text-sm">{String(errors.faculty.message)}</p>}
-          </div>
+          </div> */}
 
           {/* Department */}
           <div className="flex flex-col gap-2">
@@ -183,7 +183,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
             </div>
 
             {/* Semester Selection */}
-            <div className="flex flex-col gap-2">
+            {/* <div className="flex flex-col gap-2">
               <Label>Semester</Label>
               <Select
                 onValueChange={(value) => setFormData({ ...formData, semester: Number(value) })}
@@ -196,10 +196,10 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
                 </SelectContent>
               </Select>
               {errors.semester && <p className="text-red-500 text-sm">Semester is required</p>}
-            </div>
+            </div> */}
 
             {/* Group Type Selection */}
-            <div className="flex flex-col gap-2">
+            {/* <div className="flex flex-col gap-2">
               <Label>Type</Label>
               <Select
                 onValueChange={(value) => setFormData({ ...formData, groupType: value as "weekday" | "weekend" })}
@@ -212,7 +212,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
                 </SelectContent>
               </Select>
               {errors.groupType && <p className="text-red-500 text-sm">Group type is required</p>}
-            </div>
+            </div> */}
             
           </div>
 
@@ -237,11 +237,11 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) {
               Are you sure you want to add this group?
               <div className="mt-2 space-y-1">
                 <p><strong>Name:</strong> {formData.name}</p>
-                <p><strong>Faculty:</strong> {formData.faculty}</p>
+                {/* <p><strong>Faculty:</strong> {formData.faculty}</p> */}
                 <p><strong>Department:</strong> {formData.department}</p>
                 <p><strong>Year:</strong> {formData.year}</p>
-                <p><strong>Semester:</strong> {formData.semester}</p>
-                <p><strong>Type:</strong> {formData.groupType}</p>
+                {/* <p><strong>Semester:</strong> {formData.semester}</p> */}
+                {/* <p><strong>Type:</strong> {formData.groupType}</p> */}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
