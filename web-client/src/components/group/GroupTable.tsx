@@ -63,6 +63,7 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
   const handleEditClick = (group: Group) => {
     setEditingGroup(group);
     setEditedGroup({ ...group });
+    setNameError(null); // Reset name error when starting edit
   };
 
   // field change handler
@@ -77,7 +78,7 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
         );
         
         if (isNameExists) {
-          setNameError('Group name already exists');
+          setNameError('A group with this name already exists');
         } else {
           setNameError(null);
         }
@@ -91,7 +92,6 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
 
   // update confirmation handler
   const handleConfirmUpdate = () => {
-
     // Check for name error before proceeding with update
     if (nameError) {
       return;
@@ -102,6 +102,7 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
       setEditingGroup(null);
       setEditedGroup(null);
       setShowUpdateConfirmation(false);
+      setNameError(null);
     }
   };
 
@@ -109,6 +110,7 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
   const handleCancelEdit = () => {
     setEditingGroup(null);
     setEditedGroup(null);
+    setNameError(null);
   };
 
   return (
@@ -130,10 +132,14 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
             <TableRow key={group._id}>
               <TableCell>
                 {editingGroup?._id === group._id ? (
-                  <Input
-                    value={editedGroup?.name || ""}
-                    onChange={(e) => handleFieldChange("name", e.target.value)}
-                  />
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      value={editedGroup?.name || ""}
+                      onChange={(e) => handleFieldChange("name", e.target.value)}
+                      className={nameError ? "border-red-500" : ""}
+                    />
+                    {nameError && <p className="text-red-500 text-sm">{nameError}</p>}
+                  </div>
                 ) : (
                   group.name
                 )}
@@ -202,7 +208,11 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
               <TableCell className="flex flex-row justify-center items-center gap-3">
                 {editingGroup?._id === group._id ? (
                   <>
-                    <Button variant="outline" onClick={() => setShowUpdateConfirmation(true)}>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowUpdateConfirmation(true)}
+                      disabled={!!nameError}
+                    >
                       Save
                     </Button>
                     <Button variant="destructive" onClick={handleCancelEdit}>
@@ -266,7 +276,12 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>No, Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmUpdate}>Yes, Update</AlertDialogAction>
+            <AlertDialogAction 
+              onClick={handleConfirmUpdate} 
+              disabled={!!nameError}
+            >
+              Yes, Update
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
