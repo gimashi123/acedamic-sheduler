@@ -148,7 +148,7 @@ export default function GroupForm({ initialData, onSuccess, existingGroups = [] 
 
   return (
     <>
-      <Card className="w-150 p-5"> {/*removed faculty, semester and groupType fileds*/}
+      <Card className="w-140 p-5"> {/*removed faculty, semester and groupType fileds*/}
         <CardContent className="space-y-4 flex flex-col gap-4">
 
           {/* Group Name */}
@@ -160,7 +160,7 @@ export default function GroupForm({ initialData, onSuccess, existingGroups = [] 
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={nameError ? "border-red-500" : ""}
+              className={nameError ? "border-red-500" : "w-115"}
             />
             {errors.name && <p className="text-red-500 text-sm">{String(errors.name.message)}</p>}
             {nameError && <p className="text-red-500 text-sm">{nameError}</p>}
@@ -188,6 +188,7 @@ export default function GroupForm({ initialData, onSuccess, existingGroups = [] 
               name="department"
               value={formData.department}
               onChange={handleChange}
+              className="w-115"
             />
             {errors.department && <p className="text-red-500 text-sm">{String(errors.department.message)}</p>}
           </div>
@@ -201,12 +202,12 @@ export default function GroupForm({ initialData, onSuccess, existingGroups = [] 
                 onValueChange={(value) => setFormData({ ...formData, year: Number(value) })}
                 value={formData.year.toString()}
               >
-                <SelectTrigger className="w-40"><SelectValue placeholder="Year" /></SelectTrigger>
+                <SelectTrigger className="w-55"><SelectValue placeholder="Year" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="2">2</SelectItem>
-                  <SelectItem value="3">3</SelectItem>
-                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="1">Year 1</SelectItem>
+                  <SelectItem value="2">Year 2</SelectItem>
+                  <SelectItem value="3">Year 3</SelectItem>
+                  <SelectItem value="4">Year 4</SelectItem>
                 </SelectContent>
               </Select>
               {errors.year && <p className="text-red-500 text-sm">{String(errors.year.message)}</p>}
