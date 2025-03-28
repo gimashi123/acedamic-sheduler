@@ -1,5 +1,5 @@
-import {BrowserRouter, Route, Routes} from "react-router-dom";
-import HomePage from "../pages/Home.tsx";
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import HomePage from '../pages/Home.tsx';
 
 import AdminDashboardPage from "@/pages/dashboard/AdminDashboard.tsx";
 import {TimeTablePage} from "@/pages/timetable/TimeTablePage.tsx";
@@ -39,7 +39,6 @@ const AppRoutingContent = ({ children }: { children: ReactNode }) => {
     </BrowserRouter>
   );
 };
-
 
 export const AppRouting = () => {
   return (
