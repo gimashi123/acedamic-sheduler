@@ -26,7 +26,7 @@ interface VenueFormProps {
 
 interface Venue {
   _id?: string;
-  faculty: string;
+  // faculty: string;
   department: string;
   building: string;
   hallName: string;
@@ -36,7 +36,7 @@ interface Venue {
 
 export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
   const [formData, setFormData] = useState<Venue>({
-    faculty: "",
+    // faculty: "",
     department: "",
     building: "",
     hallName: "",
@@ -53,7 +53,7 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
     reset,
   } = useForm({
     defaultValues: initialData || {
-      faculty: "",
+      // faculty: "",
       department: "",
       building: "",
       hallName: "",
@@ -73,7 +73,7 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
 
   // validation handler - to fill all the fields 
   const handleFormSubmit = () => {
-    if (!formData.faculty || !formData.department || !formData.building || !formData.hallName || !formData.type || !formData.capacity) {
+    if (!formData.department || !formData.building || !formData.hallName || !formData.type || !formData.capacity) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -93,7 +93,7 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
       toast.success("Venue added successfully!");
       reset();
       setFormData({
-        faculty: "",
+        // faculty: "",
         department: "",
         building: "",
         hallName: "",
@@ -118,7 +118,7 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
         <CardContent className="space-y-4 flex flex-col gap-3">
           <div className="flex flex-row gap-5 align-middle">
             {/* Faculty */}
-            <div className="flex flex-col gap-2">
+            {/* <div className="flex flex-col gap-2">
               <Label>Faculty</Label>
               <Input 
                 {...register("faculty", { required: "Faculty is required" })} 
@@ -129,7 +129,7 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
                 onChange={handleChange}
               />
               {errors.faculty && <p className="text-red-500 text-sm">{String(errors.faculty.message)}</p>}
-            </div>
+            </div> */}
             
             {/* Department */}
             <div className="flex flex-col gap-2">
@@ -137,7 +137,7 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
               <Input 
                 {...register("department", { required: "Department is required" })} 
                 placeholder="Enter department" 
-                className="w-55"
+                className="w-115"
                 name="department"
                 value={formData.department}
                 onChange={handleChange}
@@ -180,12 +180,12 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
             {/* Type */}
             <div className="flex flex-col gap-2">
               <Label>Type</Label>
-              <Select 
+              <Select
                 onValueChange={(value) => setFormData(prev => ({...prev, type: value as "lecture" | "tutorial" | "lab"}))}
                 value={formData.type}
               >
-                <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
-                <SelectContent>
+                <SelectTrigger className="w-55"><SelectValue placeholder="Select Type" /></SelectTrigger>
+                <SelectContent className="w-55">
                   <SelectItem value="lecture">Lecture</SelectItem>
                   <SelectItem value="tutorial">Tutorial</SelectItem>
                   <SelectItem value="lab">Lab</SelectItem>
@@ -234,7 +234,7 @@ export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
             <AlertDialogDescription>
               Are you sure you want to add this venue? Please review the details:
               <div className="mt-2 space-y-1">
-                <p><strong>Faculty:</strong> {formData.faculty}</p>
+                {/* <p><strong>Faculty:</strong> {formData.faculty}</p> */}
                 <p><strong>Department:</strong> {formData.department}</p>
                 <p><strong>Building:</strong> {formData.building}</p>
                 <p><strong>Hall Name:</strong> {formData.hallName}</p>

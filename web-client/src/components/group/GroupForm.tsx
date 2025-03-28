@@ -22,6 +22,7 @@ interface GroupFormProps {
   onSubmit?: (data: any) => void;
   initialData?: any;
   onSuccess?: () => void;
+  existingGroups?: any[]; // Add this prop to receive existing groups
 }
 
 interface Group { // removed faculty, semester and groupType fileds
@@ -35,7 +36,7 @@ interface Group { // removed faculty, semester and groupType fileds
   students: string[];
 }
 
-export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { // removed faculty, semester and groupType fileds
+export default function GroupForm({ initialData, onSuccess, existingGroups = [] }: GroupFormProps) { // removed faculty, semester and groupType fileds
   const [formData, setFormData] = useState<Group>({
     name: "",
     // faculty: "",
@@ -47,6 +48,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
   });
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const { // removed faculty, semester and groupType fileds
     register,
@@ -67,7 +69,21 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
 
   // Handle input field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Check for duplicate name when name is changed
+    if (name === 'name') {
+      const isNameExists = existingGroups.some(
+        group => group.name.toLowerCase() === value.toLowerCase()
+      );
+      
+      if (isNameExists) {
+        setNameError('A group with this name already exists');
+      } else {
+        setNameError(null);
+      }
+    }
   };
 
   // validation handler - to fill all the fields - removed faculty, semester and groupType fileds
@@ -76,6 +92,17 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
       toast.error("Please fill in all required fields");
       return;
     }
+
+    // Check for duplicate name before showing confirmation
+    const isNameExists = existingGroups.some(
+      group => group.name.toLowerCase() === formData.name.toLowerCase()
+    );
+    
+    if (isNameExists) {
+      setNameError('A group with this name already exists');
+      return;
+    }
+
     setShowConfirmation(true);
   };
 
@@ -105,6 +132,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
         // groupType: "weekday",
         students: []
       });
+      setNameError(null);
 
       if(onSuccess) {
         onSuccess();
@@ -120,7 +148,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
 
   return (
     <>
-      <Card className="w-150 p-5"> {/*removed faculty, semester and groupType fileds*/}
+      <Card className="w-140 p-5"> {/*removed faculty, semester and groupType fileds*/}
         <CardContent className="space-y-4 flex flex-col gap-4">
 
           {/* Group Name */}
@@ -132,8 +160,10 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
               name="name"
               value={formData.name}
               onChange={handleChange}
+              className={nameError ? "border-red-500" : "w-115"}
             />
             {errors.name && <p className="text-red-500 text-sm">{String(errors.name.message)}</p>}
+            {nameError && <p className="text-red-500 text-sm">{nameError}</p>}
           </div>
 
           {/* Faculty */}
@@ -158,6 +188,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
               name="department"
               value={formData.department}
               onChange={handleChange}
+              className="w-115"
             />
             {errors.department && <p className="text-red-500 text-sm">{String(errors.department.message)}</p>}
           </div>
@@ -171,12 +202,12 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
                 onValueChange={(value) => setFormData({ ...formData, year: Number(value) })}
                 value={formData.year.toString()}
               >
-                <SelectTrigger className="w-40"><SelectValue placeholder="Year" /></SelectTrigger>
+                <SelectTrigger className="w-55"><SelectValue placeholder="Year" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="2">2</SelectItem>
-                  <SelectItem value="3">3</SelectItem>
-                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="1">Year 1</SelectItem>
+                  <SelectItem value="2">Year 2</SelectItem>
+                  <SelectItem value="3">Year 3</SelectItem>
+                  <SelectItem value="4">Year 4</SelectItem>
                 </SelectContent>
               </Select>
               {errors.year && <p className="text-red-500 text-sm">{String(errors.year.message)}</p>}
@@ -220,7 +251,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
           <Button 
             className="w-full" 
             onClick={handleSubmit(handleFormSubmit)} 
-            disabled={isSubmitting}
+            disabled={isSubmitting || !!nameError}
             >
               {isSubmitting ? "Adding..." : "Add Group"}
             </Button>
@@ -247,7 +278,7 @@ export default function GroupForm({ initialData, onSuccess }: GroupFormProps) { 
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>No, Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmSubmit} disabled={isSubmitting}>
+            <AlertDialogAction onClick={handleConfirmSubmit} disabled={isSubmitting || !!nameError}>
               {isSubmitting ? "Adding..." : "Yes, Add"}
             </AlertDialogAction>
           </AlertDialogFooter>

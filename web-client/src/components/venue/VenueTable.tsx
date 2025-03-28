@@ -22,7 +22,7 @@ import {
 
 interface Venue {
   _id?: string;
-  faculty: string;
+  department: string;
   building: string;
   hallName: string;
   type: "lecture" | "tutorial" | "lab";
@@ -92,7 +92,7 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
       <Table className="w-full border">
         <TableHeader>
           <TableRow>
-            <TableHead>Faculty</TableHead>
+            <TableHead>Department</TableHead>
             <TableHead>Building</TableHead>
             <TableHead>Hall</TableHead>
             <TableHead>Type</TableHead>
@@ -106,11 +106,11 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
               <TableCell>
                 {editingVenue?._id === venue._id ? (
                   <Input
-                    value={editedVenue?.faculty || ""}
-                    onChange={(e) => handleFieldChange("faculty", e.target.value)}
+                    value={editedVenue?.department || ""}
+                    onChange={(e) => handleFieldChange("department", e.target.value)}
                   />
                 ) : (
-                  venue.faculty
+                  venue.department
                 )}
               </TableCell>
               <TableCell>
@@ -219,7 +219,7 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
               <div className="mt-2 space-y-1">
                 <p><strong>Hall Name:</strong> {editedVenue?.hallName}</p>
                 <p><strong>Type:</strong> {editedVenue?.type}</p>
-                <p><strong>Faculty:</strong> {editedVenue?.faculty}</p>
+                <p><strong>Department:</strong> {editedVenue?.department}</p>
                 <p><strong>Building:</strong> {editedVenue?.building}</p>
                 <p><strong>Capacity:</strong> {editedVenue?.capacity}</p>
               </div>
