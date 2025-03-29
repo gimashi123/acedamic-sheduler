@@ -45,11 +45,13 @@ export const AppRouting = () => {
     <AppRoutingContent>
       <Routes>
         <Route path={'/'} element={<HomePage />} />
-        <Route path="/groups" element={<GroupManagement/>}/>
-        <Route path="/venues" element={<VenueManagement/>}/>
+        
+        
         <Route path={'/login'} element={<LoginPage />} />
         <Route path={'/signup'} element={<SingUp />} />
         <Route path={'/admin/dashboard/*'} element={<AdminDashboardPage />}>
+          {/* <Route path='groups' element={<GroupManagement/>}/>  */}
+          <Route path='venues' element={<VenueManagement/>}/>
           <Route path={'timetable'}>
             <Route path={''} element={<TimeTablePage />} />
             <Route path={'add-details'} element={<AddDetails />} />
@@ -66,7 +68,7 @@ export const AppRouting = () => {
             <Route path={''} element={<SubjectDashboard />} />
             <Route path={'add'} element={<SubjectAdd />} />
           </Route>
-          <Route path={'user'} element={<UserPage />} />
+          <Route path={'user'} element={<GroupManagement />} />
         </Route>
       </Routes>
     </AppRoutingContent>
