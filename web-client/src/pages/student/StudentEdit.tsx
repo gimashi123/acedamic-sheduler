@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getStudentById } from "@/services/student.service";
 import { toast } from "sonner";
 import { SubjectProvider } from "@/context/subject/subject.context";
+import { GroupProvider } from "@/context/group/group.context";
 import { ArrowLeft } from "lucide-react";
 
 export default function StudentEdit() {
@@ -34,6 +35,7 @@ export default function StudentEdit() {
   }, [id]);
 
   const handleSuccess = () => {
+    toast.success("Student updated successfully!");
     navigate('/admin/dashboard/student');
   };
 
@@ -53,26 +55,28 @@ export default function StudentEdit() {
   }
 
   return (
-    <SubjectProvider>
-      <div className="p-6">
-        {/* Back button and page title */}
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/admin/dashboard/student')}
-            className="mr-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
-          </Button>
-          <h2 className="text-2xl font-bold">Edit Student</h2>
+    <GroupProvider>
+      <SubjectProvider>
+        <div className="p-6">
+          {/* Back button and page title */}
+          <div className="flex items-center mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/admin/dashboard/student')}
+              className="mr-4"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back
+            </Button>
+            <h2 className="text-2xl font-bold">Edit Student</h2>
+          </div>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <StudentForm initialData={student} onSuccess={handleSuccess} />
+            </CardContent>
+          </Card>
         </div>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <StudentForm initialData={student} onSuccess={handleSuccess} />
-          </CardContent>
-        </Card>
-      </div>
-    </SubjectProvider>
+      </SubjectProvider>
+    </GroupProvider>
   );
 }

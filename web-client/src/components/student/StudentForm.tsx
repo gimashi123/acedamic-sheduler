@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { IStudentRequest } from "@/data-types/student.tp";
 import { useSubject } from "@/context/subject/subject.context";
-import axios from "axios";
+import { useGroup } from "@/context/group/group.context";
+import api from "@/config/axios.config";
 
 interface StudentFormProps {
   initialData?: any;
@@ -40,28 +41,12 @@ export default function StudentForm({ initialData, onSuccess }: StudentFormProps
     address: ""
   });
   
-  const [groups, setGroups] = useState<any[]>([]);
   const { subjects } = useSubject();
+  const { groups, loading: groupsLoading } = useGroup();
   
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Fetch student groups
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/group');
-        if (response.data) {
-          setGroups(response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching groups:', error);
-      }
-    };
-    
-    fetchGroups();
-  }, []);
 
   // Set form data if initialData is provided (for edit mode)
   useEffect(() => {
@@ -291,14 +276,24 @@ export default function StudentForm({ initialData, onSuccess }: StudentFormProps
                 onValueChange={(value) => setFormData(prev => ({...prev, groupNumber: value}))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select student group" />
+                  <SelectValue placeholder={groupsLoading ? "Loading groups..." : "Select student group"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {groups.map((group) => (
-                    <SelectItem key={group._id} value={group._id}>
-                      {group.name}
+                  {groupsLoading ? (
+                    <SelectItem value="loading" disabled>
+                      Loading groups...
                     </SelectItem>
-                  ))}
+                  ) : groups && groups.length > 0 ? (
+                    groups.map((group) => (
+                      <SelectItem key={group._id} value={group._id}>
+                        {group.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-groups" disabled>
+                      No groups available. Please create a group first.
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               {errors.groupNumber && <p className="text-red-500 text-sm">{errors.groupNumber}</p>}
