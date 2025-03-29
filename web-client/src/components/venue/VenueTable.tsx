@@ -22,7 +22,7 @@ import {
 
 interface Venue {
   _id?: string;
-  faculty: string;
+  department: string;
   building: string;
   hallName: string;
   type: "lecture" | "tutorial" | "lab";
@@ -41,6 +41,7 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
   const [editedVenue, setEditedVenue] = useState<Venue | null>(null);
   const [showUpdateConfirmation, setShowUpdateConfirmation] = useState(false);
+  const [capacityError, setCapacityError] = useState<string | null>(null);
 
   // delete handler
   const handleDeleteClick = (venue: Venue) => {
@@ -59,11 +60,23 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
   const handleEditClick = (venue: Venue) => {
     setEditingVenue(venue);
     setEditedVenue({ ...venue });
+    setCapacityError(null); // Reset capacity error when starting edit
   };
 
   // field change handler
   const handleFieldChange = (field: keyof Venue, value: string | number) => {
     if (editedVenue) {
+      // Validate capacity when it's changed
+      if (field === 'capacity') {
+        const capacity = Number(value);
+        if (capacity > 500) {
+          setCapacityError('Capacity cannot exceed 500 students');
+        } else if (capacity < 1) {
+          setCapacityError('Capacity must be at least 1 student');
+        } else {
+          setCapacityError(null);
+        }
+      }
       setEditedVenue({
         ...editedVenue,
         [field]: value
@@ -73,11 +86,17 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
 
   // update confirmation handler
   const handleConfirmUpdate = () => {
+    // Check for capacity error before proceeding with update
+    if (capacityError) {
+      return;
+    }
+    
     if (editedVenue && editedVenue._id) {
       onUpdate(editedVenue._id, editedVenue);
       setEditingVenue(null);
       setEditedVenue(null);
       setShowUpdateConfirmation(false);
+      setCapacityError(null);
     }
   };
 
@@ -85,6 +104,7 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
   const handleCancelEdit = () => {
     setEditingVenue(null);
     setEditedVenue(null);
+    setCapacityError(null);
   };
 
   return (
@@ -92,7 +112,7 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
       <Table className="w-full border">
         <TableHeader>
           <TableRow>
-            <TableHead>Faculty</TableHead>
+            <TableHead>Department</TableHead>
             <TableHead>Building</TableHead>
             <TableHead>Hall</TableHead>
             <TableHead>Type</TableHead>
@@ -106,11 +126,11 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
               <TableCell>
                 {editingVenue?._id === venue._id ? (
                   <Input
-                    value={editedVenue?.faculty || ""}
-                    onChange={(e) => handleFieldChange("faculty", e.target.value)}
+                    value={editedVenue?.department || ""}
+                    onChange={(e) => handleFieldChange("department", e.target.value)}
                   />
                 ) : (
-                  venue.faculty
+                  venue.department
                 )}
               </TableCell>
               <TableCell>
@@ -154,11 +174,15 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
               </TableCell>
               <TableCell>
                 {editingVenue?._id === venue._id ? (
-                  <Input
-                    type="number"
-                    value={editedVenue?.capacity || ""}
-                    onChange={(e) => handleFieldChange("capacity", Number(e.target.value))}
-                  />
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      type="number"
+                      value={editedVenue?.capacity || ""}
+                      onChange={(e) => handleFieldChange("capacity", Number(e.target.value))}
+                      className={capacityError ? "border-red-500" : ""}
+                    />
+                    {capacityError && <p className="text-red-500 text-sm">{capacityError}</p>}
+                  </div>
                 ) : (
                   venue.capacity
                 )}
@@ -166,7 +190,11 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
               <TableCell className="flex flex-row justify-center items-center gap-3">
                 {editingVenue?._id === venue._id ? (
                   <>
-                    <Button variant="outline" onClick={() => setShowUpdateConfirmation(true)}>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowUpdateConfirmation(true)}
+                      disabled={!!capacityError}
+                    >
                       Save
                     </Button>
                     <Button variant="destructive" onClick={handleCancelEdit}>
@@ -219,7 +247,7 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
               <div className="mt-2 space-y-1">
                 <p><strong>Hall Name:</strong> {editedVenue?.hallName}</p>
                 <p><strong>Type:</strong> {editedVenue?.type}</p>
-                <p><strong>Faculty:</strong> {editedVenue?.faculty}</p>
+                <p><strong>Department:</strong> {editedVenue?.department}</p>
                 <p><strong>Building:</strong> {editedVenue?.building}</p>
                 <p><strong>Capacity:</strong> {editedVenue?.capacity}</p>
               </div>
@@ -227,7 +255,12 @@ export default function VenueTable({ venues, onDelete, onUpdate }: VenueTablePro
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>No, Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmUpdate}>Yes, Update</AlertDialogAction>
+            <AlertDialogAction 
+              onClick={handleConfirmUpdate} 
+              disabled={!!capacityError}
+            >
+              Yes, Update
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

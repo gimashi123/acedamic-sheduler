@@ -1,5 +1,5 @@
-import {BrowserRouter, Route, Routes} from "react-router-dom";
-import HomePage from "../pages/Home.tsx";
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import HomePage from '../pages/Home.tsx';
 
 import AdminDashboardPage from "@/pages/dashboard/AdminDashboard.tsx";
 import {TimeTablePage} from "@/pages/timetable/TimeTablePage.tsx";
@@ -22,17 +22,23 @@ import { AuthProvider } from '@/context/auth/auth-context.tsx';
 import { SubjectDashboard } from '@/pages/subject/SubjectDashboard..tsx';
 import { SubjectAdd } from '@/pages/subject/SubjectAdd.tsx';
 import { SubjectProvider } from '@/context/subject/subject.context.tsx';
+import {TimetableProvider} from "@/context/timetable/timetable-context.tsx";
+
+
 
 const AppRoutingContent = ({ children }: { children: ReactNode }) => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <SubjectProvider>{children}</SubjectProvider>
-      </AuthProvider>
+        <TimetableProvider>
+            <SubjectProvider>
+          {children}
+                </SubjectProvider>
+        </TimetableProvider>
+        </AuthProvider>
     </BrowserRouter>
   );
 };
-
 
 export const AppRouting = () => {
   return (

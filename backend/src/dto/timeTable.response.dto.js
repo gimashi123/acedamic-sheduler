@@ -3,7 +3,7 @@ export const timeTableResponseDto = (timetable) => {
         id: timetable._id,
         title:timetable.title,
         description: timetable.description,
-        group: timetable.group.name,
+        group: timetable.groupName,
         isPublished: timetable.isPublished,
 
     };

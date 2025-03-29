@@ -35,7 +35,7 @@ export default function GroupManagement() {
       // refresh group after adding / update
       await fetchGroups();
       setEditingGroup(null);
-      toast.success(editingGroup ? "Group Updated Successfull!" : "Group added successfully!");
+      toast.success(editingGroup ? "Group Updated Successfully!" : "Group added successfully!");
 
     } catch (error) {
       console.error("Error handling group: ", error);
@@ -60,6 +60,17 @@ export default function GroupManagement() {
 
   const handleUpdate = async (id: string, updatedGroup: any) => {
     try {
+      // Check for duplicate names excluding the current group
+      const duplicateGroups = groups.find(
+        group => group.name.toLowerCase() === updatedGroup.name.toLowerCase() && 
+                group._id !== id
+      );
+      
+      if (duplicateGroups) {
+        toast.error("A group with this name already exists! Please use a different name.");
+        return;
+      }
+
       await updateGroup(id, updatedGroup);
       await fetchGroups();
       toast.success("Group updated successfully!");
@@ -75,7 +86,11 @@ export default function GroupManagement() {
       <div className="h-screen flex justify-center items-center">
         <CardContent>
           <h2 className="text-xl font-bold mb-5">Add Groups</h2>
-          <GroupForm onSubmit={handleAddOrUpdate} initialData={editingGroup} />
+          <GroupForm 
+            onSubmit={handleAddOrUpdate} 
+            initialData={editingGroup} 
+            existingGroups={groups}
+          />
         </CardContent>
       </div>
         
