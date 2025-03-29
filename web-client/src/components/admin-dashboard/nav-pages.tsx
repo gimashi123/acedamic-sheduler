@@ -17,7 +17,7 @@ const pages = [
     icon: CalendarRange,
   },
   {
-    name: 'User Management',
+    name: 'Group Management',
     url: '/admin/dashboard/user',
     icon: PieChart,
   },
