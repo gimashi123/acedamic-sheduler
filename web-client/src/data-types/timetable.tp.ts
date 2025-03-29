@@ -1,5 +1,5 @@
 export interface ITimetable {
-    _id: string;
+    id: string;
     title: string;
     description: string;
     group: string;

@@ -19,8 +19,8 @@ import {NavPages} from "@/components/admin-dashboard/nav-pages.tsx";
 // This is sample data.
 const data = {
     user: {
-        name: "shadcn",
-        email: "m@example.com",
+        name: "",
+        email: "",
         avatar: "/avatars/shadcn.jpg",
     },
 

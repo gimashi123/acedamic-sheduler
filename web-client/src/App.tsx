@@ -1,14 +1,17 @@
+import { AppRouting } from '@/utils/AppRouting.tsx';
+import {Toaster} from "react-hot-toast"
 
-import { AppRouting } from "./utils/AppRouting";
 
-
-
-const App = () => {
+function App() {
   return (
     <>
-     <AppRouting/>
+        <Toaster
+            position="top-center"
+            reverseOrder={false}
+        />
+      <AppRouting />
     </>
   );
-};
+}
 
 export default App;

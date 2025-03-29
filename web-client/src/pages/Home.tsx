@@ -19,16 +19,13 @@ export default function Home() {
                 <div className="relative z-10 container px-4 md:px-6">
                     <div className="max-w-4xl mx-auto text-center space-y-6">
                         <h1 className="text-5xl md:text-6xl font-bold text-white drop-shadow-lg">
-                            Build Amazing Interfaces with
-                            <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                {" "}ShadCN
-              </span>
+
                         </h1>
                         <p className="text-xl md:text-2xl text-gray-200 font-medium max-w-2xl mx-auto">
-                            Accelerate your development with beautifully crafted components and modern design patterns.
+
                         </p>
                         <button className="bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all text-white px-8 py-3 rounded-lg font-semibold text-lg">
-                            Get Started
+
                         </button>
                     </div>
                 </div>
