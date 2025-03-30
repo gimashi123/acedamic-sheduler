@@ -19,6 +19,7 @@ import venueRoutes from './routes/venue.route.js';
 import settingsRoutes from './routes/settings.routes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import subjectRoutes from './routes/subject.route.js';
+import subjectAssignmentRoutes from './routes/subject_assignment.route.js';
 import { authenticateToken } from './middleware/jwt.middleware.js';
 
 const app = express();
@@ -75,6 +76,7 @@ app.use('/api/venue', authenticateToken, venueRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/profile', authenticateToken, profileRoutes);
 app.use('/api/subject', subjectRoutes);
+app.use('/api/subject-assignments', subjectAssignmentRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

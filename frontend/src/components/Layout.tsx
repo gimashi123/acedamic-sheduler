@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Building2, UserPlus, Settings, User, BookOpen, MessageSquare, ClipboardList, BookText } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Building2, 
+  Users, 
+  BookText, 
+  User, 
+  UserPlus, 
+  Settings, 
+  Calendar, 
+  ClipboardList, 
+  BookOpen, 
+  MessageSquare, 
+  Book,
+  LogOut 
+} from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import ChangePasswordModal from './ChangePasswordModal';
 import { useDispatch, useSelector } from 'react-redux';
@@ -71,6 +85,9 @@ const Layout: React.FC = () => {
             <Link to="/subjects" className="text-gray-700 hover:text-gray-900">
               <BookText className="h-5 w-5" />
             </Link>
+            <Link to="/subject-assignments" className="text-gray-700 hover:text-gray-900">
+              <Book className="h-5 w-5" />
+            </Link>
             <Link to="/users" className="text-gray-700 hover:text-gray-900">
               <User className="h-5 w-5" />
             </Link>
@@ -93,6 +110,9 @@ const Layout: React.FC = () => {
             </Link>
             <Link to="/attendance" className="text-gray-700 hover:text-gray-900">
               <ClipboardList className="h-5 w-5" />
+            </Link>
+            <Link to="/subject-assignments" className="text-gray-700 hover:text-gray-900">
+              <Book className="h-5 w-5" />
             </Link>
             <Link to="/materials" className="text-gray-700 hover:text-gray-900">
               <BookOpen className="h-5 w-5" />
