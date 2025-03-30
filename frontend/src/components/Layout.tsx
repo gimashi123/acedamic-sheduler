@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Building2, UserPlus, Settings, User, BookOpen, MessageSquare, ClipboardList } from 'lucide-react';
+import { Calendar, Users, Building2, UserPlus, Settings, User, BookOpen, MessageSquare, ClipboardList, BookText } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import ChangePasswordModal from './ChangePasswordModal';
 import { useDispatch, useSelector } from 'react-redux';
@@ -67,6 +67,9 @@ const Layout: React.FC = () => {
             </Link>
             <Link to="/groups" className="text-gray-700 hover:text-gray-900">
               <Users className="h-5 w-5" />
+            </Link>
+            <Link to="/subjects" className="text-gray-700 hover:text-gray-900">
+              <BookText className="h-5 w-5" />
             </Link>
             <Link to="/users" className="text-gray-700 hover:text-gray-900">
               <User className="h-5 w-5" />
