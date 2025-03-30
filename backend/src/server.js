@@ -6,6 +6,7 @@ import { initializeAdmin } from './controller/auth.controller.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import mongoose from 'mongoose';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -38,6 +39,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 console.log('Serving uploads from:', path.join(__dirname, '../uploads'));
 
 const PORT = process.env.BACKEND_PORT || 5001;
+const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/academic-scheduler';
 
 // Connect to database before starting server
 try {
@@ -46,6 +48,10 @@ try {
   
   // Initialize admin account
   await initializeAdmin();
+  
+  // Connect to MongoDB
+  await mongoose.connect(DB_URI);
+  console.log('Connected to MongoDB successfully');
   
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
@@ -64,7 +70,7 @@ app.get('/hello', (_, res) => {
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use('/api/request', requestRoute);
-app.use('/api/group', authenticateToken, groupRoutes);
+app.use('/api/groups', authenticateToken, groupRoutes);
 app.use('/api/venue', authenticateToken, venueRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/profile', authenticateToken, profileRoutes);
@@ -78,4 +84,11 @@ app.use((err, req, res, next) => {
     message: 'Internal Server Error',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Promise Rejection:', err);
+  // Close server & exit process
+  process.exit(1);
 });

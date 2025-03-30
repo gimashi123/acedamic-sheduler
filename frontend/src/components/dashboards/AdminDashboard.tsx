@@ -93,6 +93,12 @@ const AdminDashboard: React.FC = () => {
             <p className="text-gray-600">Manage academic subjects and modules</p>
           </Link>
 
+          <Link to="/groups" className="bg-teal-50 p-6 rounded-lg hover:bg-teal-100 transition-colors">
+            <Users className="h-8 w-8 text-teal-600 mb-2" />
+            <h3 className="text-lg font-semibold text-gray-900">Student Groups</h3>
+            <p className="text-gray-600">Manage student groups and assignments</p>
+          </Link>
+
           <Link to="/schedule" className="bg-blue-50 p-6 rounded-lg hover:bg-blue-100 transition-colors">
             <Calendar className="h-8 w-8 text-blue-600 mb-2" />
             <h3 className="text-lg font-semibold text-gray-900">Schedule Management</h3>
