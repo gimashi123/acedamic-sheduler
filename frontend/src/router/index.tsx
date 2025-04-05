@@ -15,8 +15,6 @@ import Groups from '../features/groups/Groups';
 import Requests from '../features/requests/Requests';
 import Settings from '../features/settings/Settings';
 import Users from '../features/users/Users';
-import Subjects from '../features/subjects/Subjects';
-import SubjectAssignments from '../features/subjects/SubjectAssignments';
 
 // Loading component for suspense fallback
 const LoadingSpinner = () => (
@@ -57,8 +55,6 @@ export const AppRouter: React.FC = () => {
             <Route path="requests" element={<Requests />} />
             <Route path="settings" element={<Settings />} />
             <Route path="users" element={<Users />} />
-            <Route path="subjects" element={<Subjects />} />
-            <Route path="subject-assignments" element={<SubjectAssignments />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="change-password" element={<ChangePassword />} />
             <Route path="register-request" element={<RegisterRequestForm />} />
