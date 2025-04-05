@@ -1,8 +1,14 @@
 /**
  * Get the authorization header with JWT token
  */
+
+// Get the authentication token from local storage
+export const getAuthToken = (): string | null => {
+  return localStorage.getItem('accessToken');
+};
+
 export const getAuthHeader = () => {
-  const token = localStorage.getItem('accessToken');
+  const token = getAuthToken();
   if (token) {
     return {
       Authorization: `Bearer ${token}`,

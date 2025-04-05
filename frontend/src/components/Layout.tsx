@@ -13,7 +13,8 @@ import {
   BookOpen, 
   MessageSquare, 
   Book,
-  LogOut 
+  LogOut,
+  Table
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -84,6 +85,9 @@ const Layout: React.FC = () => {
             </Link>
             <Link to="/subjects" className="text-gray-700 hover:text-gray-900">
               <BookText className="h-5 w-5" />
+            </Link>
+            <Link to="/timetables" className="text-gray-700 hover:text-gray-900">
+              <Table className="h-5 w-5" />
             </Link>
             <Link to="/subject-assignments" className="text-gray-700 hover:text-gray-900">
               <Book className="h-5 w-5" />
