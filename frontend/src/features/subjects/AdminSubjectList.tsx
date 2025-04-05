@@ -1,0 +1,139 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
+  Typography, Box, Chip, Alert, CircularProgress, TextField, InputAdornment
+} from '@mui/material';
+import { Search } from '@mui/icons-material';
+import { Subject, getAllSubjects } from './subjectService';
+
+interface LecturerType {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+const AdminSubjectList: React.FC = () => {
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [filteredSubjects, setFilteredSubjects] = useState<Subject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const loadSubjects = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getAllSubjects();
+      setSubjects(data);
+      setFilteredSubjects(data);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to load subjects');
+      console.error('Error loading subjects:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSubjects();
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredSubjects(subjects);
+    } else {
+      const query = searchQuery.toLowerCase();
+      setFilteredSubjects(
+        subjects.filter(
+          (subject) =>
+            subject.name.toLowerCase().includes(query) ||
+            subject.code.toLowerCase().includes(query) ||
+            (subject.department && subject.department.toLowerCase().includes(query))
+        )
+      );
+    }
+  }, [searchQuery, subjects]);
+
+  if (loading && subjects.length === 0) {
+    return (
+      <Box display="flex" justifyContent="center" my={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Box mb={3}>
+      <Typography variant="h6" gutterBottom>
+        All Subjects
+      </Typography>
+      
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      
+      <Box mb={3}>
+        <TextField
+          fullWidth
+          placeholder="Search by name, code, or department"
+          variant="outlined"
+          size="small"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+      
+      {filteredSubjects.length === 0 ? (
+        <Alert severity="info">No subjects found.</Alert>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Code</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Lecturer</TableCell>
+                <TableCell>Credits</TableCell>
+                <TableCell>Department</TableCell>
+                <TableCell>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredSubjects.map((subject) => {
+                const lecturerData = subject.lecturer as unknown as LecturerType;
+                const lecturerInfo = lecturerData && typeof lecturerData === 'object' 
+                  ? `${lecturerData.firstName} ${lecturerData.lastName}`
+                  : 'Unknown';
+                
+                return (
+                  <TableRow key={subject._id}>
+                    <TableCell>{subject.code}</TableCell>
+                    <TableCell>{subject.name}</TableCell>
+                    <TableCell>{lecturerInfo}</TableCell>
+                    <TableCell>{subject.credits}</TableCell>
+                    <TableCell>{subject.department || '-'}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={subject.status} 
+                        color={subject.status === 'active' ? 'success' : 'default'} 
+                        size="small" 
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </Box>
+  );
+};
+
+export default AdminSubjectList; 

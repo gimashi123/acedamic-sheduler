@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, Users, ClipboardList, MessageSquare, BookOpen } from 'lucide-react';
+import { Calendar, Users, ClipboardList, MessageSquare, BookOpen, BookOpenCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { Typography, Box } from '@mui/material';
@@ -61,6 +61,12 @@ const LecturerDashboard: React.FC = () => {
             <Users className="h-8 w-8 text-green-600 mb-2" />
             <h3 className="text-lg font-semibold text-gray-900">My Classes</h3>
             <p className="text-gray-600">Manage your classes and students</p>
+          </Link>
+
+          <Link to="/subjects" className="bg-amber-50 p-6 rounded-lg hover:bg-amber-100 transition-colors">
+            <BookOpenCheck className="h-8 w-8 text-amber-600 mb-2" />
+            <h3 className="text-lg font-semibold text-gray-900">My Subjects</h3>
+            <p className="text-gray-600">Add and manage your teaching subjects</p>
           </Link>
 
           <Link to="/attendance" className="bg-blue-50 p-6 rounded-lg hover:bg-blue-100 transition-colors">

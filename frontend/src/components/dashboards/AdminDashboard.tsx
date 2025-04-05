@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Building2, Calendar, Settings, UserPlus, FileText, BarChart } from 'lucide-react';
+import { Users, Building2, Calendar, Settings, UserPlus, FileText, BarChart, BookOpenCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { requestService } from '../../features/requests/requestService';
 import { UserRequest } from '../../types/request';
@@ -92,6 +92,12 @@ const AdminDashboard: React.FC = () => {
             <Users className="h-8 w-8 text-teal-600 mb-2" />
             <h3 className="text-lg font-semibold text-gray-900">Student Groups</h3>
             <p className="text-gray-600">Manage student groups and assignments</p>
+          </Link>
+
+          <Link to="/admin/subjects" className="bg-amber-50 p-6 rounded-lg hover:bg-amber-100 transition-colors">
+            <BookOpenCheck className="h-8 w-8 text-amber-600 mb-2" />
+            <h3 className="text-lg font-semibold text-gray-900">Subjects</h3>
+            <p className="text-gray-600">View all subjects and lecturers</p>
           </Link>
 
           <Link to="/schedule" className="bg-blue-50 p-6 rounded-lg hover:bg-blue-100 transition-colors">
