@@ -27,11 +27,11 @@ export interface Timetable {
 // Service for timetable management
 const TimetableService = {
   // Generate timetable for a single group
-  generateTimetable: async (groupId: string, month: number, year: number) => {
+  generateTimetable: async (groupId: string, month: number, year: number, forceRegenerate: boolean = false) => {
     try {
       const response = await axios.post(
         `${API_URL}/timetables/generate`,
-        { groupId, month, year },
+        { groupId, month, year, forceRegenerate },
         {
           headers: {
             Authorization: `Bearer ${getAuthToken()}`,
@@ -46,11 +46,11 @@ const TimetableService = {
   },
 
   // Generate timetables for all groups
-  generateAllTimetables: async (month: number, year: number) => {
+  generateAllTimetables: async (month: number, year: number, forceRegenerate: boolean = false) => {
     try {
       const response = await axios.post(
         `${API_URL}/timetables/generate-all`,
-        { month, year },
+        { month, year, forceRegenerate },
         {
           headers: {
             Authorization: `Bearer ${getAuthToken()}`,

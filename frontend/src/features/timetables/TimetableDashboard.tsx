@@ -7,10 +7,12 @@ const TimetableDashboard: React.FC = () => {
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [forceRegenerate, setForceRegenerate] = useState<boolean>(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | '' }>({
     text: '',
     type: '',
   });
+  const [generationErrors, setGenerationErrors] = useState<{groupId: string, name: string, reason: string}[]>([]);
   const [timetables, setTimetables] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
@@ -41,8 +43,13 @@ const TimetableDashboard: React.FC = () => {
     try {
       setIsGenerating(true);
       setMessage({ text: '', type: '' });
+      setGenerationErrors([]);
       
-      const response = await TimetableService.generateAllTimetables(month, year);
+      const response = await TimetableService.generateAllTimetables(month, year, forceRegenerate);
+      
+      if (response.data.failed && response.data.failed.length > 0) {
+        setGenerationErrors(response.data.failed);
+      }
       
       setMessage({
         text: `Timetables generated successfully. Success: ${response.data.success.length}, Failed: ${response.data.failed.length}`,
@@ -158,6 +165,21 @@ const TimetableDashboard: React.FC = () => {
             </div>
           </div>
           
+          <div className="mb-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="forceRegenerate"
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                checked={forceRegenerate}
+                onChange={(e) => setForceRegenerate(e.target.checked)}
+              />
+              <label htmlFor="forceRegenerate" className="ml-2 text-sm text-gray-700">
+                Replace existing timetables (this will delete and regenerate if timetables already exist)
+              </label>
+            </div>
+          </div>
+          
           {message.text && (
             <div
               className={`p-3 rounded ${
@@ -165,6 +187,25 @@ const TimetableDashboard: React.FC = () => {
               }`}
             >
               {message.text}
+            </div>
+          )}
+          
+          {generationErrors.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-md font-semibold text-red-600 mb-2">Failed Timetable Generation Details:</h3>
+              <div className="bg-red-50 p-3 rounded border border-red-200">
+                <ul className="text-sm text-red-700 list-disc pl-5">
+                  {generationErrors.map((error, index) => (
+                    <li key={index}>
+                      <strong>{error.name}:</strong> {error.reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-2 text-sm text-gray-600">
+                These errors may occur due to scheduling conflicts. Try again with "Replace existing timetables" 
+                option checked to reassign all schedules.
+              </div>
             </div>
           )}
         </div>

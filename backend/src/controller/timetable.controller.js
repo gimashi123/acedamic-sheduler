@@ -5,33 +5,59 @@ import Venue from '../models/venue.model.js';
 import { HTTP_STATUS, errorResponse, successResponse } from '../config/http.config.js';
 
 // Helper function to check venue availability
-const isVenueAvailable = (venue, day, startTime, endTime, existingTimeSlots) => {
-  // Check if venue is already booked in this time slot
-  return !existingTimeSlots.some(slot => 
+const isVenueAvailable = (venue, day, startTime, endTime, existingTimeSlots, globalBookings = []) => {
+  // Check if venue is already booked in this time slot in the current group's timetable
+  const bookedInGroup = existingTimeSlots.some(slot => 
     slot.day === day && 
     slot.venue.toString() === venue.toString() && 
     ((startTime >= slot.startTime && startTime < slot.endTime) || 
      (endTime > slot.startTime && endTime <= slot.endTime) ||
      (startTime <= slot.startTime && endTime >= slot.endTime))
   );
+  
+  if (bookedInGroup) return false;
+  
+  // Check if venue is already booked in another group's timetable
+  const bookedGlobally = globalBookings.some(booking => 
+    booking.day === day && 
+    booking.venue.toString() === venue.toString() && 
+    ((startTime >= booking.startTime && startTime < booking.endTime) || 
+     (endTime > booking.startTime && endTime <= booking.endTime) ||
+     (startTime <= booking.startTime && endTime >= booking.endTime))
+  );
+  
+  return !bookedGlobally;
 };
 
 // Helper function to check lecturer availability
-const isLecturerAvailable = (lecturer, day, startTime, endTime, existingTimeSlots) => {
-  // Check if lecturer is already assigned in this time slot
-  return !existingTimeSlots.some(slot => 
+const isLecturerAvailable = (lecturer, day, startTime, endTime, existingTimeSlots, globalBookings = []) => {
+  // Check if lecturer is already assigned in this time slot in the current group's timetable
+  const assignedInGroup = existingTimeSlots.some(slot => 
     slot.day === day && 
     slot.lecturer.toString() === lecturer.toString() && 
     ((startTime >= slot.startTime && startTime < slot.endTime) || 
      (endTime > slot.startTime && endTime <= slot.endTime) ||
      (startTime <= slot.startTime && endTime >= slot.endTime))
   );
+  
+  if (assignedInGroup) return false;
+  
+  // Check if lecturer is already assigned in another group's timetable
+  const assignedGlobally = globalBookings.some(booking => 
+    booking.day === day && 
+    booking.lecturer.toString() === lecturer.toString() && 
+    ((startTime >= booking.startTime && startTime < booking.endTime) || 
+     (endTime > booking.startTime && endTime <= booking.endTime) ||
+     (startTime <= booking.startTime && endTime >= booking.endTime))
+  );
+  
+  return !assignedGlobally;
 };
 
 // Generate timetable for a specific group
 export const generateTimetable = async (req, res) => {
   try {
-    const { groupId, month, year } = req.body;
+    const { groupId, month, year, forceRegenerate = false, globalBookings = [] } = req.body;
     
     if (!groupId || !month || !year) {
       return errorResponse(
@@ -62,20 +88,27 @@ export const generateTimetable = async (req, res) => {
     
     // Check if timetable already exists for this group/month/year
     let timetable = await Timetable.findOne({ group: groupId, month, year });
-    if (timetable) {
+    
+    // If timetable exists and forceRegenerate is true, delete the existing timetable
+    if (timetable && forceRegenerate) {
+      await Timetable.deleteOne({ _id: timetable._id });
+      timetable = null;
+      console.log(`Deleted existing timetable for group ${group.name} for ${month}/${year}`);
+    } else if (timetable) {
       return errorResponse(
         res, 
-        'Timetable already exists for this group in the specified month and year', 
+        'Timetable already exists for this group in the specified month and year. Use forceRegenerate=true to replace it.', 
         HTTP_STATUS.CONFLICT
       );
     }
     
     // Get subjects that should be assigned to this group
-    // This logic can be adjusted based on how subjects are assigned to groups
-    // For now, we're getting subjects based on the department
+    // Include Mathematics subjects for all departments as they are common subjects
     const subjects = await Subject.find({ 
-      department: group.department,
-      status: 'active'
+      $or: [
+        { department: group.department, status: 'active' },
+        { department: 'Mathematics', status: 'active' }  // Include Math subjects for all departments
+      ]
     }).populate('lecturer');
     
     if (subjects.length === 0) {
@@ -86,10 +119,15 @@ export const generateTimetable = async (req, res) => {
       );
     }
     
+    console.log(`Found ${subjects.length} subjects for group ${group.name}`);
+    
     // Get available venues
+    // Include venues from both the group's department AND Mathematics department if available
     const venues = await Venue.find({
-      department: group.department,
-      capacity: { $gte: group.students.length }
+      $or: [
+        { department: group.department, capacity: { $gte: group.students.length } },
+        { department: 'Mathematics', capacity: { $gte: group.students.length } }
+      ]
     });
     
     if (venues.length === 0) {
@@ -100,8 +138,10 @@ export const generateTimetable = async (req, res) => {
       );
     }
     
+    console.log(`Found ${venues.length} suitable venues for group ${group.name}`);
+    
     // Generate time slots
-    // Basic algorithm - can be enhanced for more sophisticated scheduling
+    // Improved algorithm for better scheduling
     const timeSlots = [];
     const existingSlots = [];
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -114,20 +154,53 @@ export const generateTimetable = async (req, res) => {
       { start: '15:00', end: '17:00' }
     ];
     
-    // For each subject, assign a time slot
+    // For each subject, assign a time slot with improved distribution
     for (const subject of subjects) {
       let slotAssigned = false;
+      console.log(`Trying to assign subject: ${subject.name} (${subject.department})`);
       
-      for (const day of days) {
+      // Try different days and times for better distribution
+      // Start from a random position in the day/time grid to avoid patterns
+      let dayIndex = Math.floor(Math.random() * days.length);
+      let timeIndex = Math.floor(Math.random() * availableTimeSlots.length);
+      
+      // Try to find an available slot
+      // We need to try all possible combinations of days and time slots
+      for (let attemptCount = 0; attemptCount < days.length * availableTimeSlots.length; attemptCount++) {
         if (slotAssigned) break;
         
-        for (const timeSlot of availableTimeSlots) {
-          if (slotAssigned) break;
-          
-          // Find a suitable venue
-          for (const venue of venues) {
-            if (isVenueAvailable(venue._id, day, timeSlot.start, timeSlot.end, existingSlots) &&
-                isLecturerAvailable(subject.lecturer._id, day, timeSlot.start, timeSlot.end, existingSlots)) {
+        // Get next day and time slot in sequence
+        const day = days[dayIndex];
+        const timeSlot = availableTimeSlots[timeIndex];
+        
+        // Move to next time slot for next attempt
+        timeIndex = (timeIndex + 1) % availableTimeSlots.length;
+        if (timeIndex === 0) {
+          dayIndex = (dayIndex + 1) % days.length;
+        }
+        
+        // Check if this day/time combination already has a subject for this group
+        const groupSlotConflict = existingSlots.some(slot => 
+          slot.day === day && 
+          timeSlot.start === slot.startTime && 
+          timeSlot.end === slot.endTime
+        );
+        
+        if (groupSlotConflict) {
+          console.log(`Slot conflict found for ${day} at ${timeSlot.start}-${timeSlot.end}`);
+          continue; // Skip this time slot if there's already a subject assigned
+        }
+        
+        // Find a suitable venue
+        for (const venue of venues) {
+          // For Mathematics subjects, try to find a venue in the Mathematics department first
+          // but fall back to the group's department if necessary
+          if ((subject.department === 'Mathematics' && 
+               (venue.department === 'Mathematics' || venue.department === group.department)) ||
+              (subject.department === group.department && venue.department === group.department)) {
+            
+            if (isVenueAvailable(venue._id, day, timeSlot.start, timeSlot.end, existingSlots, globalBookings) &&
+                isLecturerAvailable(subject.lecturer._id, day, timeSlot.start, timeSlot.end, existingSlots, globalBookings)) {
               
               const newSlot = {
                 day,
@@ -141,6 +214,7 @@ export const generateTimetable = async (req, res) => {
               timeSlots.push(newSlot);
               existingSlots.push(newSlot);
               slotAssigned = true;
+              console.log(`Assigned ${subject.name} to ${group.name} on ${day} at ${timeSlot.start}-${timeSlot.end}`);
               break;
             }
           }
@@ -152,6 +226,14 @@ export const generateTimetable = async (req, res) => {
       }
     }
     
+    if (timeSlots.length === 0) {
+      return errorResponse(
+        res, 
+        'Could not generate any time slots for this group', 
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+    
     // Create a new timetable
     timetable = new Timetable({
       group: groupId,
@@ -161,6 +243,7 @@ export const generateTimetable = async (req, res) => {
     });
     
     await timetable.save();
+    console.log(`Timetable generated successfully for group ${group.name} with ${timeSlots.length} slots`);
     
     return successResponse(
       res,
@@ -183,7 +266,7 @@ export const generateTimetable = async (req, res) => {
 // Generate timetables for all groups for a specific month and year
 export const generateAllTimetables = async (req, res) => {
   try {
-    const { month, year } = req.body;
+    const { month, year, forceRegenerate = false } = req.body;
     
     if (!month || !year) {
       return errorResponse(
@@ -217,8 +300,38 @@ export const generateAllTimetables = async (req, res) => {
       failed: []
     };
     
-    // Generate timetable for each group
+    // If forceRegenerate is true, delete all existing timetables for this month/year
+    if (forceRegenerate) {
+      const deleteResult = await Timetable.deleteMany({ month, year });
+      console.log(`Deleted ${deleteResult.deletedCount} existing timetables for ${month}/${year}`);
+    }
+    
+    // Sort groups by number of subjects in their department to prioritize more complex groups first
+    const groupsWithInfo = [];
     for (const group of groups) {
+      // Count subjects for this group's department
+      const subjectCount = await Subject.countDocuments({ 
+        $or: [
+          { department: group.department, status: 'active' },
+          { department: 'Mathematics', status: 'active' }
+        ]
+      });
+      
+      groupsWithInfo.push({
+        group,
+        subjectCount
+      });
+    }
+    
+    // Sort groups by subject count in descending order
+    groupsWithInfo.sort((a, b) => b.subjectCount - a.subjectCount);
+    
+    // Centralized tracking of venue and lecturer bookings across all groups
+    // This ensures no venue or lecturer is double-booked across different groups
+    const globalBookings = [];
+    
+    // Generate timetable for each group, starting with the most complex ones
+    for (const { group } of groupsWithInfo) {
       try {
         // Check if timetable already exists
         const existingTimetable = await Timetable.findOne({ 
@@ -227,44 +340,70 @@ export const generateAllTimetables = async (req, res) => {
           year 
         });
         
-        if (existingTimetable) {
+        if (existingTimetable && !forceRegenerate) {
           results.failed.push({
-            group: group.name,
+            groupId: group._id,
+            name: group.name,
             reason: 'Timetable already exists'
           });
           continue;
         }
         
-        // Mock request object to reuse the generateTimetable function
+        // Special request to use global venue and lecturer booking tracking
         const mockReq = {
-          body: { groupId: group._id, month, year }
+          body: {
+            groupId: group._id,
+            month,
+            year,
+            forceRegenerate,
+            globalBookings  // Pass the global bookings to coordinate across groups
+          }
         };
         
         // Mock response object
         const mockRes = {
-          status: (code) => ({
-            json: (data) => {
-              if (code >= 200 && code < 300) {
-                results.success.push({
-                  group: group.name,
-                  id: data.data._id
-                });
-              } else {
-                results.failed.push({
-                  group: group.name,
-                  reason: data.message
-                });
-              }
-              return mockRes;
-            }
-          })
+          status: function(code) {
+            this.statusCode = code;
+            return this;
+          },
+          json: function(data) {
+            this.data = data;
+            return this;
+          }
         };
         
         await generateTimetable(mockReq, mockRes);
         
+        // Check if the operation was successful
+        if (mockRes.statusCode === HTTP_STATUS.CREATED) {
+          // Update global bookings with the new timetable's slots
+          if (mockRes.data?.data?.timeSlots) {
+            mockRes.data.data.timeSlots.forEach(slot => {
+              globalBookings.push({
+                day: slot.day,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                venue: slot.venue,
+                lecturer: slot.lecturer
+              });
+            });
+          }
+          
+          results.success.push({
+            groupId: group._id,
+            name: group.name
+          });
+        } else {
+          results.failed.push({
+            groupId: group._id,
+            name: group.name,
+            reason: mockRes.data?.message || 'Unknown error'
+          });
+        }
       } catch (error) {
         results.failed.push({
-          group: group.name,
+          groupId: group._id,
+          name: group.name,
           reason: error.message
         });
       }
