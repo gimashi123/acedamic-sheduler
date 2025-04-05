@@ -6,7 +6,10 @@ import {
     getTimetablesByGroup, 
     getTimetableById, 
     updateTimetableStatus, 
-    deleteTimetable 
+    deleteTimetable,
+    optimizeTimetable,
+    lockTimeSlot,
+    assignTimeSlot
 } from '../controller/timetable.controller.js';
 import { authenticateToken, authorizeRole } from '../middleware/jwt.middleware.js';
 import { ROLES } from '../constants/roles.js';
@@ -61,6 +64,27 @@ router.delete(
     '/:id', 
     authorizeRole([ROLES.ADMIN]), 
     deleteTimetable
+);
+
+// Optimize timetable (Admin only)
+router.post(
+    '/:timetableId/optimize', 
+    authorizeRole([ROLES.ADMIN]), 
+    optimizeTimetable
+);
+
+// Lock/unlock time slot (Admin only)
+router.patch(
+    '/:timetableId/slot/:slotId/lock', 
+    authorizeRole([ROLES.ADMIN]), 
+    lockTimeSlot
+);
+
+// Manually assign time slot (Admin only)
+router.post(
+    '/:timetableId/assign', 
+    authorizeRole([ROLES.ADMIN]), 
+    assignTimeSlot
 );
 
 export default router; 

@@ -179,6 +179,20 @@ const TimetableDashboard: React.FC = () => {
               </label>
             </div>
           </div>
+
+          <div className="bg-blue-50 p-4 rounded-md mb-4">
+            <h3 className="text-sm font-semibold text-blue-800 mb-1">Advanced Timetable Optimization</h3>
+            <p className="text-sm text-blue-700">
+              Our system now supports advanced conflict-free timetable generation with optimization. After creating timetables, 
+              use the <strong>Optimize</strong> button to access features like:
+            </p>
+            <ul className="mt-1 text-sm text-blue-700 list-disc list-inside">
+              <li>Intelligent backtracking algorithm for resolving conflicts</li>
+              <li>Score-based optimization for balanced schedules</li>
+              <li>Manual slot locking to preserve important assignments</li>
+              <li>Manual assignment for special scheduling needs</li>
+            </ul>
+          </div>
           
           {message.text && (
             <div
@@ -266,6 +280,12 @@ const TimetableDashboard: React.FC = () => {
                         
                         {isAdmin && (
                           <>
+                            <button
+                              className="text-indigo-600 hover:text-indigo-800"
+                              onClick={() => navigate(`/timetables/${timetable._id}/optimize`)}
+                            >
+                              Optimize
+                            </button>
                             {timetable.status === 'draft' && (
                               <button
                                 className="text-green-600 hover:text-green-800"

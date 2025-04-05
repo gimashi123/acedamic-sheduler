@@ -3,6 +3,7 @@ import Group from '../models/group.model.js';
 import Subject from '../models/subject.model.js';
 import Venue from '../models/venue.model.js';
 import { HTTP_STATUS, errorResponse, successResponse } from '../config/http.config.js';
+import { optimizeTimetable as optimizeTimetableUtil, generatePossibleTimeSlots, calculateTimetableScore } from '../utils/timetableOptimizer.js';
 
 // Helper function to check venue availability
 const isVenueAvailable = (venue, day, startTime, endTime, existingTimeSlots, globalBookings = []) => {
@@ -52,6 +53,27 @@ const isLecturerAvailable = (lecturer, day, startTime, endTime, existingTimeSlot
   );
   
   return !assignedGlobally;
+};
+
+// Generate time slots based on subject duration and group type
+const generateTimeSlots = (group, subjects, venues, globalBookings = []) => {
+  // Determine if we should include weekends based on group type
+  const includeWeekends = group.groupType === 'weekend';
+  
+  // Get unique session durations from subjects, default to 120 if not specified
+  const sessionDurations = [...new Set(
+    subjects.map(subject => subject.sessionDuration || 120)
+  )];
+  
+  // Generate possible time slots for each duration
+  let allPossibleSlots = [];
+  
+  sessionDurations.forEach(duration => {
+    const slots = generatePossibleTimeSlots(includeWeekends, duration, 8, 18);
+    allPossibleSlots = [...allPossibleSlots, ...slots];
+  });
+  
+  return allPossibleSlots;
 };
 
 // Generate timetable for a specific group
@@ -651,6 +673,272 @@ export const deleteTimetable = async (req, res) => {
     return errorResponse(
       res,
       'Server error while deleting timetable',
+      HTTP_STATUS.SERVER_ERROR,
+      error
+    );
+  }
+};
+
+// Optimize a timetable
+export const optimizeTimetable = async (req, res) => {
+  try {
+    const { timetableId } = req.params;
+    
+    if (!timetableId) {
+      return errorResponse(
+        res, 
+        'Timetable ID is required', 
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+    
+    // Get the timetable
+    const timetable = await Timetable.findById(timetableId)
+      .populate({
+        path: 'group',
+        populate: {
+          path: 'students'
+        }
+      })
+      .populate('timeSlots.subject')
+      .populate('timeSlots.venue')
+      .populate('timeSlots.lecturer');
+    
+    if (!timetable) {
+      return errorResponse(
+        res, 
+        'Timetable not found', 
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    // Get all subjects for this department
+    const subjects = await Subject.find({ 
+      $or: [
+        { department: timetable.group.department, status: 'active' },
+        { department: 'Mathematics', status: 'active' }
+      ]
+    }).populate('lecturer');
+    
+    // Get all venues
+    const venues = await Venue.find({
+      $or: [
+        { department: timetable.group.department, capacity: { $gte: timetable.group.students.length } },
+        { department: 'Mathematics', capacity: { $gte: timetable.group.students.length } }
+      ]
+    });
+    
+    // Get bookings from other timetables for the same month/year
+    const otherTimetables = await Timetable.find({
+      _id: { $ne: timetableId },
+      month: timetable.month,
+      year: timetable.year
+    }).populate('timeSlots.venue').populate('timeSlots.lecturer');
+    
+    const globalBookings = [];
+    otherTimetables.forEach(tt => {
+      tt.timeSlots.forEach(slot => {
+        globalBookings.push({
+          day: slot.day,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          venue: slot.venue._id,
+          lecturer: slot.lecturer._id
+        });
+      });
+    });
+    
+    // Run the optimization
+    const optimizedTimetable = await optimizeTimetableUtil(
+      timetable,
+      subjects,
+      venues,
+      globalBookings
+    );
+    
+    // Save the optimized timetable
+    await Timetable.findByIdAndUpdate(timetableId, {
+      timeSlots: optimizedTimetable.timeSlots,
+      optimizationScore: optimizedTimetable.optimizationScore,
+      optimizationDetails: optimizedTimetable.optimizationDetails
+    });
+    
+    return successResponse(
+      res,
+      'Timetable optimized successfully',
+      HTTP_STATUS.OK,
+      optimizedTimetable
+    );
+    
+  } catch (error) {
+    console.error('Error optimizing timetable:', error);
+    return errorResponse(
+      res,
+      'Server error while optimizing timetable',
+      HTTP_STATUS.SERVER_ERROR,
+      error
+    );
+  }
+};
+
+// Lock or unlock a time slot
+export const lockTimeSlot = async (req, res) => {
+  try {
+    const { timetableId, slotId } = req.params;
+    const { isLocked } = req.body;
+    
+    if (!timetableId || !slotId) {
+      return errorResponse(
+        res, 
+        'Timetable ID and slot ID are required', 
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+    
+    // Find the timetable
+    const timetable = await Timetable.findById(timetableId);
+    
+    if (!timetable) {
+      return errorResponse(
+        res, 
+        'Timetable not found', 
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    // Find the slot
+    const slotIndex = timetable.timeSlots.findIndex(slot => 
+      slot._id.toString() === slotId
+    );
+    
+    if (slotIndex === -1) {
+      return errorResponse(
+        res, 
+        'Time slot not found', 
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    // Update the slot
+    timetable.timeSlots[slotIndex].isLocked = !!isLocked;
+    
+    // Save the timetable
+    await timetable.save();
+    
+    return successResponse(
+      res,
+      `Time slot ${isLocked ? 'locked' : 'unlocked'} successfully`,
+      HTTP_STATUS.OK,
+      timetable
+    );
+    
+  } catch (error) {
+    console.error('Error locking/unlocking time slot:', error);
+    return errorResponse(
+      res,
+      'Server error while updating time slot',
+      HTTP_STATUS.SERVER_ERROR,
+      error
+    );
+  }
+};
+
+// Manually assign a time slot
+export const assignTimeSlot = async (req, res) => {
+  try {
+    const { timetableId } = req.params;
+    const { 
+      subjectId, venueId, day, startTime, endTime 
+    } = req.body;
+    
+    if (!timetableId || !subjectId || !venueId || !day || !startTime || !endTime) {
+      return errorResponse(
+        res, 
+        'All fields are required', 
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+    
+    // Find the timetable
+    const timetable = await Timetable.findById(timetableId);
+    
+    if (!timetable) {
+      return errorResponse(
+        res, 
+        'Timetable not found', 
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    // Find the subject
+    const subject = await Subject.findById(subjectId);
+    
+    if (!subject) {
+      return errorResponse(
+        res, 
+        'Subject not found', 
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    // Find the venue
+    const venue = await Venue.findById(venueId);
+    
+    if (!venue) {
+      return errorResponse(
+        res, 
+        'Venue not found', 
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+    
+    // Check for conflicts
+    const hasConflict = timetable.timeSlots.some(slot =>
+      slot.day === day &&
+      ((startTime >= slot.startTime && startTime < slot.endTime) ||
+       (endTime > slot.startTime && endTime <= slot.endTime) ||
+       (startTime <= slot.startTime && endTime >= slot.endTime)) &&
+      (slot.venue.toString() === venueId ||
+       slot.lecturer.toString() === subject.lecturer.toString())
+    );
+    
+    if (hasConflict) {
+      return errorResponse(
+        res, 
+        'This assignment would create a conflict', 
+        HTTP_STATUS.CONFLICT
+      );
+    }
+    
+    // Add the new slot
+    const newSlot = {
+      day,
+      startTime,
+      endTime,
+      subject: subjectId,
+      venue: venueId,
+      lecturer: subject.lecturer,
+      isLocked: true, // Lock it by default
+      manuallyAssigned: true
+    };
+    
+    timetable.timeSlots.push(newSlot);
+    
+    // Save the timetable
+    await timetable.save();
+    
+    return successResponse(
+      res,
+      'Time slot assigned successfully',
+      HTTP_STATUS.CREATED,
+      timetable
+    );
+    
+  } catch (error) {
+    console.error('Error assigning time slot:', error);
+    return errorResponse(
+      res,
+      'Server error while assigning time slot',
       HTTP_STATUS.SERVER_ERROR,
       error
     );

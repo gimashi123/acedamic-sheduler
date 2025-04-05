@@ -12,6 +12,9 @@ export interface TimeSlot {
   subject: any;
   venue: any;
   lecturer: any;
+  isLocked?: boolean;
+  manuallyAssigned?: boolean;
+  score?: number;
 }
 
 export interface Timetable {
@@ -22,6 +25,13 @@ export interface Timetable {
   timeSlots: TimeSlot[];
   generatedAt: string;
   status: 'draft' | 'published';
+  preferredTimes?: any[];
+  optimizationScore?: number;
+  optimizationDetails?: {
+    gapScore: number;
+    distributionScore: number;
+    preferenceScore: number;
+  }
 }
 
 // Service for timetable management
@@ -139,6 +149,76 @@ const TimetableService = {
       return response.data;
     } catch (error) {
       console.error('Error deleting timetable:', error);
+      throw error;
+    }
+  },
+
+  // Optimize timetable
+  optimizeTimetable: async (timetableId: string) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/timetables/${timetableId}/optimize`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error optimizing timetable:', error);
+      throw error;
+    }
+  },
+
+  // Lock or unlock a time slot
+  lockTimeSlot: async (timetableId: string, slotId: string, isLocked: boolean) => {
+    try {
+      const response = await axios.patch(
+        `${API_URL}/timetables/${timetableId}/slot/${slotId}/lock`,
+        { isLocked },
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error locking/unlocking time slot:', error);
+      throw error;
+    }
+  },
+
+  // Manually assign a time slot
+  assignTimeSlot: async (
+    timetableId: string,
+    subjectId: string,
+    venueId: string,
+    day: string,
+    startTime: string,
+    endTime: string
+  ) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/timetables/${timetableId}/assign`,
+        {
+          subjectId,
+          venueId,
+          day,
+          startTime,
+          endTime
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error assigning time slot:', error);
       throw error;
     }
   },

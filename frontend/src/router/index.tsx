@@ -19,6 +19,7 @@ import Subjects from '../features/subjects/Subjects';
 import AdminSubjects from '../features/subjects/AdminSubjects';
 import TimetableDashboard from '../features/timetables/TimetableDashboard';
 import TimetableView from '../features/timetables/TimetableView';
+import TimetableOptimizer from '../features/timetables/TimetableOptimizer';
 
 // Loading component for suspense fallback
 const LoadingSpinner = () => (
@@ -63,6 +64,7 @@ export const AppRouter: React.FC = () => {
             <Route path="admin/subjects" element={<AdminSubjects />} />
             <Route path="timetables" element={<TimetableDashboard />} />
             <Route path="timetables/:id" element={<TimetableView />} />
+            <Route path="timetables/:id/optimize" element={<TimetableOptimizer />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="change-password" element={<ChangePassword />} />
             <Route path="register-request" element={<RegisterRequestForm />} />
