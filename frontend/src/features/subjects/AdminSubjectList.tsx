@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
-  Typography, Box, Chip, Alert, CircularProgress, TextField, InputAdornment
+  Typography, Box, Chip, Alert, CircularProgress, TextField, InputAdornment,
+  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+  Snackbar
 } from '@mui/material';
-import { Search } from '@mui/icons-material';
-import { Subject, getAllSubjects } from './subjectService';
+import { Search, Delete } from '@mui/icons-material';
+import { Subject, getAllSubjects, deleteSubject } from './subjectService';
 
 interface LecturerType {
   _id: string;
@@ -19,6 +21,11 @@ const AdminSubjectList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const loadSubjects = async () => {
     setLoading(true);
@@ -54,6 +61,55 @@ const AdminSubjectList: React.FC = () => {
       );
     }
   }, [searchQuery, subjects]);
+
+  const handleOpenDeleteDialog = (subject: Subject) => {
+    setSubjectToDelete(subject);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setSubjectToDelete(null);
+  };
+
+  const handleDeleteSubject = async () => {
+    if (!subjectToDelete || !subjectToDelete._id) return;
+    
+    setDeleteInProgress(true);
+    try {
+      const result = await deleteSubject(subjectToDelete._id);
+      
+      if (result.success) {
+        // Remove the deleted subject from state
+        const updatedSubjects = subjects.filter(s => s._id !== subjectToDelete._id);
+        setSubjects(updatedSubjects);
+        setFilteredSubjects(updatedSubjects.filter(
+          (subject) => {
+            if (searchQuery.trim() === '') return true;
+            const query = searchQuery.toLowerCase();
+            return subject.name.toLowerCase().includes(query) ||
+              subject.code.toLowerCase().includes(query) ||
+              (subject.department && subject.department.toLowerCase().includes(query));
+          }
+        ));
+        setSnackbarMessage('Subject deleted successfully');
+      } else {
+        setSnackbarMessage(result.message);
+      }
+      setSnackbarOpen(true);
+    } catch (err) {
+      console.error('Error deleting subject:', err);
+      setSnackbarMessage('An error occurred while deleting the subject');
+      setSnackbarOpen(true);
+    } finally {
+      setDeleteInProgress(false);
+      handleCloseDeleteDialog();
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
 
   if (loading && subjects.length === 0) {
     return (
@@ -102,6 +158,7 @@ const AdminSubjectList: React.FC = () => {
                 <TableCell>Credits</TableCell>
                 <TableCell>Department</TableCell>
                 <TableCell>Status</TableCell>
+                <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -125,6 +182,16 @@ const AdminSubjectList: React.FC = () => {
                         size="small" 
                       />
                     </TableCell>
+                    <TableCell align="center">
+                      <IconButton 
+                        color="error" 
+                        size="small"
+                        onClick={() => handleOpenDeleteDialog(subject)}
+                        title="Delete subject"
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -132,6 +199,44 @@ const AdminSubjectList: React.FC = () => {
           </Table>
         </TableContainer>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+      >
+        <DialogTitle>Delete Subject</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the subject "{subjectToDelete?.name} ({subjectToDelete?.code})"? 
+            This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleCloseDeleteDialog}
+            disabled={deleteInProgress}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteSubject} 
+            color="error"
+            disabled={deleteInProgress}
+            autoFocus
+          >
+            {deleteInProgress ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message={snackbarMessage}
+      />
     </Box>
   );
 };

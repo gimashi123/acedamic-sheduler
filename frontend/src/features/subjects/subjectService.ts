@@ -95,11 +95,18 @@ export const updateSubject = async (id: string, subjectData: Partial<SubjectForm
 };
 
 // Delete a subject
-export const deleteSubject = async (id: string): Promise<void> => {
+export const deleteSubject = async (id: string): Promise<{ success: boolean; message: string }> => {
   try {
-    await api.delete(`/subjects/${id}`);
-  } catch (error) {
+    const response = await api.delete(`/subjects/${id}`);
+    return { 
+      success: true, 
+      message: response.data?.message || 'Subject deleted successfully' 
+    };
+  } catch (error: any) {
     console.error('Error in deleteSubject service:', error);
-    throw error;
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to delete subject'
+    };
   }
 }; 
