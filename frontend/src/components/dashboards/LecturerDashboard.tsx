@@ -75,7 +75,8 @@ const LecturerDashboard: React.FC = () => {
               }}
             />
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Welcome, {user.firstName}!</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Lecturer Dashboard</h2>
+              <p className="text-gray-600">Welcome, {user.firstName}!</p>
               <p className="text-gray-600">{user.email}</p>
             </div>
           </div>

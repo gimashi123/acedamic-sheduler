@@ -68,7 +68,8 @@ const AdminDashboard: React.FC = () => {
               }}
             />
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Welcome, Administrator!</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Admin Dashboard</h2>
+              <p className="text-gray-600">Welcome, {user.firstName}!</p>
               <p className="text-gray-600">{user.email}</p>
             </div>
           </div>
