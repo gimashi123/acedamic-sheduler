@@ -4,8 +4,10 @@ import {
   Typography, Box, IconButton, Chip, Button, Alert, Dialog, DialogActions, 
   DialogContent, DialogContentText, DialogTitle, CircularProgress
 } from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
+import { Edit, Delete, PictureAsPdf } from '@mui/icons-material';
 import { Subject, getLecturerSubjects, deleteSubject } from './subjectService';
+import { exportToPdf } from '../../utils/pdfExport';
+import toast from 'react-hot-toast';
 
 interface SubjectListProps {
   onEditSubject?: (subject: Subject) => void;
@@ -65,6 +67,27 @@ const SubjectList: React.FC<SubjectListProps> = ({ onEditSubject, refresh }) => 
     setSubjectToDelete(null);
   };
 
+  const handleExportToPdf = () => {
+    const columns = [
+      { header: 'Code', dataKey: 'code' },
+      { header: 'Name', dataKey: 'name' },
+      { header: 'Credits', dataKey: 'credits' },
+      { header: 'Department', dataKey: 'department' },
+      { header: 'Status', dataKey: 'status' }
+    ];
+
+    exportToPdf({
+      title: 'My Subjects',
+      filename: `subjects-list-${new Date().toISOString().split('T')[0]}`,
+      columns,
+      data: subjects,
+      orientation: 'portrait',
+      includeTimestamp: true
+    });
+
+    toast.success('Subject list exported to PDF successfully');
+  };
+
   if (loading && subjects.length === 0) {
     return (
       <Box display="flex" justifyContent="center" my={4}>
@@ -76,9 +99,21 @@ const SubjectList: React.FC<SubjectListProps> = ({ onEditSubject, refresh }) => 
   return (
     <>
       <Box mb={3}>
-        <Typography variant="h6" gutterBottom>
-          My Subjects
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6" gutterBottom>
+            My Subjects
+          </Typography>
+          {subjects.length > 0 && (
+            <Button 
+              variant="outlined" 
+              startIcon={<PictureAsPdf />} 
+              onClick={handleExportToPdf}
+              size="small"
+            >
+              Export PDF
+            </Button>
+          )}
+        </Box>
         
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         

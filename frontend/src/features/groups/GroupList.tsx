@@ -17,15 +17,18 @@ import {
   Paper,
   TablePagination,
   Chip,
-  Badge
+  Badge,
+  Box
 } from '@mui/material';
 import { 
   Edit as EditIcon, 
   Delete as DeleteIcon,
-  Group as GroupIcon
+  Group as GroupIcon,
+  PictureAsPdf
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { Group, deleteGroup } from '../../utils/api/groupApi';
+import { exportToPdf } from '../../utils/pdfExport';
 
 interface GroupListProps {
   groups: Group[];
@@ -88,6 +91,36 @@ const GroupList = ({ groups, onEdit, onManageStudents, onRefresh }: GroupListPro
     }
   };
 
+  const handleExportToPdf = () => {
+    const columns = [
+      { header: 'Group Name', dataKey: 'name' },
+      { header: 'Faculty', dataKey: 'faculty' },
+      { header: 'Department', dataKey: 'department' },
+      { header: 'Type', dataKey: 'groupType' },
+      { header: 'Year', dataKey: 'year' },
+      { header: 'Semester', dataKey: 'semester' },
+      { header: 'Students Count', dataKey: 'studentCount' }
+    ];
+
+    // Format the data for PDF export
+    const formattedData = groups.map(group => ({
+      ...group,
+      groupType: group.groupType.charAt(0).toUpperCase() + group.groupType.slice(1),
+      studentCount: `${group.students.length}/30`
+    }));
+
+    exportToPdf({
+      title: 'Student Groups List',
+      filename: `groups-list-${new Date().toISOString().split('T')[0]}`,
+      columns,
+      data: formattedData,
+      orientation: 'landscape',
+      includeTimestamp: true
+    });
+
+    toast.success('Groups list exported to PDF successfully');
+  };
+
   return (
     <>
       {groups.length === 0 ? (
@@ -96,6 +129,16 @@ const GroupList = ({ groups, onEdit, onManageStudents, onRefresh }: GroupListPro
         </Typography>
       ) : (
         <>
+          <Box display="flex" justifyContent="flex-end" mb={2}>
+            <Button 
+              variant="outlined" 
+              startIcon={<PictureAsPdf />} 
+              onClick={handleExportToPdf}
+              size="small"
+            >
+              Export PDF
+            </Button>
+          </Box>
           <TableContainer component={Paper} elevation={0}>
             <Table>
               <TableHead>

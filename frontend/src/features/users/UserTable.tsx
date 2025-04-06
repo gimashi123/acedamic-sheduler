@@ -18,11 +18,12 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
-import { Delete, Image, Edit } from '@mui/icons-material';
+import { Delete, Image, Edit, PictureAsPdf } from '@mui/icons-material';
 import ProfilePicture from '../../components/ProfilePicture';
 import { profileService } from '../../features/profile/profileService';
 import { userService } from './userService';
 import toast from 'react-hot-toast';
+import { exportToPdf } from '../../utils/pdfExport';
 
 interface UserTableProps {
   users: User[];
@@ -225,9 +226,41 @@ const UserTable: React.FC<UserTableProps> = ({ users, title, onRemoveUser, onUse
     }
   };
 
+  const handleExportToPdf = () => {
+    const columns = [
+      { header: 'First Name', dataKey: 'firstName' },
+      { header: 'Last Name', dataKey: 'lastName' },
+      { header: 'Email', dataKey: 'email' },
+      { header: 'Role', dataKey: 'role' },
+      { header: 'Status', dataKey: 'status' }
+    ];
+
+    exportToPdf({
+      title: `${title} - User List`,
+      filename: `user-list-${new Date().toISOString().split('T')[0]}`,
+      columns,
+      data: users,
+      orientation: 'portrait',
+      includeTimestamp: true
+    });
+
+    toast.success('PDF exported successfully');
+  };
+
   return (
     <div className="mb-8">
-      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <Button 
+          variant="outlined" 
+          startIcon={<PictureAsPdf />} 
+          onClick={handleExportToPdf}
+          color="primary"
+        >
+          Export PDF
+        </Button>
+      </div>
+      
       {users.length === 0 ? (
         <p className="text-gray-500">No {title.toLowerCase()} found.</p>
       ) : (

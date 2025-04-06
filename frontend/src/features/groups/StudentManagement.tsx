@@ -11,9 +11,6 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  ListItemSecondaryAction,
-  IconButton,
-  Divider,
   TextField,
   Chip,
   CircularProgress,
@@ -24,10 +21,12 @@ import {
   PersonRemove as PersonRemoveIcon,
   ArrowForward as ArrowForwardIcon,
   ArrowBack as ArrowBackIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  PictureAsPdf
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { Group, Student, getAvailableStudents, addStudentsToGroup, removeStudentFromGroup } from '../../utils/api/groupApi';
+import { exportToPdf } from '../../utils/pdfExport';
 
 interface StudentManagementProps {
   open: boolean;
@@ -150,15 +149,54 @@ const StudentManagement = ({ open, onClose, onSuccess, group }: StudentManagemen
     }
   };
 
+  const handleExportStudentsToPdf = () => {
+    if (groupStudents.length === 0) {
+      toast.error('No students to export');
+      return;
+    }
+
+    const columns = [
+      { header: 'First Name', dataKey: 'firstName' },
+      { header: 'Last Name', dataKey: 'lastName' },
+      { header: 'Email', dataKey: 'email' }
+    ];
+
+    exportToPdf({
+      title: `Students in Group: ${group.name}`,
+      filename: `group-${group.name}-students-${new Date().toISOString().split('T')[0]}`,
+      columns,
+      data: groupStudents,
+      orientation: 'portrait',
+      includeTimestamp: true
+    });
+
+    toast.success('Student list exported to PDF successfully');
+  };
+
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="lg"
       fullWidth
+      aria-labelledby="student-management-dialog-title"
     >
-      <DialogTitle>
-        Manage Students - {group.name}
+      <DialogTitle id="student-management-dialog-title">
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6">
+            Manage Students in Group: {group.name}
+          </Typography>
+          {groupStudents.length > 0 && (
+            <Button 
+              variant="outlined" 
+              startIcon={<PictureAsPdf />} 
+              onClick={handleExportStudentsToPdf}
+              size="small"
+            >
+              Export Students PDF
+            </Button>
+          )}
+        </Box>
         <Typography variant="subtitle2" color="text.secondary">
           Faculty: {group.faculty} | Department: {group.department} | Type: {group.groupType.charAt(0).toUpperCase() + group.groupType.slice(1)}
         </Typography>

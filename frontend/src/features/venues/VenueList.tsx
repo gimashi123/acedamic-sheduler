@@ -16,11 +16,13 @@ import {
   Typography,
   Paper,
   TablePagination,
-  Chip
+  Chip,
+  Box
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, PictureAsPdf } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { Venue, deleteVenue } from '../../utils/api/venueApi';
+import { exportToPdf } from '../../utils/pdfExport';
 
 interface VenueListProps {
   venues: Venue[];
@@ -84,6 +86,34 @@ const VenueList = ({ venues, onEdit, onRefresh }: VenueListProps) => {
     }
   };
 
+  const handleExportToPdf = () => {
+    const columns = [
+      { header: 'Hall Name', dataKey: 'hallName' },
+      { header: 'Building', dataKey: 'building' },
+      { header: 'Type', dataKey: 'type' },
+      { header: 'Department', dataKey: 'department' },
+      { header: 'Faculty', dataKey: 'faculty' },
+      { header: 'Capacity', dataKey: 'capacity' }
+    ];
+
+    // Format the type field to capitalize first letter
+    const formattedData = venues.map(venue => ({
+      ...venue,
+      type: venue.type.charAt(0).toUpperCase() + venue.type.slice(1)
+    }));
+
+    exportToPdf({
+      title: 'Venues List',
+      filename: `venues-list-${new Date().toISOString().split('T')[0]}`,
+      columns,
+      data: formattedData,
+      orientation: 'landscape',
+      includeTimestamp: true
+    });
+
+    toast.success('Venues list exported to PDF successfully');
+  };
+
   return (
     <>
       {venues.length === 0 ? (
@@ -92,6 +122,16 @@ const VenueList = ({ venues, onEdit, onRefresh }: VenueListProps) => {
         </Typography>
       ) : (
         <>
+          <Box display="flex" justifyContent="flex-end" mb={2}>
+            <Button 
+              variant="outlined" 
+              startIcon={<PictureAsPdf />} 
+              onClick={handleExportToPdf}
+              size="small"
+            >
+              Export PDF
+            </Button>
+          </Box>
           <TableContainer component={Paper} elevation={0}>
             <Table>
               <TableHead>
