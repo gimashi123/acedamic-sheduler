@@ -82,7 +82,7 @@ const Layout: React.FC = () => {
             <Link to="/groups" className="text-gray-700 hover:text-gray-900">
               <Users className="h-5 w-5" />
             </Link>
-            <Link to="/subjects" className="text-gray-700 hover:text-gray-900">
+            <Link to="/admin/subjects" className="text-gray-700 hover:text-gray-900">
               <BookText className="h-5 w-5" />
             </Link>
             <Link to="/subject-assignments" className="text-gray-700 hover:text-gray-900">
@@ -230,4 +230,4 @@ const Layout: React.FC = () => {
   );
 };
 
-export default Layout; 
+export default Layout;
