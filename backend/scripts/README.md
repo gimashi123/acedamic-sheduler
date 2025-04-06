@@ -34,7 +34,7 @@ Run the sample data generation script to create the basic entities:
 
 ```bash
 cd backend/scripts
-node sample-data.js
+node setup-academic-scheduler.js
 ```
 
 This will create:
