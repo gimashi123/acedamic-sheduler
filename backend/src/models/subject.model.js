@@ -51,7 +51,11 @@ const subjectSchema = new mongoose.Schema(
     preferredTimeRanges: [{
       startTime: String,
       endTime: String,
-      description: 'Time ranges when this subject is preferably taught'
+      description: {
+        type: String,
+
+        default: 'Time ranges when this subject is preferably taught'
+      }
     }],
     sessionDuration: {
       type: Number,
@@ -72,4 +76,4 @@ const subjectSchema = new mongoose.Schema(
 
 const Subject = mongoose.model('Subject', subjectSchema);
 
-export default Subject; 
+export default Subject;
