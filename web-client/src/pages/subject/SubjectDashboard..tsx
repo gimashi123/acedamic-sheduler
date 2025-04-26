@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card.tsx';
 import { useSubject } from '@/context/subject/subject.context.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { useNavigate } from 'react-router-dom';
-import { Pencil, Trash } from 'lucide-react';
+import { Trash } from 'lucide-react';
 import { deleteSubject } from '@/services/subject.service.ts';
 import { toast } from 'react-hot-toast';
 
