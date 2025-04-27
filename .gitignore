@@ -6,3 +6,6 @@ web-client/package-lock.json
 node_modules/
 frontend_old/.env
 
+# Add to .gitignore
+**/sonar-scanner.properties
+**/.env
