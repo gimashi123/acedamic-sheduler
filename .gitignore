@@ -9,3 +9,4 @@ frontend_old/.env
 # Add to .gitignore
 **/sonar-scanner.properties
 **/.env
+.scannerwork/
