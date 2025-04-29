@@ -70,6 +70,7 @@ export function SubjectAdd() {
         (error) => {
           console.error('Error adding subject:', error);
           setLoading(false); // Set loading to false after error
+        
         },
       )
       .finally(() => setLoading(false));

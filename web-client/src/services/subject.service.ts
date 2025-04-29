@@ -10,7 +10,8 @@ export const addSubject = async (addSubjectReq: ISubjectRequest) => {
     } else {
       alert('failed to add subject');
     }
-  } catch (e) {
-    console.log(e);
+  } catch (e: any) {
+    alert(e.response.data.message || 'failed to add subject');
+    console.log('failed to add subject:', e);
   }
 };

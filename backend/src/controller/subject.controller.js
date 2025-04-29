@@ -11,8 +11,12 @@ export const addSubject = async (req, res) => {
   try {
     let { name, code, credits } = req.body;
 
+     // Check if the subject already exists
+     if (await Subject.findOne({ code })) {
+       return errorResponse(res, 'Subject with this code already exists', HTTP_STATUS.BAD_REQUEST);
+     }
     if (name === undefined || code === undefined || credits === undefined) {
-      return errorResponse(res, 'Please provide all required fields', null);
+      return errorResponse(res, 'Please provide all required fields', HTTP_STATUS.BAD_REQUEST); //http code add krnna ethana awula thibbe mn giya
     }
 
     //First letter of the name is capitalized
@@ -22,7 +26,7 @@ export const addSubject = async (req, res) => {
       return errorResponse(
         res,
         'Credits must be an integer between 1 and 4',
-        null,
+        HTTP_STATUS.BAD_REQUEST,
       );
     }
 
@@ -37,7 +41,8 @@ export const addSubject = async (req, res) => {
       getSubjectResponse(subject),
     );
   } catch (e) {
-    errorResponse(res, e.message || 'Error when creating a subject', null);
+    console.log( 'error when adding a subject' , e)
+    errorResponse(res, e.message || 'Error when creating a subject', HTTP_STATUS.SERVER_ERROR);
   }
 };
 
