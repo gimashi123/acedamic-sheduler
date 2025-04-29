@@ -11,6 +11,10 @@ export const addSubject = async (req, res) => {
   try {
     let { name, code, credits } = req.body;
 
+     // Check if the subject already exists
+     if (await Subject.findOne({ code })) {
+       return errorResponse(res, 'Subject with this code already exists', HTTP_STATUS.BAD_REQUEST);
+     }
     if (name === undefined || code === undefined || credits === undefined) {
       return errorResponse(
         res,
@@ -76,17 +80,6 @@ export const getSubjects = async (req, res) => {
 export const updateSubject = async (req, res) => {
   try {
     const { name, code, credits } = req.body;
-    const { id } = req.params;
-
-    // if (!Number.isInteger(credits) || credits < 1 || credits > 4) {
-    //   return errorResponse(
-    //     res,
-    //     'Credits must be an integer between 1 and 4',
-    //     HTTP_STATUS.BAD_REQUEST,
-    //   );
-    // }
-
-    const subject = await Subject.findById(id);
 
     if (!subject) {
       return errorResponse(res, 'Subject not found', HTTP_STATUS.NOT_FOUND);
