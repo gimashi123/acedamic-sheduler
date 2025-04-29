@@ -1,5 +1,5 @@
-import {BrowserRouter, Route, Routes} from "react-router-dom";
-import HomePage from "../pages/Home.tsx";
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import HomePage from '../pages/Home.tsx';
 
 import AdminDashboardPage from "@/pages/dashboard/AdminDashboard.tsx";
 import {TimeTablePage} from "@/pages/timetable/TimeTablePage.tsx";
@@ -40,17 +40,18 @@ const AppRoutingContent = ({ children }: { children: ReactNode }) => {
   );
 };
 
-
 export const AppRouting = () => {
   return (
     <AppRoutingContent>
       <Routes>
         <Route path={'/'} element={<HomePage />} />
-        <Route path="/groups" element={<GroupManagement/>}/>
-        <Route path="/venues" element={<VenueManagement/>}/>
+        
+        
         <Route path={'/login'} element={<LoginPage />} />
         <Route path={'/signup'} element={<SingUp />} />
         <Route path={'/admin/dashboard/*'} element={<AdminDashboardPage />}>
+          <Route path='groups' element={<GroupManagement/>}/> 
+          <Route path='venues' element={<VenueManagement/>}/>
           <Route path={'timetable'}>
             <Route path={''} element={<TimeTablePage />} />
             <Route path={'add-details'} element={<AddDetails />} />

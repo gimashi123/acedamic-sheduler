@@ -16,7 +16,11 @@ export const addSubject = async (req, res) => {
        return errorResponse(res, 'Subject with this code already exists', HTTP_STATUS.BAD_REQUEST);
      }
     if (name === undefined || code === undefined || credits === undefined) {
-      return errorResponse(res, 'Please provide all required fields', HTTP_STATUS.BAD_REQUEST); //http code add krnna ethana awula thibbe mn giya
+      return errorResponse(
+        res,
+        'Please provide all required fields',
+        HTTP_STATUS.NOT_FOUND,
+      );
     }
 
     //First letter of the name is capitalized
@@ -41,8 +45,11 @@ export const addSubject = async (req, res) => {
       getSubjectResponse(subject),
     );
   } catch (e) {
-    console.log( 'error when adding a subject' , e)
-    errorResponse(res, e.message || 'Error when creating a subject', HTTP_STATUS.SERVER_ERROR);
+    errorResponse(
+      res,
+      e.message || 'Error when creating a subject',
+      HTTP_STATUS.NOT_FOUND,
+    );
   }
 };
 
@@ -50,17 +57,21 @@ export const addSubject = async (req, res) => {
 export const getSubjects = async (req, res) => {
   try {
     const subjects = await Subject.find();
+
+    const subjectResponses = subjects?.map((subject) => {
+      return getSubjectResponse(subject);
+    });
     return successResponse(
       res,
       'Subjects retrieved successfully',
       HTTP_STATUS.OK,
-      subjects,
+      subjectResponses,
     );
   } catch (error) {
     return errorResponse(
       res,
       error.message || 'Error retrieving subjects',
-      null,
+      HTTP_STATUS.NOT_FOUND,
     );
   }
 };
@@ -70,45 +81,48 @@ export const updateSubject = async (req, res) => {
   try {
     const { name, code, credits } = req.body;
 
-    if (name === undefined || code === undefined || credits === undefined) {
-      return errorResponse(res, 'Please provide all required fields', null);
+    if (!subject) {
+      return errorResponse(res, 'Subject not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    if (!Number.isInteger(credits) || credits < 1 || credits > 4) {
-      return errorResponse(
-        res,
-        'Credits must be an integer between 1 and 4',
-        null,
-      );
+    if (code) {
+      subject.code = code;
     }
 
-    const updatedSubject = await Subject.findByIdAndUpdate(
-      req.params.id,
-      { name: name.charAt(0).toUpperCase() + name.slice(1), code, credits },
-      { new: true },
-    );
-
-    if (!updatedSubject) {
-      return errorResponse(res, 'Subject not found', null);
+    if (credits) {
+      subject.credits = credits;
     }
+
+    if (name) {
+      subject.name = name;
+    }
+
+    await subject.save();
 
     return successResponse(
       res,
       'Subject updated successfully',
       HTTP_STATUS.OK,
-      getSubjectResponse(updatedSubject),
+      getSubjectResponse(subject),
     );
   } catch (error) {
-    return errorResponse(res, error.message || 'Error updating subject', null);
+    return errorResponse(
+      res,
+      error.message || 'Error updating subject',
+      HTTP_STATUS.NOT_FOUND,
+    );
   }
 };
 
 // Delete subject
 export const deleteSubject = async (req, res) => {
   try {
-    const deletedSubject = await Subject.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+
+    console.log('Attempting to delete subject: ', id);
+    const deletedSubject = await Subject.findByIdAndDelete(id);
     if (!deletedSubject) {
-      return errorResponse(res, 'Subject not found', null);
+      return errorResponse(res, 'Subject not found', HTTP_STATUS.NOT_FOUND);
     }
     return successResponse(
       res,
@@ -117,6 +131,10 @@ export const deleteSubject = async (req, res) => {
       null,
     );
   } catch (error) {
-    return errorResponse(res, error.message || 'Error deleting subject', null);
+    return errorResponse(
+      res,
+      error.message || 'Error deleting subject',
+      HTTP_STATUS.NOT_FOUND,
+    );
   }
 };

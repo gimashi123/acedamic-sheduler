@@ -12,13 +12,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Group { // removed faculty, semester and groupType fileds
   _id?: string;
@@ -166,13 +166,22 @@ export default function GroupTable({ groups, onDelete, onUpdate }: GroupTablePro
               </TableCell>
               <TableCell>
                 {editingGroup?._id === group._id ? (
-                  <Input
-                    type="number"
-                    value={editedGroup?.year || ""}
-                    onChange={(e) => handleFieldChange("year", Number(e.target.value))}
-                  />
+                  <Select
+                    onValueChange={(value) => handleFieldChange("year", Number(value))}
+                    value={editedGroup?.year.toString()}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Year 1</SelectItem>
+                      <SelectItem value="2">Year 2</SelectItem>
+                      <SelectItem value="3">Year 3</SelectItem>
+                      <SelectItem value="4">Year 4</SelectItem>
+                    </SelectContent>
+                  </Select>
                 ) : (
-                  group.year
+                  `Year ${group.year}`
                 )}
               </TableCell>
               {/* <TableCell>
