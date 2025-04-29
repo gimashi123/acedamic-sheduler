@@ -262,6 +262,7 @@ export default function GroupForm({ initialData, onSuccess, existingGroups = [] 
       {/* Updated confirmation dialog */}
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <AlertDialogContent>
+
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Group Addition</AlertDialogTitle>
             <AlertDialogDescription>
@@ -276,12 +277,14 @@ export default function GroupForm({ initialData, onSuccess, existingGroups = [] 
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter>
             <AlertDialogCancel>No, Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmSubmit} disabled={isSubmitting || !!nameError}>
               {isSubmitting ? "Adding..." : "Yes, Add"}
             </AlertDialogAction>
           </AlertDialogFooter>
+          
         </AlertDialogContent>
       </AlertDialog>
     </>
