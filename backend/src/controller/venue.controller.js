@@ -1,128 +1,209 @@
-import Venue from "../models/venue.model.js";
+// controller/venue.controller.js
 
-// create venues
-export const createVenue = async(req, res) => {
-    try {
-        const {
-            // faculty,
-            department, 
-            building, 
-            hallName,
-            type,
-            capacity
-        } = req.body;
+import Venue from '../models/venue.model.js';
+import {
+  errorResponse,
+  successResponse,
+  HTTP_STATUS,
+} from '../config/http.config.js';
+import { VenueOptionsDTO, venueResponseDto } from '../dto/venue.dto.js';
 
-        if(!department || !building ||!hallName || !type || !capacity) {
-            return res.status(400).json({
-                message: "All fields are required!"
-            });
-        }
+/**
+ * @desc Create a new Venue
+ * @route POST /venues
+ */
+export const createVenue = async (req, res) => {
+  try {
+    const { department, building, hallName, type, capacity } = req.body;
 
-        const newVenue = new Venue({
-            // faculty, 
-            department, 
-            building, 
-            hallName, 
-            type, 
-            capacity
-        });
-
-        await newVenue.save();
-        
-        res.status(201).json({
-            message: "Venue added sucecsfully!",
-            venue: newVenue
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            message: error.message
-        });
+    // basic validation
+    if (!department || !building || !hallName || !type || capacity == null) {
+      return errorResponse(
+        res,
+        'All fields (department, building, hallName, type, capacity) are required',
+        HTTP_STATUS.BAD_REQUEST,
+      );
     }
+
+    if (capacity < 1) {
+      return errorResponse(
+        res,
+        'Capacity must be at least 1',
+        HTTP_STATUS.BAD_REQUEST,
+      );
+    }
+
+    const newVenue = new Venue({
+      department,
+      building,
+      hallName,
+      type,
+      capacity,
+    });
+
+    await newVenue.save();
+
+    return successResponse(
+      res,
+      'Venue created successfully',
+      HTTP_STATUS.CREATED,
+      venueResponseDto(newVenue),
+    );
+  } catch (err) {
+    console.error('Error creating venue:', err);
+    return errorResponse(
+      res,
+      'Server error occurred while creating venue',
+      HTTP_STATUS.SERVER_ERROR,
+    );
+  }
 };
 
-// fetch all venues
-export const getVenues = async(req, res) => {
-    try {
-        const venues = await Venue.find();
-        res.status(200).json(venues);
-    } catch (error) {
-        res.status(500).json({
-            message: error.message
-        });
+/**
+ * @desc Get all Venues
+ * @route GET /venues
+ */
+export const getVenues = async (req, res) => {
+  try {
+    const venues = await Venue.find();
+
+    if (!venues.length) {
+      return errorResponse(res, 'No venues found', HTTP_STATUS.NOT_FOUND);
     }
+
+    return successResponse(
+      res,
+      'Venues fetched successfully',
+      HTTP_STATUS.OK,
+      venues.map(venueResponseDto),
+    );
+  } catch (err) {
+    console.error('Error fetching venues:', err);
+    return errorResponse(
+      res,
+      'Server error occurred while fetching venues',
+      HTTP_STATUS.SERVER_ERROR,
+    );
+  }
 };
 
-// fetch a single venue
-export const getVenueById = async(req, res) => {
-    try {
-        const venue = await Venue.findById(req.params.id);
-        
-        // validations 
-        if(!venue) {
-            return res.status(404).json({
-                message: "Venue not found!"
-            });
-        }
-        res.status(200).json(venue);
+/**
+ * @desc Get a Venue by ID
+ * @route GET /venues/:id
+ */
+export const getVenueById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const venue = await Venue.findById(id);
 
-    } catch (error) {
-        res.status(500).json({
-            message: error.message
-        });
+    if (!venue) {
+      return errorResponse(res, 'Venue not found', HTTP_STATUS.NOT_FOUND);
     }
+
+    return successResponse(
+      res,
+      'Venue fetched successfully',
+      HTTP_STATUS.OK,
+      venueResponseDto(venue),
+    );
+  } catch (err) {
+    console.error('Error fetching venue:', err);
+    return errorResponse(
+      res,
+      'Server error occurred while fetching venue',
+      HTTP_STATUS.SERVER_ERROR,
+    );
+  }
 };
 
-// update venue details 
-export const updateVenue = async(req, res) => {
-    try {
-        const venue = await Venue.findByIdAndUpdate(req.params.id, req.body, {new: true});
-        
-        // validations
-        if(!venue) {
-            return res.status(404).json({
-                message: "Venue not found!"
-            });
-        }
+/**
+ * @desc Update a Venue
+ * @route PUT /venues/:id
+ */
+export const updateVenue = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = (({ department, building, hallName, type, capacity }) => ({
+      department,
+      building,
+      hallName,
+      type,
+      capacity,
+    }))(req.body);
 
-        if(req.body.capacity && req.body.capacity < 1) {
-            return res.status(400).json({
-                message: "Capacity must be at least 1!"
-            });
-        }
-        res.status(200).json({
-            message: "Venue updated succesfully!"
-        }); // make sure to check when testing
-
-    } catch (error) {
-        res.status(500).json({
-            message: error.message
-        });
+    if (updates.capacity != null && updates.capacity < 1) {
+      return errorResponse(
+        res,
+        'Capacity must be at least 1',
+        HTTP_STATUS.BAD_REQUEST,
+      );
     }
+
+    const venue = await Venue.findByIdAndUpdate(id, updates, { new: true });
+
+    if (!venue) {
+      return errorResponse(res, 'Venue not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    return successResponse(
+      res,
+      'Venue updated successfully',
+      HTTP_STATUS.OK,
+      venueResponseDto(venue),
+    );
+  } catch (err) {
+    console.error('Error updating venue:', err);
+    return errorResponse(
+      res,
+      'Server error occurred while updating venue',
+      HTTP_STATUS.SERVER_ERROR,
+    );
+  }
 };
 
-// delete venue details 
-export const deleteVenue = async(req, res) => {
-    try {
-        const venue = await Venue.findByIdAndDelete(req.params.id);
+/**
+ * @desc Delete a Venue
+ * @route DELETE /venues/:id
+ */
+export const deleteVenue = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const venue = await Venue.findByIdAndDelete(id);
 
-        // validations
-        if(!venue) {
-            return res.status(404).json({
-                message: "Venue not found!"
-            });
-        }
-
-        res.status(200).json({
-            message: "Venue deleted successfully!"
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            message: error.message
-        });
+    if (!venue) {
+      return errorResponse(res, 'Venue not found', HTTP_STATUS.NOT_FOUND);
     }
+
+    return successResponse(res, 'Venue deleted successfully', HTTP_STATUS.OK);
+  } catch (err) {
+    console.error('Error deleting venue:', err);
+    return errorResponse(
+      res,
+      'Server error occurred while deleting venue',
+      HTTP_STATUS.SERVER_ERROR,
+    );
+  }
 };
 
-// there was a function for showing free venues and occupide venues
-// i need to research on this function and for now ill leave it as it is
+export const getVenuesOptions = async (req, res) => {
+  try {
+    const venues = await Venue.find();
+
+    if (!venues.length) {
+      return errorResponse(res, 'No venues found', HTTP_STATUS.OK);
+    }
+    return successResponse(
+      res,
+      'Venues fetched successfully',
+      HTTP_STATUS.OK,
+      venues.map(VenueOptionsDTO),
+    );
+  } catch (err) {
+    console.error('Error fetching venue options:', err);
+    return errorResponse(
+      null,
+      'Server error occurred while fetching venue options',
+      HTTP_STATUS.SERVER_ERROR,
+    );
+  }
+};

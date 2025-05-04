@@ -17,7 +17,7 @@ const pages = [
     icon: CalendarRange,
   },
   {
-    name: 'User Management',
+    name: 'Group Management',
     url: '/admin/dashboard/user',
     icon: PieChart,
   },
@@ -27,8 +27,14 @@ const pages = [
     icon: Map,
   },
   {
-    name: 'Student Management',
-    url: '/admin/dashboard/student',
+    name: 'Venue Management',
+    url: '/admin/dashboard/venues',
+    icon: Map,
+  },
+
+  {
+    name: 'User Management',
+    url: '/admin/dashboard/user',
     icon: Users,
   },
 ];

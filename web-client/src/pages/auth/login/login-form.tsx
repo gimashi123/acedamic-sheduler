@@ -12,7 +12,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
-  const { login, loading } = useAuth();
+  const { login } = useAuth();
   const [formData, setFormData] = useState<ILoginRequest>({
     email: '',
     password: '',
@@ -72,11 +72,7 @@ export function LoginForm({
                   required
                 />
               </div>
-              <Button
-                className="w-full"
-                onClick={handleSubmit}
-                disabled={loading}
-              >
+              <Button className="w-full" onClick={handleSubmit}>
                 Login
               </Button>
 

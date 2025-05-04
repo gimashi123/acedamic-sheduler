@@ -1,258 +1,267 @@
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { useState } from "react";
-import { addVenue } from "@/services/venue.service";
-import { toast } from "sonner";
+import React, { useState } from "react";
+import {addVenue, updateVenue} from "@/services/venue.service";
+
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    Dialog,
+    DialogTrigger,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
+import {toast} from "react-hot-toast";
 
 interface VenueFormProps {
-  onSubmit?: (data: any) => void;
-  initialData?: any;
-  onSuccess?: () => void;
+    onSubmit?: (data: Venue) => void;
+    initialData?: Venue;
+    onSuccess?: () => void;
+    children?: React.ReactNode;
+    mode?: "add" | "edit";
 }
 
 interface Venue {
-  _id?: string;
-  // faculty: string;
-  department: string;
-  building: string;
-  hallName: string;
-  type: "lecture" | "tutorial" | "lab";
-  capacity: number;
+    id?: string;
+    department: string;
+    building: string;
+    hallName: string;
+    type: "lecture" | "tutorial" | "lab";
+    capacity: number;
 }
 
-export default function VenueForm({ initialData, onSuccess }: VenueFormProps) {
-  const [formData, setFormData] = useState<Venue>({
-    // faculty: "",
-    department: "",
-    building: "",
-    hallName: "",
-    type: "lecture",
-    capacity: 0
-  });
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function VenueForm({ initialData, onSuccess, children, mode = "add" }: VenueFormProps) {
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
-    defaultValues: initialData || {
-      // faculty: "",
-      department: "",
-      building: "",
-      hallName: "",
-      type: "lecture",
-      capacity: 0,
-    },
-  });
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+        setValue,
+        watch,
+    } = useForm<Venue>({
+        defaultValues: initialData || {
+            department: "",
+            building: "",
+            hallName: "",
+            type: "lecture",
+            capacity: 0,
+        },
+    });
 
-  // Handle input field changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'capacity' ? Number(value) : value
-    }));
-  };
+    const typeValue = watch("type");
 
-  // validation handler - to fill all the fields 
-  const handleFormSubmit = () => {
-    if (!formData.department || !formData.building || !formData.hallName || !formData.type || !formData.capacity) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-    setShowConfirmation(true);
-  };
+    const handleFormSubmit = (data: Venue) => {
+        if (!data.department || !data.building || !data.hallName || !data.type || !data.capacity) {
+            toast.error("Please fill in all required fields");
+            return;
+        }
+        setDialogOpen(false);
+        setShowConfirmation(true);
+    };
 
-  // final submission handler (venue adding confirmation message)
-  const handleConfirmSubmit = async () => {
-    try {
-      setIsSubmitting(true);
-      const venueData = {
-        ...formData,
-        capacity: Number(formData.capacity)
-      };
+    const handleConfirmSubmit = async () => {
+        try {
+            setIsSubmitting(true);
+            const venueData = {
+                ...watch(),
+                capacity: Number(watch("capacity"))
+            };
 
-      await addVenue(venueData);
-      toast.success("Venue added successfully!");
-      reset();
-      setFormData({
-        // faculty: "",
-        department: "",
-        building: "",
-        hallName: "",
-        type: "lecture",
-        capacity: 0
-      });
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Failed to add venue. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-      setShowConfirmation(false);
-    }
-  };
 
-  return (
-    <>
-      <Card className="w-140 p-6">
-        <CardContent className="space-y-4 flex flex-col gap-3">
-          <div className="flex flex-row gap-5 align-middle">
-            {/* Faculty */}
-            {/* <div className="flex flex-col gap-2">
-              <Label>Faculty</Label>
-              <Input 
-                {...register("faculty", { required: "Faculty is required" })} 
-                placeholder="Enter faculty" 
-                className="w-55"
-                name="faculty"
-                value={formData.faculty}
-                onChange={handleChange}
-              />
-              {errors.faculty && <p className="text-red-500 text-sm">{String(errors.faculty.message)}</p>}
-            </div> */}
-            
-            {/* Department */}
-            <div className="flex flex-col gap-2">
-              <Label>Department</Label>
-              <Input 
-                {...register("department", { required: "Department is required" })} 
-                placeholder="Enter department" 
-                className="w-115"
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-              />
-              {errors.department && <p className="text-red-500 text-sm">{String(errors.department.message)}</p>}
-            </div>
-          </div>
+            if (mode === "edit" && initialData?.id) {
+                await updateVenue(initialData.id, venueData);
+            } else {
+                await addVenue(venueData);
+            }
 
-          <div className="flex flex-row gap-5 align-middle">
-            {/* Building */}
-            <div className="flex flex-col gap-2">
-              <Label>Building</Label>
-              <Input 
-                {...register("building", { required: "Building name is required" })} 
-                placeholder="Enter building name" 
-                className="w-55"
-                name="building"
-                value={formData.building}
-                onChange={handleChange}
-              />
-              {errors.building && <p className="text-red-500 text-sm">{String(errors.building.message)}</p>}
-            </div>
 
-            {/* Hall Name */}
-            <div className="flex flex-col gap-2">
-              <Label>Hall Name</Label>
-              <Input 
-                {...register("hallName", { required: "Hall name is required" })} 
-                placeholder="Enter hall name" 
-                className="w-55"
-                name="hallName"
-                value={formData.hallName}
-                onChange={handleChange}
-              />
-              {errors.hallName && <p className="text-red-500 text-sm">{String(errors.hallName.message)}</p>}
-            </div>
-          </div>
-         
-          <div className="flex flex-row gap-5 align-middle">
-            {/* Type */}
-            <div className="flex flex-col gap-2">
-              <Label>Type</Label>
-              <Select
-                onValueChange={(value) => setFormData(prev => ({...prev, type: value as "lecture" | "tutorial" | "lab"}))}
-                value={formData.type}
-              >
-                <SelectTrigger className="w-55"><SelectValue placeholder="Select Type" /></SelectTrigger>
-                <SelectContent className="w-55">
-                  <SelectItem value="lecture">Lecture</SelectItem>
-                  <SelectItem value="tutorial">Tutorial</SelectItem>
-                  <SelectItem value="lab">Lab</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.type && <p className="text-red-500 text-sm">Type is required</p>}
-            </div>
+            toast.success(`Venue ${mode === "add" ? "added" : "updated"} successfully!`);
+            reset();
+            setDialogOpen(false);
+            onSuccess?.();
+        } catch (error) {
+            console.error("Error submitting form:", error);
+            toast.error(`Failed to ${mode === "add" ? "add" : "update"} venue. Please try again.`);
+        } finally {
+            setIsSubmitting(false);
+            setShowConfirmation(false);
+        }
+    };
 
-            {/* Capacity */}
-            <div className="flex flex-col gap-2">
-              <Label>Capacity</Label>
-              <Input 
-                type="number" 
-                {...register("capacity", { 
-                  required: "Capacity is required", 
-                  min: { value: 10, message: "Minimum capacity is 10" }, 
-                  max: { value: 500, message: "Maximum capacity is 500" } 
-                })} 
-                placeholder="Enter capacity" 
-                className="w-55"
-                name="capacity"
-                value={formData.capacity}
-                onChange={handleChange}
-              />
-              {errors.capacity && <p className="text-red-500 text-sm">{String(errors.capacity.message)}</p>}
-            </div>
-          </div>
-          
-          {/* Submit Button */}
-          <Button 
-            className="w-115" 
-            onClick={handleSubmit(handleFormSubmit)}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Adding..." : "Add Venue"}
-          </Button>
-        </CardContent>
-      </Card>
+    return (
+        <>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                    {children || <Button variant="default">{mode === "add" ? "Add Venue" : "Edit"}</Button>}
+                </DialogTrigger>
 
-      {/* venue adding confirmatio pop up message */}
-      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <AlertDialogContent>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle>{mode === "add" ? "Create New Venue" : "Edit Venue"}</DialogTitle>
+                        <DialogDescription>
+                            {mode === "add"
+                                ? "Fill in the details to add a new venue"
+                                : "Update the venue information below"}
+                        </DialogDescription>
+                    </DialogHeader>
 
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Venue Addition</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to add this venue? Please review the details:
-              <div className="mt-2 space-y-1">
-                {/* <p><strong>Faculty:</strong> {formData.faculty}</p> */}
-                <p><strong>Department:</strong> {formData.department}</p>
-                <p><strong>Building:</strong> {formData.building}</p>
-                <p><strong>Hall Name:</strong> {formData.hallName}</p>
-                <p><strong>Type:</strong> {formData.type}</p>
-                <p><strong>Capacity:</strong> {formData.capacity}</p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+                    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* Department */}
+                            <div className="space-y-2">
+                                <Label htmlFor="department">Department</Label>
+                                <Input
+                                    id="department"
+                                    {...register("department", { required: "Department is required" })}
+                                    placeholder="Enter department"
+                                />
+                                {errors.department && (
+                                    <p className="text-sm text-red-500">{errors.department.message}</p>
+                                )}
+                            </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Confirm"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+                            {/* Building */}
+                            <div className="space-y-2">
+                                <Label htmlFor="building">Building</Label>
+                                <Input
+                                    id="building"
+                                    {...register("building", { required: "Building is required" })}
+                                    placeholder="Enter building name"
+                                />
+                                {errors.building && (
+                                    <p className="text-sm text-red-500">{errors.building.message}</p>
+                                )}
+                            </div>
 
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
+                            {/* Hall Name */}
+                            <div className="space-y-2 col-span-2">
+                                <Label htmlFor="hallName">Hall Name</Label>
+                                <Input
+                                    id="hallName"
+                                    {...register("hallName", { required: "Hall name is required" })}
+                                    placeholder="Enter hall name"
+                                />
+                                {errors.hallName && (
+                                    <p className="text-sm text-red-500">{errors.hallName.message}</p>
+                                )}
+                            </div>
+
+                            {/* Type */}
+                            <div className="space-y-2">
+                                <Label htmlFor="type">Type</Label>
+                                <Select
+                                    value={typeValue}
+                                    onValueChange={(value) => setValue("type", value as Venue["type"])}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="lecture">Lecture Hall</SelectItem>
+                                        <SelectItem value="tutorial">Tutorial Room</SelectItem>
+                                        <SelectItem value="lab">Laboratory</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Capacity */}
+                            <div className="space-y-2">
+                                <Label htmlFor="capacity">Capacity</Label>
+                                <Input
+                                    id="capacity"
+                                    type="number"
+                                    {...register("capacity", {
+                                        required: "Capacity is required",
+                                        min: { value: 10, message: "Minimum capacity is 10" },
+                                        max: { value: 500, message: "Maximum capacity is 500" }
+                                    })}
+                                    placeholder="Enter capacity"
+                                />
+                                {errors.capacity && (
+                                    <p className="text-sm text-red-500">{errors.capacity.message}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setDialogOpen(false)}
+                                disabled={isSubmitting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {mode === "add" ? "Add Venue" : "Save Changes"}
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Confirmation Dialog */}
+            <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Venue {mode === "add" ? "Addition" : "Update"}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Please review the venue details:
+                            <div className="mt-4 space-y-2 p-4 bg-gray-50 rounded-lg">
+                                <div className="flex justify-between">
+                                    <span className="font-medium">Department:</span>
+                                    <span>{watch("department")}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium">Building:</span>
+                                    <span>{watch("building")}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium">Hall Name:</span>
+                                    <span>{watch("hallName")}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium">Type:</span>
+                                    <span className="capitalize">{watch("type")}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-medium">Capacity:</span>
+                                    <span>{watch("capacity")}</span>
+                                </div>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmSubmit} disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                `Confirm ${mode === "add" ? "Addition" : "Update"}`
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
+    );
 }
