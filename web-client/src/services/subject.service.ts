@@ -1,5 +1,5 @@
 import axiosConfig from '@/config/axios.config.ts';
-import { ISubjectRequest } from '@/data-types/subject.tp.ts';
+import { ISubjectRequest, SubjectOptions } from '@/data-types/subject.tp.ts';
 import api from '@/config/axios.config.ts';
 
 export const addSubject = async (addSubjectReq: ISubjectRequest) => {
@@ -49,6 +49,16 @@ export const updateSubject = async (id: string, subjectData: any) => {
     return response.data;
   } catch (error) {
     console.error('Error updating subject:', error);
+    throw error;
+  }
+};
+
+export const getSubjectOptions = async () => {
+  try {
+    const response = await api.get('/subject/get/options');
+    return response.data.result as SubjectOptions[];
+  } catch (error) {
+    console.error('Error fetching venue options:', error);
     throw error;
   }
 };

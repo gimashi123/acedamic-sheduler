@@ -6,3 +6,10 @@ export const getSubjectResponse = (subject) => {
     credits: subject.credits,
   };
 };
+
+export const SubjectOptions = (subject) => ({
+  id: subject._id,
+  code: subject.code,
+  credits: subject.credits,
+  name: subject.name,
+});

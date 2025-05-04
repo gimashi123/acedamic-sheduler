@@ -1,104 +1,156 @@
 import { useState, useEffect } from "react";
-import VenueForm from "@/components/venue/VenueForm";
-import VenueTable from "@/components/venue/VenueTable";
-import { Card, CardContent } from "@/components/ui/card";
-import { getVenues, deleteVenue, updateVenue } from "@/services/venue.service";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Trash2, Loader2, Pencil } from "lucide-react";
+import { getVenues, deleteVenue } from "@/services/venue.service";
 import { toast } from "sonner";
+import VenueForm from "@/components/venue/VenueForm";
+
+interface Venue {
+  id: string;
+  department: string;
+  building: string;
+  hallName: string;
+  type: "lecture" | "tutorial" | "lab";
+  capacity: number;
+}
 
 export default function VenueManagement() {
-  const [venues, setVenues] = useState<any[]>([]);
-  const [editingVenue, setEditingVenue] = useState<any | null>(null);
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchVenues = async () => {
     try {
       const data = await getVenues();
       setVenues(data);
     } catch (error) {
-      console.error("Error fetching venues:", error);
       toast.error("Failed to fetch venues");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchVenues();
+    fetchVenues().then();
   }, []);
-
-  const handleAddOrUpdate = async (venue: any) => {
-    try {
-      // Check for duplicate hall name
-      const duplicateHall = venues.find(v => v.hallName.toLowerCase() === venue.hallName.toLowerCase());
-      if (duplicateHall) {
-        toast.error("A hall with this name already exists! Please use a different name.");
-        return;
-      }
-
-      // Check for lab overlap
-      if (venue.type === "lab") {
-        const overlappingLab = venues.find(v => v.type === "lab" && v.hallName === venue.hallName);
-        if (overlappingLab) {
-          toast.error("Lab sessions cannot overlap! Please choose another hall.");
-          return;
-        }
-      }
-
-      // Refresh venues after adding/updating
-      await fetchVenues();
-      setEditingVenue(null);
-      toast.success(editingVenue ? "Venue updated successfully!" : "Venue added successfully!");
-    } catch (error) {
-      console.error("Error handling venue:", error);
-      toast.error("Failed to save venue");
-    }
-  };
-
-  const handleEdit = (venue: any) => {
-    setEditingVenue(venue);
-  };
 
   const handleDelete = async (id: string) => {
     try {
+      setDeletingId(id);
       await deleteVenue(id);
-      await fetchVenues(); // Refresh the venues list
-      toast.success("Venue deleted successfully!");
+      await fetchVenues();
+      toast.success("Venue deleted successfully");
     } catch (error) {
-      console.error("Error deleting venue:", error);
       toast.error("Failed to delete venue");
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  const handleUpdate = async (id: string, updatedVenue: any) => {
-    try {
-      await updateVenue(id, updatedVenue);
-      await fetchVenues(); // Refresh the venues list
-      toast.success("Venue updated successfully!");
-    } catch (error) {
-      console.error("Error updating venue:", error);
-      toast.error("Failed to update venue");
-    }
-  };
+  const filteredVenues = venues.filter(venue =>
+      venue.hallName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      venue.building.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="p-4 space-y-6 justify-center">
-      <div className="h-screen flex justify-center items-center">
-        <CardContent>
-          <h2 className="text-xl font-bold mb-3">Manage Venues</h2>
-          <VenueForm onSubmit={handleAddOrUpdate} initialData={editingVenue} onSuccess={fetchVenues} />
-        </CardContent>
-      </div>
+      <div className="p-6 w-full mx-auto space-y-6">
+        <Card>
+          <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+            <div className="space-y-1">
+              <CardTitle className="text-2xl">Venue Management</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Manage all university venues and their details
+              </p>
+            </div>
+            <div className="flex gap-2 items-start">
+              <Input
+                  placeholder="Search venues..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-xs"
+              />
+              <VenueForm onSuccess={fetchVenues} mode="add">
+                <Button>Add New Venue</Button>
+              </VenueForm>
+            </div>
+          </CardHeader>
 
-      <div className="flex justify-center items-center">
-        <Card className="w-240">
           <CardContent>
-            <h2 className="text-xl font-bold mb-3">Allocated Venues</h2>
-            <VenueTable 
-              venues={venues} 
-              onEdit={handleEdit} 
-              onDelete={handleDelete}
-              onUpdate={handleUpdate}
-            />
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[150px]">Hall Name</TableHead>
+                    <TableHead className="min-w-[150px]">Building</TableHead>
+                    <TableHead className="min-w-[150px]">Department</TableHead>
+                    <TableHead className="min-w-[120px]">Type</TableHead>
+                    <TableHead className="min-w-[100px]">Capacity</TableHead>
+                    <TableHead className="min-w-[150px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+                        </TableCell>
+                      </TableRow>
+                  ) : filteredVenues.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          No venues found
+                        </TableCell>
+                      </TableRow>
+                  ) : (
+                      filteredVenues.map((venue) => (
+                          <TableRow key={venue.id}>
+                            <TableCell className="font-medium">{venue.hallName}</TableCell>
+                            <TableCell>{venue.building}</TableCell>
+                            <TableCell>{venue.department}</TableCell>
+                            <TableCell>
+                        <span className="capitalize px-2 py-1 rounded bg-accent text-accent-foreground">
+                          {venue.type}
+                        </span>
+                            </TableCell>
+                            <TableCell>{venue.capacity}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <VenueForm
+                                    mode="edit"
+                                    initialData={venue}
+                                    onSuccess={fetchVenues}
+                                >
+                                  <Button variant="ghost" size="sm">
+                                    <Pencil className="h-4 w-4 mr-2" />
+                                  </Button>
+                                </VenueForm>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDelete(venue.id)}
+                                    disabled={deletingId === venue.id}
+                                >
+                                  {deletingId === venue.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                      <Trash2  className="h-4 w-4 text-red-500" />
+                                  )}
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                      ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
-    </div>
   );
 }

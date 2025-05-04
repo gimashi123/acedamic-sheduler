@@ -10,3 +10,10 @@ export interface ISubjectRequest {
   code: string;
   credits: number;
 }
+
+export interface SubjectOptions {
+  id: string;
+  code: string;
+  name: string;
+  credits: number;
+}

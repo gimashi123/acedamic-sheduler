@@ -4,17 +4,26 @@ import {
   HTTP_STATUS,
   successResponse,
 } from '../config/http.config.js';
-import { getSubjectResponse } from '../dto/subject.response.dto.js';
+import {
+  getSubjectResponse,
+  SubjectOptions,
+} from '../dto/subject.response.dto.js';
+import Venue from '../models/venue.model.js';
+import { VenueOptionsDTO } from '../dto/venue.dto.js';
 
 // Add a new subject
 export const addSubject = async (req, res) => {
   try {
     let { name, code, credits } = req.body;
 
-     // Check if the subject already exists
-     if (await Subject.findOne({ code })) {
-       return errorResponse(res, 'Subject with this code already exists', HTTP_STATUS.BAD_REQUEST);
-     }
+    // Check if the subject already exists
+    if (await Subject.findOne({ code })) {
+      return errorResponse(
+        res,
+        'Subject with this code already exists',
+        HTTP_STATUS.BAD_REQUEST,
+      );
+    }
     if (name === undefined || code === undefined || credits === undefined) {
       return errorResponse(
         res,
@@ -135,6 +144,29 @@ export const deleteSubject = async (req, res) => {
       res,
       error.message || 'Error deleting subject',
       HTTP_STATUS.NOT_FOUND,
+    );
+  }
+};
+
+export const getSubjectOptions = async (req, res) => {
+  try {
+    const subjects = await Subject.find();
+
+    if (!subjects.length) {
+      return errorResponse(res, 'No subjects found', HTTP_STATUS.OK);
+    }
+    return successResponse(
+      res,
+      'Subject Options fetched successfully',
+      HTTP_STATUS.OK,
+      subjects.map(SubjectOptions),
+    );
+  } catch (err) {
+    console.error('Error fetching subject options:', err);
+    return errorResponse(
+      null,
+      'Server error occurred while fetching subject options',
+      HTTP_STATUS.SERVER_ERROR,
     );
   }
 };

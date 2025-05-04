@@ -37,6 +37,11 @@ export const TimeTablePage = () => {
     const navigate = useNavigate();
     const {timetables} = useTimetable();
 
+
+    const handleViewTimetable = (timetable: ITimetable) => {
+        navigate(`/admin/dashboard/timetable/view`, { state: { timetable } });
+    }
+
     return (
         <div>
             <div>
@@ -65,7 +70,7 @@ export const TimeTablePage = () => {
                             </CardContent>
                             <CardFooter>
                                 <div className="flex gap-x-4">
-                                    <Button variant={'outline'} size={"icon"} className={'cursor-pointer hover:text-white hover:bg-green-400'} onClick={() => navigate(`/admin/dashboard/timetable/view`)}>
+                                    <Button variant={'outline'} size={"icon"} className={'cursor-pointer hover:text-white hover:bg-green-400'} onClick={()=>handleViewTimetable(item)}>
                                         <Eye/>
                                     </Button>
                                     <Button variant={'outline'} size={"sm"} className={'cursor-pointer hover:text-white hover:bg-green-400'} onClick={() => navigate(`/admin/dashboard/timetable/add`)}>
