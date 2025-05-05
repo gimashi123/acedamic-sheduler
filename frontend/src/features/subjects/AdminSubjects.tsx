@@ -53,6 +53,11 @@ const AdminSubjects: React.FC = () => {
               <strong>Delete subjects</strong> that are no longer needed using the delete icon
             </Typography>
           </Box>
+          <Box component="li">
+            <Typography variant="body1">
+              <strong>Export subjects to PDF</strong> for reporting or documentation purposes
+            </Typography>
+          </Box>
         </Box>
       </Paper>
 

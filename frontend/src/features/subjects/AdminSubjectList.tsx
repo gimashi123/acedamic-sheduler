@@ -5,12 +5,13 @@ import {
   IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
   Snackbar, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Grid, Tooltip
 } from '@mui/material';
-import { Search, Delete, Edit, PersonAdd, Add, PersonRemove } from '@mui/icons-material';
+import { Search, Delete, Edit, PersonAdd, Add, PersonRemove, PictureAsPdf } from '@mui/icons-material';
 import { Subject, User, LecturerInfo } from '../../types';
 import { getSubjects, deleteSubject, assignLecturer } from './subjectService';
 import { getAllUsers, userService } from '../../features/users/userService';
 import SubjectForm from './SubjectForm';
 import { userApi } from '../../utils/api';
+import { exportToPdf } from '../../utils/pdfExport';
 
 const AdminSubjectList: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -283,6 +284,49 @@ const AdminSubjectList: React.FC = () => {
     setSnackbarOpen(true);
   };
 
+  // Function to handle PDF export
+  const handleExportToPdf = () => {
+    // Format subject data for PDF export
+    const subjectData = filteredSubjects.map(subject => {
+      // Get the lecturer name
+      let lecturerName = 'Not assigned';
+      if (subject.lecturer) {
+        if (typeof subject.lecturer === 'object') {
+          lecturerName = `${subject.lecturer.firstName} ${subject.lecturer.lastName}`;
+        } else {
+          // If it's just the ID, find the lecturer in the list
+          const foundLecturer = lecturers.find(l => l._id === subject.lecturer);
+          if (foundLecturer) {
+            lecturerName = `${foundLecturer.firstName} ${foundLecturer.lastName}`;
+          }
+        }
+      }
+      
+      return {
+        code: subject.code,
+        name: subject.name,
+        credits: subject.credits,
+        lecturer: lecturerName
+      };
+    });
+
+    // Configure PDF export options
+    exportToPdf({
+      title: 'Subjects Report',
+      filename: 'subjects-report',
+      columns: [
+        { header: 'Code', dataKey: 'code' },
+        { header: 'Name', dataKey: 'name' },
+        { header: 'Credits', dataKey: 'credits' },
+        { header: 'Assigned Lecturer', dataKey: 'lecturer' }
+      ],
+      data: subjectData,
+      orientation: 'portrait',
+      pageSize: 'a4',
+      includeTimestamp: true
+    });
+  };
+
   // Add a new method to handle unassigning lecturer directly
   const handleOpenUnassignDialog = (subject: Subject) => {
     setSubjectToUnassign(subject);
@@ -362,7 +406,7 @@ const AdminSubjectList: React.FC = () => {
             }}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={2}>
           <Button
             fullWidth
             variant="contained"
@@ -370,7 +414,18 @@ const AdminSubjectList: React.FC = () => {
             startIcon={<Add />}
             onClick={handleOpenAddSubjectDialog}
           >
-            Add New Subject
+            Add Subject
+          </Button>
+        </Grid>
+        <Grid item xs={12} md={2}>
+          <Button
+            fullWidth
+            variant="outlined"
+            color="primary"
+            startIcon={<PictureAsPdf />}
+            onClick={handleExportToPdf}
+          >
+            Export PDF
           </Button>
         </Grid>
       </Grid>

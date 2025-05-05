@@ -4,12 +4,16 @@ import SubjectForm from './SubjectForm';
 import SubjectList from './SubjectList';
 import UpdateSubjectDialog from './UpdateSubjectDialog';
 import { Subject } from '../../types';
+import useAuthStore from '../../store/authStore';
 
 const Subjects: React.FC = () => {
+  const { user } = useAuthStore();
   const [refresh, setRefresh] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+
+  const isAdmin = user?.role === 'Admin';
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -21,6 +25,9 @@ const Subjects: React.FC = () => {
   };
 
   const handleEditSubject = (subject: Subject) => {
+    // Only allow editing for admin users
+    if (!isAdmin) return;
+    
     setSelectedSubject(subject);
     setUpdateDialogOpen(true);
   };
@@ -37,37 +44,43 @@ const Subjects: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Subject Management
+        {isAdmin ? 'Subject Management' : 'My Subjects'}
       </Typography>
       
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs 
-          value={activeTab} 
-          onChange={handleTabChange}
-          aria-label="subject management tabs"
-        >
-          <Tab label="Subject List" />
-          <Tab label="Add New Subject" />
-        </Tabs>
-      </Box>
+      {/* Only show tabs for admin users */}
+      {isAdmin ? (
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={handleTabChange}
+            aria-label="subject management tabs"
+          >
+            <Tab label="Subject List" />
+            <Tab label="Add New Subject" />
+          </Tabs>
+        </Box>
+      ) : null}
 
-      {activeTab === 0 ? (
-        <SubjectList 
-          refresh={refresh}
-          onEditSubject={handleEditSubject}
-        />
-      ) : (
+      {isAdmin && activeTab === 1 ? (
         <Box maxWidth="md" mx="auto">
           <SubjectForm onSuccess={handleSuccess} />
         </Box>
+      ) : (
+        <SubjectList 
+          refresh={refresh}
+          onEditSubject={isAdmin ? handleEditSubject : undefined}
+        />
       )}
 
-      <UpdateSubjectDialog
-        open={updateDialogOpen}
-        subject={selectedSubject}
-        onClose={handleCloseUpdateDialog}
-        onSuccess={handleUpdateSuccess}
-      />
+      {/* Only show update dialog for admin users */}
+      {isAdmin && (
+        <UpdateSubjectDialog
+          open={updateDialogOpen}
+          subject={selectedSubject}
+          onClose={handleCloseUpdateDialog}
+          onSuccess={handleUpdateSuccess}
+        />
+      )}
     </Container>
   );
 };
