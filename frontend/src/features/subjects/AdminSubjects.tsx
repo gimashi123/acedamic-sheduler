@@ -40,7 +40,12 @@ const AdminSubjects: React.FC = () => {
           </Box>
           <Box component="li">
             <Typography variant="body1">
-              <strong>Assign lecturers</strong> to subjects using the person icon in the actions column
+              <strong>Assign lecturers</strong> to subjects using the person add icon in the actions column
+            </Typography>
+          </Box>
+          <Box component="li">
+            <Typography variant="body1">
+              <strong>Unassign lecturers</strong> from subjects using the person remove icon that appears for assigned subjects
             </Typography>
           </Box>
           <Box component="li">

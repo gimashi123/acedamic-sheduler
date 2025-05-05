@@ -3,9 +3,9 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
   Typography, Box, Alert, CircularProgress, TextField, InputAdornment,
   IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
-  Snackbar, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Grid
+  Snackbar, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Grid, Tooltip
 } from '@mui/material';
-import { Search, Delete, Edit, PersonAdd, Add } from '@mui/icons-material';
+import { Search, Delete, Edit, PersonAdd, Add, PersonRemove } from '@mui/icons-material';
 import { Subject, User, LecturerInfo } from '../../types';
 import { getSubjects, deleteSubject, assignLecturer } from './subjectService';
 import { getAllUsers, userService } from '../../features/users/userService';
@@ -23,11 +23,14 @@ const AdminSubjectList: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [addSubjectDialogOpen, setAddSubjectDialogOpen] = useState(false);
+  const [unassignDialogOpen, setUnassignDialogOpen] = useState(false);
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
   const [subjectToAssign, setSubjectToAssign] = useState<Subject | null>(null);
+  const [subjectToUnassign, setSubjectToUnassign] = useState<Subject | null>(null);
   const [selectedLecturerId, setSelectedLecturerId] = useState<string>('');
   const [deleteInProgress, setDeleteInProgress] = useState(false);
   const [assignInProgress, setAssignInProgress] = useState(false);
+  const [unassignInProgress, setUnassignInProgress] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
@@ -280,6 +283,51 @@ const AdminSubjectList: React.FC = () => {
     setSnackbarOpen(true);
   };
 
+  // Add a new method to handle unassigning lecturer directly
+  const handleOpenUnassignDialog = (subject: Subject) => {
+    setSubjectToUnassign(subject);
+    setUnassignDialogOpen(true);
+  };
+
+  const handleCloseUnassignDialog = () => {
+    setUnassignDialogOpen(false);
+    setSubjectToUnassign(null);
+  };
+
+  const handleUnassignLecturer = async () => {
+    if (!subjectToUnassign?.id) return;
+    
+    setUnassignInProgress(true);
+    try {
+      const updatedSubject = await assignLecturer(subjectToUnassign.id, null);
+      
+      // Update the subjects list with the updated subject
+      const updatedSubjects = subjects.map(s => 
+        s.id === updatedSubject.id ? updatedSubject : s
+      );
+      
+      setSubjects(updatedSubjects);
+      setFilteredSubjects(
+        updatedSubjects.filter((s) => {
+          if (searchQuery.trim() === '') return true;
+          const query = searchQuery.toLowerCase();
+          return s.name.toLowerCase().includes(query) ||
+            s.code.toLowerCase().includes(query);
+        })
+      );
+      
+      setSnackbarMessage('Lecturer unassigned successfully');
+      setSnackbarOpen(true);
+    } catch (err) {
+      console.error('Error unassigning lecturer:', err);
+      setSnackbarMessage('An error occurred while unassigning lecturer');
+      setSnackbarOpen(true);
+    } finally {
+      setUnassignInProgress(false);
+      handleCloseUnassignDialog();
+    }
+  };
+
   if (loading && subjects.length === 0) {
     return (
       <Box display="flex" justifyContent="center" my={4}>
@@ -349,23 +397,40 @@ const AdminSubjectList: React.FC = () => {
                   <TableCell>{subject.credits}</TableCell>
                   <TableCell>{getLecturerName(subject.lecturer)}</TableCell>
                   <TableCell align="center">
-                    <IconButton 
-                      color="primary" 
-                      size="small"
-                      onClick={() => handleOpenAssignDialog(subject)}
-                      title="Assign lecturer"
-                      sx={{ mr: 1 }}
-                    >
-                      <PersonAdd fontSize="small" />
-                    </IconButton>
-                    <IconButton 
-                      color="error" 
-                      size="small"
-                      onClick={() => handleOpenDeleteDialog(subject)}
-                      title="Delete subject"
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
+                    <Tooltip title="Assign lecturer">
+                      <IconButton 
+                        color="primary" 
+                        size="small"
+                        onClick={() => handleOpenAssignDialog(subject)}
+                        sx={{ mr: 1 }}
+                      >
+                        <PersonAdd fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    
+                    {/* Show unassign button only if there's an assigned lecturer */}
+                    {subject.lecturer && (
+                      <Tooltip title="Unassign lecturer">
+                        <IconButton 
+                          color="secondary" 
+                          size="small"
+                          onClick={() => handleOpenUnassignDialog(subject)}
+                          sx={{ mr: 1 }}
+                        >
+                          <PersonRemove fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    
+                    <Tooltip title="Delete subject">
+                      <IconButton 
+                        color="error" 
+                        size="small"
+                        onClick={() => handleOpenDeleteDialog(subject)}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}
@@ -487,6 +552,35 @@ const AdminSubjectList: React.FC = () => {
             />
           </Box>
         </DialogContent>
+      </Dialog>
+
+      {/* Unassign Lecturer Confirmation Dialog */}
+      <Dialog
+        open={unassignDialogOpen}
+        onClose={handleCloseUnassignDialog}
+      >
+        <DialogTitle>Unassign Lecturer</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to unassign the lecturer from "{subjectToUnassign?.name} ({subjectToUnassign?.code})"?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleCloseUnassignDialog}
+            disabled={unassignInProgress}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleUnassignLecturer} 
+            color="primary"
+            disabled={unassignInProgress}
+            autoFocus
+          >
+            {unassignInProgress ? 'Unassigning...' : 'Unassign Lecturer'}
+          </Button>
+        </DialogActions>
       </Dialog>
 
       {/* Notification Snackbar */}
