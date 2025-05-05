@@ -17,6 +17,7 @@ import Settings from '../features/settings/Settings';
 import Users from '../features/users/Users';
 import Subjects from '../features/subjects/Subjects';
 import AdminSubjects from '../features/subjects/AdminSubjects';
+import Analytics from '../features/analytics/Analytics';
 
 // Loading component for suspense fallback
 const LoadingSpinner = () => (
@@ -59,6 +60,7 @@ export const AppRouter: React.FC = () => {
             <Route path="users" element={<Users />} />
             <Route path="subjects" element={<Subjects />} />
             <Route path="admin/subjects" element={<AdminSubjects />} />
+            <Route path="analytics" element={<Analytics />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="change-password" element={<ChangePassword />} />
             <Route path="register-request" element={<RegisterRequestForm />} />

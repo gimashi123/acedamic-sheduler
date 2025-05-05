@@ -15,7 +15,8 @@ import {
   Book,
   LogOut,
   Moon,
-  Sun
+  Sun,
+  BarChart2
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -42,7 +43,8 @@ import {
   Logout as LogoutIcon,
   Person as PersonIcon,
   LightMode as LightModeIcon,
-  DarkMode as DarkModeIcon
+  DarkMode as DarkModeIcon,
+  BarChart as BarChartIcon
 } from '@mui/icons-material';
 
 const Layout: React.FC = () => {
@@ -106,6 +108,9 @@ const Layout: React.FC = () => {
             </Link>
             <Link to="/requests" className={linkClass}>
               <UserPlus className="h-5 w-5" />
+            </Link>
+            <Link to="/analytics" className={linkClass}>
+              <BarChart2 className="h-5 w-5" />
             </Link>
             <Link to="/settings" className={linkClass}>
               <Settings className="h-5 w-5" />
@@ -219,6 +224,14 @@ const Layout: React.FC = () => {
             </ListItemIcon>
             Change Password
           </MenuItem>
+          {user.role === 'Admin' && (
+            <MenuItem onClick={() => navigate('/analytics')}>
+              <ListItemIcon>
+                <BarChartIcon fontSize="small" />
+              </ListItemIcon>
+              Analytics
+            </MenuItem>
+          )}
           <Divider />
           <MenuItem onClick={handleLogout}>
             <ListItemIcon>
