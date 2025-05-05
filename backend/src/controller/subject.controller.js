@@ -1,206 +1,168 @@
 import Subject from '../models/subject.model.js';
-import User from '../models/user.model.js';
+import {
+  errorResponse,
+  HTTP_STATUS,
+  successResponse,
+} from '../config/http.config.js';
+import { getSubjectResponse } from '../dto/subject.response.dto.js';
 
-/**
- * Create a new subject
- */
-export const createSubject = async (req, res) => {
+// Add a new subject
+export const addSubject = async (req, res) => {
   try {
-    console.log('Creating subject - request body:', req.body);
-    console.log('Creating subject - user from token:', req.user);
-    
-    const { name, code, description, credits, department } = req.body;
-    
-    if (!req.user || !req.user.userId) {
-      console.error('User ID not found in token:', req.user);
-      return res.status(401).json({ message: 'Authentication error: User ID not found' });
-    }
-    
-    const lecturerId = req.user.userId; // Get lecturer ID from authenticated user
+    let { name, code, credits } = req.body;
 
-    // Verify user is a lecturer
-    const user = await User.findById(lecturerId);
-    console.log('User from DB:', user);
-    
-    if (!user) {
-      console.error('User not found with ID:', lecturerId);
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    if (user.role !== 'Lecturer') {
-      console.error('User is not a lecturer:', user.role);
-      return res.status(403).json({ message: 'Only lecturers can add subjects' });
+     // Check if the subject already exists
+     if (await Subject.findOne({ code })) {
+       return errorResponse(res, 'Subject with this code already exists', HTTP_STATUS.BAD_REQUEST);
+     }
+    if (name === undefined || code === undefined || credits === undefined) {
+      return errorResponse(
+        res,
+        'Please provide all required fields',
+        HTTP_STATUS.NOT_FOUND,
+      );
     }
 
-    // Check if the lecturer already has a subject
-    const existingLecturerSubject = await Subject.findOne({ lecturer: lecturerId });
-    console.log('Existing subject for lecturer:', existingLecturerSubject);
-    
-    if (existingLecturerSubject) {
-      return res.status(400).json({ 
-        message: 'You have already added a subject. A lecturer can only manage one subject.' 
-      });
+    //First letter of the name is capitalized
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+
+    if (!Number.isInteger(credits) || credits < 1 || credits > 4) {
+      return errorResponse(
+        res,
+        'Credits must be an integer between 1 and 4',
+        HTTP_STATUS.BAD_REQUEST,
+      );
     }
 
-    // Check if subject code already exists
-    const existingSubject = await Subject.findOne({ code });
-    if (existingSubject) {
-      return res.status(400).json({ message: 'Subject with this code already exists' });
-    }
+    //save to db
+    const subject = new Subject({ name, code, credits });
+    await subject.save();
 
-    // Create new subject
-    const subject = new Subject({
-      name,
-      code,
-      description,
-      lecturer: lecturerId,
-      credits: credits || 3,
-      department,
-      status: 'active'
-    });
-
-    const savedSubject = await subject.save();
-    console.log('Subject created successfully:', savedSubject);
-    
-    return res.status(201).json({
-      message: 'Subject created successfully',
-      subject: savedSubject
-    });
-  } catch (error) {
-    console.error('Error creating subject:', error);
-    return res.status(500).json({ 
-      message: 'Internal server error', 
-      error: error.message 
-    });
+    return successResponse(
+      res,
+      'Subject added Successfully',
+      HTTP_STATUS.CREATED,
+      getSubjectResponse(subject),
+    );
+  } catch (e) {
+    return errorResponse(
+      res,
+      e.message || 'Error when creating a subject',
+      HTTP_STATUS.NOT_FOUND,
+    );
   }
 };
 
-/**
- * Get all subjects
- */
-export const getAllSubjects = async (req, res) => {
+// Get all subjects
+export const getSubjects = async (req, res) => {
   try {
-    const subjects = await Subject.find()
-      .populate('lecturer', 'firstName lastName email')
-      .sort({ createdAt: -1 });
-    
-    return res.status(200).json({ subjects });
-  } catch (error) {
-    console.error('Error fetching subjects:', error);
-    return res.status(500).json({ 
-      message: 'Internal server error',
-      error: error.message
+    const subjects = await Subject.find();
+
+    const subjectResponses = subjects?.map((subject) => {
+      return getSubjectResponse(subject);
     });
+    return successResponse(
+      res,
+      'Subjects retrieved successfully',
+      HTTP_STATUS.OK,
+      subjectResponses,
+    );
+  } catch (error) {
+    return errorResponse(
+      res,
+      error.message || 'Error retrieving subjects',
+      HTTP_STATUS.NOT_FOUND,
+    );
   }
 };
 
-/**
- * Get subjects for a specific lecturer
- */
-export const getLecturerSubjects = async (req, res) => {
+// Get subject by ID
+export const getSubjectById = async (req, res) => {
   try {
-    if (!req.user || !req.user.userId) {
-      return res.status(401).json({ message: 'Authentication error: User ID not found' });
+    const { id } = req.params;
+    const subject = await Subject.findById(id);
+    
+    if (!subject) {
+      return errorResponse(res, 'Subject not found', HTTP_STATUS.NOT_FOUND);
     }
-    
-    const lecturerId = req.user.userId;
-    console.log('Getting subjects for lecturer:', lecturerId);
-    
-    const subjects = await Subject.find({ lecturer: lecturerId })
-      .sort({ createdAt: -1 });
-    
-    return res.status(200).json({ subjects });
+
+    return successResponse(
+      res,
+      'Subject retrieved successfully',
+      HTTP_STATUS.OK,
+      getSubjectResponse(subject),
+    );
   } catch (error) {
-    console.error('Error fetching lecturer subjects:', error);
-    return res.status(500).json({ 
-      message: 'Internal server error',
-      error: error.message
-    });
+    return errorResponse(
+      res,
+      error.message || 'Error retrieving subject',
+      HTTP_STATUS.NOT_FOUND,
+    );
   }
 };
 
-/**
- * Update a subject
- */
+// Update subject
 export const updateSubject = async (req, res) => {
   try {
-    if (!req.user || !req.user.userId) {
-      return res.status(401).json({ message: 'Authentication error: User ID not found' });
-    }
-    
     const { id } = req.params;
-    const { name, description, credits, department, status } = req.body;
-    const lecturerId = req.user.userId;
-
+    const { name, code, credits } = req.body;
+    
     const subject = await Subject.findById(id);
     
-    // Check if subject exists
     if (!subject) {
-      return res.status(404).json({ message: 'Subject not found' });
-    }
-    
-    // Verify user is the subject's lecturer or an admin
-    if (subject.lecturer.toString() !== lecturerId && req.user.role !== 'Admin') {
-      return res.status(403).json({ message: 'You do not have permission to update this subject' });
+      return errorResponse(res, 'Subject not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Update fields
-    subject.name = name || subject.name;
-    subject.description = description || subject.description;
-    subject.credits = credits || subject.credits;
-    subject.department = department || subject.department;
-    subject.status = status || subject.status;
+    if (code) {
+      subject.code = code;
+    }
+
+    if (credits) {
+      subject.credits = credits;
+    }
+
+    if (name) {
+      subject.name = name;
+    }
 
     await subject.save();
-    
-    return res.status(200).json({
-      message: 'Subject updated successfully',
-      subject
-    });
+
+    return successResponse(
+      res,
+      'Subject updated successfully',
+      HTTP_STATUS.OK,
+      getSubjectResponse(subject),
+    );
   } catch (error) {
-    console.error('Error updating subject:', error);
-    return res.status(500).json({ 
-      message: 'Internal server error',
-      error: error.message
-    });
+    return errorResponse(
+      res,
+      error.message || 'Error updating subject',
+      HTTP_STATUS.NOT_FOUND,
+    );
   }
 };
 
-/**
- * Delete a subject
- */
+// Delete subject
 export const deleteSubject = async (req, res) => {
   try {
-    if (!req.user || !req.user.userId) {
-      return res.status(401).json({ message: 'Authentication error: User ID not found' });
-    }
-    
     const { id } = req.params;
-    const userId = req.user.userId;
-    const userRole = req.user.role;
 
-    const subject = await Subject.findById(id);
-    
-    // Check if subject exists
-    if (!subject) {
-      return res.status(404).json({ message: 'Subject not found' });
+    console.log('Attempting to delete subject: ', id);
+    const deletedSubject = await Subject.findByIdAndDelete(id);
+    if (!deletedSubject) {
+      return errorResponse(res, 'Subject not found', HTTP_STATUS.NOT_FOUND);
     }
-    
-    // Only allow the lecturer who created the subject or admin to delete it
-    if (subject.lecturer.toString() !== userId && userRole !== 'Admin') {
-      return res.status(403).json({ message: 'You do not have permission to delete this subject' });
-    }
-
-    await Subject.findByIdAndDelete(id);
-    
-    return res.status(200).json({
-      message: 'Subject deleted successfully',
-    });
+    return successResponse(
+      res,
+      'Subject deleted successfully',
+      HTTP_STATUS.OK,
+      null,
+    );
   } catch (error) {
-    console.error('Error deleting subject:', error);
-    return res.status(500).json({ 
-      message: 'Internal server error',
-      error: error.message
-    });
+    return errorResponse(
+      res,
+      error.message || 'Error deleting subject',
+      HTTP_STATUS.NOT_FOUND,
+    );
   }
-}; 
+};

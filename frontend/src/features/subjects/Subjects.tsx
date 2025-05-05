@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, Divider, Tabs, Tab } from '@mui/material';
+import { Container, Typography, Box, Tabs, Tab } from '@mui/material';
 import SubjectForm from './SubjectForm';
 import SubjectList from './SubjectList';
-import { Subject } from './subjectService';
-import useAuthStore from '../../store/authStore';
+import UpdateSubjectDialog from './UpdateSubjectDialog';
+import { Subject } from '../../types';
 
 const Subjects: React.FC = () => {
-  const { user } = useAuthStore();
   const [refresh, setRefresh] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -16,18 +17,22 @@ const Subjects: React.FC = () => {
 
   const handleSuccess = () => {
     setRefresh(!refresh);
+    setActiveTab(0); // Switch to list view after adding
   };
 
-  // Only allow access to lecturers
-  if (!user || user.role !== 'Lecturer') {
-    return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography color="error">
-          Access denied. Only lecturers can access this page.
-        </Typography>
-      </Container>
-    );
-  }
+  const handleEditSubject = (subject: Subject) => {
+    setSelectedSubject(subject);
+    setUpdateDialogOpen(true);
+  };
+
+  const handleUpdateSuccess = () => {
+    setRefresh(!refresh);
+  };
+
+  const handleCloseUpdateDialog = () => {
+    setUpdateDialogOpen(false);
+    setSelectedSubject(null);
+  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -41,7 +46,7 @@ const Subjects: React.FC = () => {
           onChange={handleTabChange}
           aria-label="subject management tabs"
         >
-          <Tab label="My Subjects" />
+          <Tab label="Subject List" />
           <Tab label="Add New Subject" />
         </Tabs>
       </Box>
@@ -49,12 +54,20 @@ const Subjects: React.FC = () => {
       {activeTab === 0 ? (
         <SubjectList 
           refresh={refresh}
+          onEditSubject={handleEditSubject}
         />
       ) : (
         <Box maxWidth="md" mx="auto">
           <SubjectForm onSuccess={handleSuccess} />
         </Box>
       )}
+
+      <UpdateSubjectDialog
+        open={updateDialogOpen}
+        subject={selectedSubject}
+        onClose={handleCloseUpdateDialog}
+        onSuccess={handleUpdateSuccess}
+      />
     </Container>
   );
 };

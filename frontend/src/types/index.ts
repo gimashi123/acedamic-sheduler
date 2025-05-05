@@ -16,6 +16,13 @@ export interface User {
   profilePicture?: ProfilePicture;
 }
 
+export interface Subject {
+  id: string;
+  name: string;
+  code: string;
+  credits: number;
+}
+
 export interface Venue {
   _id: string;
   faculty: string;

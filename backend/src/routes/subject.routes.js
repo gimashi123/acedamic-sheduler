@@ -1,42 +1,21 @@
 import express from 'express';
-import { createSubject, getAllSubjects, getLecturerSubjects, updateSubject, deleteSubject } from '../controller/subject.controller.js';
-import { authenticateToken, authorizeRole } from '../middleware/jwt.middleware.js';
+import { addSubject, getSubjects, getSubjectById, updateSubject, deleteSubject } from '../controller/subject.controller.js';
 
 const router = express.Router();
 
-// Route to create a new subject (Lecturer only)
-router.post('/', 
-  authenticateToken, 
-  authorizeRole(['Lecturer']), 
-  createSubject
-);
+// Route to add a new subject
+router.post('/add', addSubject);
 
-// Route to get all subjects (Admin only)
-router.get('/all', 
-  authenticateToken, 
-  authorizeRole(['Admin']), 
-  getAllSubjects
-);
+// Route to get all subjects
+router.get('/get/all', getSubjects);
 
-// Route to get the logged-in lecturer's subjects
-router.get('/my-subjects', 
-  authenticateToken, 
-  authorizeRole(['Lecturer']), 
-  getLecturerSubjects
-);
+// Route to get a specific subject
+router.get('/get/:id', getSubjectById);
 
 // Route to update a subject
-router.put('/:id', 
-  authenticateToken, 
-  authorizeRole(['Lecturer', 'Admin']), 
-  updateSubject
-);
+router.put('/update/:id', updateSubject);
 
 // Route to delete a subject
-router.delete('/:id', 
-  authenticateToken, 
-  authorizeRole(['Lecturer', 'Admin']), 
-  deleteSubject
-);
+router.delete('/delete/:id', deleteSubject);
 
 export default router; 

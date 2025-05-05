@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
-  Typography, Box, Chip, Alert, CircularProgress, TextField, InputAdornment,
+  Typography, Box, Alert, CircularProgress, TextField, InputAdornment,
   IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
   Snackbar
 } from '@mui/material';
 import { Search, Delete } from '@mui/icons-material';
-import { Subject, getAllSubjects, deleteSubject } from './subjectService';
-
-interface LecturerType {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
+import { Subject } from '../../types';
+import { getSubjects, deleteSubject } from './subjectService';
 
 const AdminSubjectList: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -31,7 +25,7 @@ const AdminSubjectList: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAllSubjects();
+      const data = await getSubjects();
       setSubjects(data);
       setFilteredSubjects(data);
     } catch (err: any) {
@@ -55,8 +49,7 @@ const AdminSubjectList: React.FC = () => {
         subjects.filter(
           (subject) =>
             subject.name.toLowerCase().includes(query) ||
-            subject.code.toLowerCase().includes(query) ||
-            (subject.department && subject.department.toLowerCase().includes(query))
+            subject.code.toLowerCase().includes(query)
         )
       );
     }
@@ -73,23 +66,22 @@ const AdminSubjectList: React.FC = () => {
   };
 
   const handleDeleteSubject = async () => {
-    if (!subjectToDelete || !subjectToDelete._id) return;
+    if (!subjectToDelete?.id) return;
     
     setDeleteInProgress(true);
     try {
-      const result = await deleteSubject(subjectToDelete._id);
+      const result = await deleteSubject(subjectToDelete.id);
       
       if (result.success) {
         // Remove the deleted subject from state
-        const updatedSubjects = subjects.filter(s => s._id !== subjectToDelete._id);
+        const updatedSubjects = subjects.filter(s => s.id !== subjectToDelete.id);
         setSubjects(updatedSubjects);
         setFilteredSubjects(updatedSubjects.filter(
           (subject) => {
             if (searchQuery.trim() === '') return true;
             const query = searchQuery.toLowerCase();
             return subject.name.toLowerCase().includes(query) ||
-              subject.code.toLowerCase().includes(query) ||
-              (subject.department && subject.department.toLowerCase().includes(query));
+              subject.code.toLowerCase().includes(query);
           }
         ));
         setSnackbarMessage('Subject deleted successfully');
@@ -130,7 +122,7 @@ const AdminSubjectList: React.FC = () => {
       <Box mb={3}>
         <TextField
           fullWidth
-          placeholder="Search by name, code, or department"
+          placeholder="Search by name or code"
           variant="outlined"
           size="small"
           value={searchQuery}
@@ -154,47 +146,28 @@ const AdminSubjectList: React.FC = () => {
               <TableRow>
                 <TableCell>Code</TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell>Lecturer</TableCell>
                 <TableCell>Credits</TableCell>
-                <TableCell>Department</TableCell>
-                <TableCell>Status</TableCell>
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredSubjects.map((subject) => {
-                const lecturerData = subject.lecturer as unknown as LecturerType;
-                const lecturerInfo = lecturerData && typeof lecturerData === 'object' 
-                  ? `${lecturerData.firstName} ${lecturerData.lastName}`
-                  : 'Unknown';
-                
-                return (
-                  <TableRow key={subject._id}>
-                    <TableCell>{subject.code}</TableCell>
-                    <TableCell>{subject.name}</TableCell>
-                    <TableCell>{lecturerInfo}</TableCell>
-                    <TableCell>{subject.credits}</TableCell>
-                    <TableCell>{subject.department || '-'}</TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={subject.status} 
-                        color={subject.status === 'active' ? 'success' : 'default'} 
-                        size="small" 
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <IconButton 
-                        color="error" 
-                        size="small"
-                        onClick={() => handleOpenDeleteDialog(subject)}
-                        title="Delete subject"
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {filteredSubjects.map((subject) => (
+                <TableRow key={subject.id}>
+                  <TableCell>{subject.code}</TableCell>
+                  <TableCell>{subject.name}</TableCell>
+                  <TableCell>{subject.credits}</TableCell>
+                  <TableCell align="center">
+                    <IconButton 
+                      color="error" 
+                      size="small"
+                      onClick={() => handleOpenDeleteDialog(subject)}
+                      title="Delete subject"
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>

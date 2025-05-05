@@ -8,8 +8,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchProfilePicture, setProfilePicture } from '../../features/profile/profileSlice';
 import { RootState } from '../../store/store';
 import { AppDispatch } from '../../store/store';
-import { ProfilePicture as ProfilePictureType } from '../../types';
-import { getLecturerSubjects, Subject } from '../../features/subjects/subjectService';
+import { ProfilePicture as ProfilePictureType, Subject } from '../../types';
+import { getSubjects } from '../../features/subjects/subjectService';
 
 const LecturerDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -27,7 +27,7 @@ const LecturerDashboard: React.FC = () => {
       const fetchSubjects = async () => {
         try {
           setLoading(true);
-          const subjectsData = await getLecturerSubjects();
+          const subjectsData = await getSubjects();
           setSubjects(subjectsData);
           setError(null);
         } catch (err) {
@@ -83,22 +83,11 @@ const LecturerDashboard: React.FC = () => {
           ) : subjects.length > 0 ? (
             <div className="space-y-4">
               {subjects.map((subject) => (
-                <div key={subject._id} className="border-l-4 border-amber-500 pl-4 py-2">
+                <div key={subject.id} className="border-l-4 border-amber-500 pl-4 py-2">
                   <h4 className="text-lg font-medium text-gray-900">{subject.name} ({subject.code})</h4>
-                  {subject.description && <p className="text-gray-600 mt-1">{subject.description}</p>}
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {subject.department && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {subject.department}
-                      </span>
-                    )}
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       {subject.credits} Credits
-                    </span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      subject.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {subject.status === 'active' ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                 </div>

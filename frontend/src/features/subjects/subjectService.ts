@@ -1,79 +1,59 @@
 import axios from 'axios';
 import api from '../../utils/api';
+import { Subject } from '../../types';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/subjects`;
-
-export interface Subject {
-  _id?: string;
-  name: string;
-  code: string;
-  description?: string;
-  lecturer: string;
-  credits?: number;
-  department?: string;
-  status?: 'active' | 'inactive';
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 export interface SubjectFormData {
   name: string;
   code: string;
-  description?: string;
-  credits?: number;
-  department?: string;
+  credits: number;
 }
 
-// Create a new subject
-export const createSubject = async (subjectData: SubjectFormData): Promise<Subject> => {
+// Add a new subject
+export const addSubject = async (subjectData: SubjectFormData): Promise<Subject> => {
   try {
-    console.log('Creating subject with data:', subjectData);
-    const response = await api.post(`/subjects`, subjectData);
-    console.log('Create subject response:', response.data);
+    const response = await api.post(`/subjects/add`, subjectData);
     
-    if (!response.data || !response.data.subject) {
+    if (!response.data || !response.data.data) {
       throw new Error('Invalid response format from server');
     }
     
-    return response.data.subject;
+    return response.data.data;
   } catch (error) {
-    console.error('Error in createSubject service:', error);
+    console.error('Error in addSubject service:', error);
     throw error;
   }
 };
 
-// Get all subjects (admin only)
-export const getAllSubjects = async (): Promise<Subject[]> => {
+// Get all subjects
+export const getSubjects = async (): Promise<Subject[]> => {
   try {
-    const response = await api.get(`/subjects/all`);
+    const response = await api.get(`/subjects/get/all`);
     
-    if (!response.data || !response.data.subjects) {
-      console.error('Invalid response format:', response.data);
+    if (!response.data || !response.data.data) {
       return [];
     }
     
-    return response.data.subjects;
+    return response.data.data;
   } catch (error) {
-    console.error('Error in getAllSubjects service:', error);
+    console.error('Error in getSubjects service:', error);
     throw error;
   }
 };
 
-// Get subjects for the logged-in lecturer
-export const getLecturerSubjects = async (): Promise<Subject[]> => {
+// Get subject by ID
+export const getSubjectById = async (id: string): Promise<Subject> => {
   try {
-    console.log('Fetching lecturer subjects');
-    const response = await api.get(`/subjects/my-subjects`);
-    console.log('Lecturer subjects response:', response.data);
+    const response = await api.get(`/subjects/get/${id}`);
     
-    if (!response.data || !response.data.subjects) {
-      console.error('Invalid response format:', response.data);
-      return [];
+    if (!response.data || !response.data.data) {
+      throw new Error('Invalid response format from server');
     }
     
-    return response.data.subjects;
+    return response.data.data;
   } catch (error) {
-    console.error('Error in getLecturerSubjects service:', error);
+    console.error('Error in getSubjectById service:', error);
     throw error;
   }
 };
@@ -81,13 +61,13 @@ export const getLecturerSubjects = async (): Promise<Subject[]> => {
 // Update a subject
 export const updateSubject = async (id: string, subjectData: Partial<SubjectFormData>): Promise<Subject> => {
   try {
-    const response = await api.put(`/subjects/${id}`, subjectData);
+    const response = await api.put(`/subjects/update/${id}`, subjectData);
     
-    if (!response.data || !response.data.subject) {
+    if (!response.data || !response.data.data) {
       throw new Error('Invalid response format from server');
     }
     
-    return response.data.subject;
+    return response.data.data;
   } catch (error) {
     console.error('Error in updateSubject service:', error);
     throw error;
@@ -97,7 +77,7 @@ export const updateSubject = async (id: string, subjectData: Partial<SubjectForm
 // Delete a subject
 export const deleteSubject = async (id: string): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await api.delete(`/subjects/${id}`);
+    const response = await api.delete(`/subjects/delete/${id}`);
     return { 
       success: true, 
       message: response.data?.message || 'Subject deleted successfully' 

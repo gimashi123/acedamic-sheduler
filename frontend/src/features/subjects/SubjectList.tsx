@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
-  Typography, Box, IconButton, Chip, Button, Alert, Dialog, DialogActions, 
+  Typography, Box, IconButton, Button, Alert, Dialog, DialogActions, 
   DialogContent, DialogContentText, DialogTitle, CircularProgress
 } from '@mui/material';
-import { Edit, Delete, PictureAsPdf } from '@mui/icons-material';
-import { Subject, getLecturerSubjects, deleteSubject } from './subjectService';
-import { exportToPdf } from '../../utils/pdfExport';
-import toast from 'react-hot-toast';
+import { Edit, Delete } from '@mui/icons-material';
+import { Subject } from '../../types';
+import { getSubjects, deleteSubject } from './subjectService';
 
 interface SubjectListProps {
   onEditSubject?: (subject: Subject) => void;
@@ -26,7 +25,7 @@ const SubjectList: React.FC<SubjectListProps> = ({ onEditSubject, refresh }) => 
     setLoading(true);
     setError(null);
     try {
-      const data = await getLecturerSubjects();
+      const data = await getSubjects();
       setSubjects(data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load subjects');
@@ -46,12 +45,12 @@ const SubjectList: React.FC<SubjectListProps> = ({ onEditSubject, refresh }) => 
   };
 
   const handleDeleteConfirm = async () => {
-    if (!subjectToDelete?._id) return;
+    if (!subjectToDelete?.id) return;
     
     setDeleteLoading(true);
     try {
-      await deleteSubject(subjectToDelete._id);
-      setSubjects(subjects.filter(s => s._id !== subjectToDelete._id));
+      await deleteSubject(subjectToDelete.id);
+      setSubjects(subjects.filter(s => s.id !== subjectToDelete.id));
       setDeleteDialogOpen(false);
       setSubjectToDelete(null);
     } catch (err: any) {
@@ -67,27 +66,6 @@ const SubjectList: React.FC<SubjectListProps> = ({ onEditSubject, refresh }) => 
     setSubjectToDelete(null);
   };
 
-  const handleExportToPdf = () => {
-    const columns = [
-      { header: 'Code', dataKey: 'code' },
-      { header: 'Name', dataKey: 'name' },
-      { header: 'Credits', dataKey: 'credits' },
-      { header: 'Department', dataKey: 'department' },
-      { header: 'Status', dataKey: 'status' }
-    ];
-
-    exportToPdf({
-      title: 'My Subjects',
-      filename: `subjects-list-${new Date().toISOString().split('T')[0]}`,
-      columns,
-      data: subjects,
-      orientation: 'portrait',
-      includeTimestamp: true
-    });
-
-    toast.success('Subject list exported to PDF successfully');
-  };
-
   if (loading && subjects.length === 0) {
     return (
       <Box display="flex" justifyContent="center" my={4}>
@@ -101,24 +79,14 @@ const SubjectList: React.FC<SubjectListProps> = ({ onEditSubject, refresh }) => 
       <Box mb={3}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6" gutterBottom>
-            My Subjects
+            Subjects
           </Typography>
-          {subjects.length > 0 && (
-            <Button 
-              variant="outlined" 
-              startIcon={<PictureAsPdf />} 
-              onClick={handleExportToPdf}
-              size="small"
-            >
-              Export PDF
-            </Button>
-          )}
         </Box>
         
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         
         {subjects.length === 0 ? (
-          <Alert severity="info">You haven't added any subjects yet.</Alert>
+          <Alert severity="info">No subjects available.</Alert>
         ) : (
           <TableContainer component={Paper}>
             <Table>
@@ -127,25 +95,15 @@ const SubjectList: React.FC<SubjectListProps> = ({ onEditSubject, refresh }) => 
                   <TableCell>Code</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Credits</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Status</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {subjects.map((subject) => (
-                  <TableRow key={subject._id}>
+                  <TableRow key={subject.id}>
                     <TableCell>{subject.code}</TableCell>
                     <TableCell>{subject.name}</TableCell>
                     <TableCell>{subject.credits}</TableCell>
-                    <TableCell>{subject.department || '-'}</TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={subject.status} 
-                        color={subject.status === 'active' ? 'success' : 'default'} 
-                        size="small" 
-                      />
-                    </TableCell>
                     <TableCell align="right">
                       {onEditSubject && (
                         <IconButton 

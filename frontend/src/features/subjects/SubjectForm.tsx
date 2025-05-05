@@ -1,48 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TextField, Button, Box, Typography, Paper, Grid, Alert, MenuItem, Select, InputLabel, FormControl, FormHelperText } from '@mui/material';
-import { SubjectFormData, createSubject, getLecturerSubjects } from './subjectService';
+import { SubjectFormData, addSubject } from './subjectService';
+import { z } from 'zod';
 
 interface SubjectFormProps {
   onSuccess?: () => void;
 }
 
+// Define validation schema with Zod
+const subjectSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").regex(/^[a-zA-Z\s]+$/, "Name must contain only letters and spaces"),
+  code: z.string().length(6, "Code must be exactly 6 characters").regex(/^[A-Z]{2}\d{4}$/, "Code must be in format XX0000 (2 uppercase letters + 4 digits)"),
+  credits: z.number().int().min(1, "Credits must be at least 1").max(4, "Credits must be at most 4")
+});
+
 const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
   const [formData, setFormData] = useState<SubjectFormData>({
     name: '',
     code: '',
-    description: '',
     credits: 3,
-    department: '',
   });
 
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [hasExistingSubject, setHasExistingSubject] = useState(false);
-  const [checkingSubjects, setCheckingSubjects] = useState(true);
 
-  // Check if lecturer already has a subject
-  useEffect(() => {
-    const checkExistingSubject = async () => {
-      setCheckingSubjects(true);
-      try {
-        console.log('Checking for existing subjects');
-        const subjects = await getLecturerSubjects();
-        console.log('Fetched subjects:', subjects);
-        if (subjects && subjects.length > 0) {
-          setHasExistingSubject(true);
-        }
-      } catch (err: any) {
-        console.error("Error checking existing subjects:", err);
-        setError(err.response?.data?.message || 'Error loading subjects. Please try refreshing the page.');
-      } finally {
-        setCheckingSubjects(false);
-      }
-    };
-    
-    checkExistingSubject();
-  }, []);
-  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -59,88 +42,58 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
     }));
   };
 
+  const validateForm = () => {
+    try {
+      subjectSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach(err => {
+          if (err.path.length > 0) {
+            newErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (hasExistingSubject) {
-      setError('You already have a subject. A lecturer can only manage one subject.');
+    if (!validateForm()) {
       return;
     }
     
-    // Basic validation
-    if (!formData.name.trim()) {
-      setError('Subject name is required');
-      return;
-    }
-    
-    if (!formData.code.trim()) {
-      setError('Subject code is required');
-      return;
-    }
-    
-    setError(null);
+    setApiError(null);
     setLoading(true);
     setSuccess(false);
     
     try {
-      console.log('Submitting subject data:', formData);
-      const result = await createSubject(formData);
-      console.log('Subject creation result:', result);
-      
+      await addSubject(formData);
       setSuccess(true);
       setFormData({
         name: '',
         code: '',
-        description: '',
         credits: 3,
-        department: '',
       });
-      setHasExistingSubject(true);
       if (onSuccess) {
         onSuccess();
       }
     } catch (err: any) {
       console.error('Error adding subject:', err);
-      // Get detailed error if available
       if (err.response && err.response.data) {
-        const errorData = err.response.data;
-        setError(errorData.message || errorData.error || 'Failed to create subject');
-        console.error('Server error details:', errorData);
+        setApiError(err.response.data.message || 'Failed to create subject');
       } else {
-        setError('Failed to create subject. Please try again later.');
+        setApiError('Failed to create subject. Please try again later.');
       }
     } finally {
       setLoading(false);
     }
   };
-
-  if (checkingSubjects) {
-    return (
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Add New Subject
-        </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
-          <Typography>Checking existing subjects...</Typography>
-        </Box>
-      </Paper>
-    );
-  }
-
-  if (hasExistingSubject) {
-    return (
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Add New Subject
-        </Typography>
-        
-        <Alert severity="info" sx={{ mb: 2 }}>
-          You have already added a subject. As a lecturer, you can only manage one subject at a time.
-          Please go to "My Subjects" tab to view or manage your existing subject.
-        </Alert>
-      </Paper>
-    );
-  }
 
   return (
     <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
@@ -148,7 +101,7 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
         Add New Subject
       </Typography>
       
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {apiError && <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>Subject added successfully!</Alert>}
       
       <form onSubmit={handleSubmit}>
@@ -161,8 +114,10 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="e.g. Introduction to Computer Science"
+              placeholder="e.g. Computer Science"
               margin="normal"
+              error={!!errors.name}
+              helperText={errors.name || "Min 2 characters, letters and spaces only"}
             />
           </Grid>
           
@@ -174,28 +129,15 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
               name="code"
               value={formData.code}
               onChange={handleChange}
-              placeholder="e.g. CS101"
+              placeholder="e.g. CS1001"
               margin="normal"
-              helperText="Unique code for this subject"
+              error={!!errors.code}
+              helperText={errors.code || "Format: XX0000 (2 uppercase letters + 4 digits)"}
             />
           </Grid>
           
           <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Brief description of the subject"
-              margin="normal"
-              multiline
-              rows={2}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth margin="normal">
+            <FormControl fullWidth margin="normal" error={!!errors.credits}>
               <InputLabel id="credits-label">Credits</InputLabel>
               <Select
                 labelId="credits-label"
@@ -208,23 +150,9 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
                 <MenuItem value={2}>2</MenuItem>
                 <MenuItem value={3}>3</MenuItem>
                 <MenuItem value={4}>4</MenuItem>
-                <MenuItem value={5}>5</MenuItem>
-                <MenuItem value={6}>6</MenuItem>
               </Select>
-              <FormHelperText>Number of credit hours</FormHelperText>
+              <FormHelperText>{errors.credits || "Number between 1-4"}</FormHelperText>
             </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Department"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              placeholder="e.g. Computer Science"
-              margin="normal"
-            />
           </Grid>
         </Grid>
         
