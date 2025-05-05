@@ -3,8 +3,8 @@ import { userService } from './userService';
 import { User, RemovedUser } from '../../types';
 import UserTable from './UserTable';
 import RemovedUsersTable from './RemovedUsersTable';
-import { Alert, CircularProgress, Snackbar, Paper, Tabs, Tab, Button } from '@mui/material';
-import { Refresh } from '@mui/icons-material';
+import { Alert, CircularProgress, Snackbar, Paper, Tabs, Tab, Button, TextField, InputAdornment, IconButton } from '@mui/material';
+import { Refresh, Search, Clear } from '@mui/icons-material';
 import axios from 'axios';
 
 const Users: React.FC = () => {
@@ -24,6 +24,9 @@ const Users: React.FC = () => {
     severity: 'success'
   });
   const [tabValue, setTabValue] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredStudents, setFilteredStudents] = useState<User[]>([]);
+  const [filteredLecturers, setFilteredLecturers] = useState<User[]>([]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -37,6 +40,7 @@ const Users: React.FC = () => {
       try {
         const studentData = await userService.getUsersByRole('Student');
         setStudents(studentData);
+        setFilteredStudents(studentData);
       } catch (studentError) {
         console.error('Failed to fetch students:', studentError);
         errorMessages.push('Failed to load students');
@@ -46,6 +50,7 @@ const Users: React.FC = () => {
       try {
         const lecturerData = await userService.getUsersByRole('Lecturer');
         setLecturers(lecturerData);
+        setFilteredLecturers(lecturerData);
       } catch (lecturerError) {
         console.error('Failed to fetch lecturers:', lecturerError);
         errorMessages.push('Failed to load lecturers');
@@ -104,6 +109,35 @@ const Users: React.FC = () => {
     fetchUsers();
   }, []);
 
+  // Filter users based on search query
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredStudents(students);
+      setFilteredLecturers(lecturers);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    
+    // Filter students
+    const matchingStudents = students.filter(
+      student => 
+        student.firstName.toLowerCase().includes(query) || 
+        student.lastName.toLowerCase().includes(query) || 
+        student.email.toLowerCase().includes(query)
+    );
+    setFilteredStudents(matchingStudents);
+    
+    // Filter lecturers
+    const matchingLecturers = lecturers.filter(
+      lecturer => 
+        lecturer.firstName.toLowerCase().includes(query) || 
+        lecturer.lastName.toLowerCase().includes(query) || 
+        lecturer.email.toLowerCase().includes(query)
+    );
+    setFilteredLecturers(matchingLecturers);
+  }, [searchQuery, students, lecturers]);
+
   const handleRemoveUser = async (userId: string, reason?: string) => {
     try {
       await userService.removeUser(userId, reason);
@@ -148,6 +182,14 @@ const Users: React.FC = () => {
     }
   };
 
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -179,23 +221,58 @@ const Users: React.FC = () => {
         </Alert>
       )}
       
-      <Paper className="mb-6" elevation={0}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
-          variant="fullWidth"
-          indicatorColor="primary"
-          textColor="primary"
-        >
-          <Tab label={`Students (${students.length})`} />
-          <Tab label={`Lecturers (${lecturers.length})`} />
-          <Tab label={`Removed Users (${removedUsers.length})`} />
-        </Tabs>
-      </Paper>
+      <div className="flex flex-col md:flex-row gap-4 mb-4 items-center justify-between">
+        <Paper className="flex-grow" elevation={0}>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange}
+            variant="fullWidth"
+            indicatorColor="primary"
+            textColor="primary"
+          >
+            <Tab label={`Students (${filteredStudents.length}/${students.length})`} />
+            <Tab label={`Lecturers (${filteredLecturers.length}/${lecturers.length})`} />
+            <Tab label={`Removed Users (${removedUsers.length})`} />
+          </Tabs>
+        </Paper>
+        
+        {/* Only show search for the first two tabs */}
+        {tabValue !== 2 && (
+          <div className="w-full md:w-1/3">
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              placeholder="Search by name or email..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="clear search"
+                      onClick={clearSearch}
+                      edge="end"
+                      size="small"
+                    >
+                      <Clear />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+          </div>
+        )}
+      </div>
 
       {tabValue === 0 && (
         <UserTable 
-          users={students} 
+          users={filteredStudents} 
           title="Students" 
           onRemoveUser={handleRemoveUser}
           onUserUpdated={fetchUsers}
@@ -204,7 +281,7 @@ const Users: React.FC = () => {
       
       {tabValue === 1 && (
         <UserTable 
-          users={lecturers} 
+          users={filteredLecturers} 
           title="Lecturers" 
           onRemoveUser={handleRemoveUser}
           onUserUpdated={fetchUsers}
