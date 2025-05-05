@@ -6,6 +6,7 @@ import { RootState, AppDispatch } from './store/store';
 import { setTheme } from './store/themeSlice';
 import ThemeProvider from './components/ThemeProvider';
 import { ThemeContextProvider } from './contexts/ThemeContext';
+import { TimetableProvider } from './contexts/TimetableContext';
 
 function App() {
   const { checkAuth } = useAuthStore();
@@ -42,7 +43,9 @@ function App() {
   return (
     <ThemeContextProvider>
       <ThemeProvider>
-        <AppRouter />
+        <TimetableProvider>
+          <AppRouter />
+        </TimetableProvider>
       </ThemeProvider>
     </ThemeContextProvider>
   );

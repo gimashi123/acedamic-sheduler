@@ -103,6 +103,9 @@ const Layout: React.FC = () => {
             <Link to="/subject-assignments" className={linkClass}>
               <Book className="h-5 w-5" />
             </Link>
+            <Link to="/admin/dashboard/timetable" className={linkClass}>
+              <Calendar className="h-5 w-5" />
+            </Link>
             <Link to="/users" className={linkClass}>
               <User className="h-5 w-5" />
             </Link>
@@ -225,12 +228,20 @@ const Layout: React.FC = () => {
             Change Password
           </MenuItem>
           {user.role === 'Admin' && (
-            <MenuItem onClick={() => navigate('/analytics')}>
-              <ListItemIcon>
-                <BarChartIcon fontSize="small" />
-              </ListItemIcon>
-              Analytics
-            </MenuItem>
+            <>
+              <MenuItem onClick={() => navigate('/analytics')}>
+                <ListItemIcon>
+                  <BarChartIcon fontSize="small" />
+                </ListItemIcon>
+                Analytics
+              </MenuItem>
+              <MenuItem onClick={() => navigate('/admin/dashboard/timetable')}>
+                <ListItemIcon>
+                  <EventIcon fontSize="small" />
+                </ListItemIcon>
+                Timetables
+              </MenuItem>
+            </>
           )}
           <Divider />
           <MenuItem onClick={handleLogout}>

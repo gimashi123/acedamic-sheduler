@@ -19,6 +19,11 @@ import Subjects from '../features/subjects/Subjects';
 import AdminSubjects from '../features/subjects/AdminSubjects';
 import Analytics from '../features/analytics/Analytics';
 
+// Import timetable components
+import TimetablePage from '../features/timetables/pages/TimetablePage';
+import ViewTimetablePage from '../features/timetables/pages/ViewTimetablePage';
+import AddTimetableContentPage from '../features/timetables/pages/AddTimetableContentPage';
+
 // Loading component for suspense fallback
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -64,6 +69,11 @@ export const AppRouter: React.FC = () => {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="change-password" element={<ChangePassword />} />
             <Route path="register-request" element={<RegisterRequestForm />} />
+            
+            {/* Timetable Routes */}
+            <Route path="admin/dashboard/timetable" element={<TimetablePage />} />
+            <Route path="admin/dashboard/timetable/view/:id" element={<ViewTimetablePage />} />
+            <Route path="admin/dashboard/timetable/add/:id" element={<AddTimetableContentPage />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />
