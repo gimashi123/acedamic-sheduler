@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { ITimetable } from '../types/timetable';
 import { getTimetables } from '../features/timetables/timetableService';
 import { toast } from 'react-hot-toast';
+import useAuthStore from '../store/authStore';
 
 interface TimetableContextType {
   timetables: ITimetable[];
@@ -20,8 +21,15 @@ export const TimetableProvider: React.FC<TimetableProviderProps> = ({ children }
   const [timetables, setTimetables] = useState<ITimetable[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuthStore();
 
   const fetchTimetables = async () => {
+    // Only fetch timetables if user is authenticated
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
@@ -30,15 +38,22 @@ export const TimetableProvider: React.FC<TimetableProviderProps> = ({ children }
     } catch (err) {
       console.error('Error fetching timetables:', err);
       setError('Failed to fetch timetables. Please try again later.');
-      toast.error('Failed to load timetables');
+      
+      // Only show toast when on a relevant page (not login)
+      if (window.location.pathname !== '/login') {
+        toast.error('Failed to load timetables');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTimetables();
-  }, []);
+    // Only fetch timetables when authenticated
+    if (isAuthenticated) {
+      fetchTimetables();
+    }
+  }, [isAuthenticated]);
 
   const refetchTimetables = async () => {
     await fetchTimetables();
@@ -64,4 +79,4 @@ export const useTimetable = (): TimetableContextType => {
     throw new Error('useTimetable must be used within a TimetableProvider');
   }
   return context;
-}; 
+};

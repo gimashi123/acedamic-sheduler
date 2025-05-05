@@ -71,6 +71,7 @@ export const AppRouter: React.FC = () => {
             <Route path="register-request" element={<RegisterRequestForm />} />
             
             {/* Timetable Routes */}
+            <Route path="schedule" element={<TimetablePage />} />
             <Route path="admin/dashboard/timetable" element={<TimetablePage />} />
             <Route path="admin/dashboard/timetable/view/:id" element={<ViewTimetablePage />} />
             <Route path="admin/dashboard/timetable/add/:id" element={<AddTimetableContentPage />} />
@@ -83,4 +84,4 @@ export const AppRouter: React.FC = () => {
   );
 };
 
-export default AppRouter; 
+export default AppRouter;

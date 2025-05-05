@@ -8,9 +8,17 @@ export const getTimetables = async (): Promise<ITimetable[]> => {
     if (response.data.success) {
       return response.data.data;
     }
+    // If no timetables found, return empty array instead of throwing error
+    if (response.data.message === "No timetables found") {
+      return [];
+    }
     throw new Error(response.data.message || 'Failed to fetch timetables');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching timetables:', error);
+    // Return empty array instead of throwing for 404 Not Found errors
+    if (error.response && error.response.status === 404) {
+      return [];
+    }
     throw error;
   }
 };
@@ -68,4 +76,4 @@ export const deleteTimetable = async (id: string): Promise<void> => {
     console.error('Error deleting timetable:', error);
     throw error;
   }
-}; 
+};
