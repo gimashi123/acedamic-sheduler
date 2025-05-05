@@ -16,11 +16,19 @@ export interface User {
   profilePicture?: ProfilePicture;
 }
 
+export interface LecturerInfo {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 export interface Subject {
   id: string;
   name: string;
   code: string;
   credits: number;
+  lecturer: string | LecturerInfo | null;
 }
 
 export interface Venue {

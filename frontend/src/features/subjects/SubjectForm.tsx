@@ -5,16 +5,17 @@ import { z } from 'zod';
 
 interface SubjectFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 // Define validation schema with Zod
 const subjectSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").regex(/^[a-zA-Z\s]+$/, "Name must contain only letters and spaces"),
-  code: z.string().length(6, "Code must be exactly 6 characters").regex(/^[A-Z]{2}\d{4}$/, "Code must be in format XX0000 (2 uppercase letters + 4 digits)"),
+  code: z.string().min(5, "Code must be at least 5 characters").max(8, "Code must be at most 8 characters").regex(/^[A-Z]{2,3}[0-9]{3,5}$/, "Code must be in format XX000 or XXX00000 (2-3 uppercase letters + 3-5 digits)"),
   credits: z.number().int().min(1, "Credits must be at least 1").max(4, "Credits must be at most 4")
 });
 
-const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
+const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess, onCancel }) => {
   const [formData, setFormData] = useState<SubjectFormData>({
     name: '',
     code: '',
@@ -95,12 +96,14 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
     }
   };
 
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
   return (
-    <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Add New Subject
-      </Typography>
-      
+    <Box sx={{ width: '100%' }}>
       {apiError && <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>Subject added successfully!</Alert>}
       
@@ -129,10 +132,10 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
               name="code"
               value={formData.code}
               onChange={handleChange}
-              placeholder="e.g. CS1001"
+              placeholder="e.g. CS101"
               margin="normal"
               error={!!errors.code}
-              helperText={errors.code || "Format: XX0000 (2 uppercase letters + 4 digits)"}
+              helperText={errors.code || "Format: XX000 (2-3 uppercase letters + 3-5 digits)"}
             />
           </Grid>
           
@@ -156,19 +159,25 @@ const SubjectForm: React.FC<SubjectFormProps> = ({ onSuccess }) => {
           </Grid>
         </Grid>
         
-        <Box mt={3}>
+        <Box mt={3} display="flex" justifyContent="space-between">
+          <Button 
+            variant="outlined" 
+            color="secondary"
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
           <Button 
             type="submit" 
             variant="contained" 
             color="primary"
             disabled={loading}
-            fullWidth
           >
             {loading ? 'Adding...' : 'Add Subject'}
           </Button>
         </Box>
       </form>
-    </Paper>
+    </Box>
   );
 };
 

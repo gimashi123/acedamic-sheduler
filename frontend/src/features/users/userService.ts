@@ -13,20 +13,23 @@ const getAuthHeader = () => {
   };
 };
 
+// Direct export for getAllUsers
+export const getAllUsers = async (): Promise<User[]> => {
+  try {
+    const response = await axios.get<ApiResponse<User[]>>(
+      `${API_URL}/user`,
+      getAuthHeader()
+    );
+    return response.data.data || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+};
+
 export const userService = {
   // Get all users
-  getAllUsers: async (): Promise<User[]> => {
-    try {
-      const response = await axios.get<ApiResponse<User[]>>(
-        `${API_URL}/user`,
-        getAuthHeader()
-      );
-      return response.data.data || [];
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      throw error;
-    }
-  },
+  getAllUsers,
 
   // Get users by role (Lecturer or Student)
   getUsersByRole: async (role: string): Promise<User[]> => {

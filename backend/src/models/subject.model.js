@@ -18,6 +18,11 @@ const subjectSchema = new mongoose.Schema(
       required: true,
       min: 1,
       max: 4
+    },
+    lecturer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
     }
   },
   {

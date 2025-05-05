@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Typography, Box, Paper } from '@mui/material';
 import AdminSubjectList from './AdminSubjectList';
 import useAuthStore from '../../store/authStore';
 
@@ -23,11 +23,33 @@ const AdminSubjects: React.FC = () => {
         Subjects Management
       </Typography>
       
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="body1" paragraph>
-          This page displays all subjects across the institution. You can view which lecturer is teaching each subject.
+      <Paper elevation={1} sx={{ p: 3, mb: 4, bgcolor: 'background.paper' }}>
+        <Typography variant="h6" gutterBottom>
+          About Subject Management
         </Typography>
-      </Box>
+        
+        <Typography variant="body1" paragraph>
+          As an administrator, you have full control over subject management:
+        </Typography>
+        
+        <Box component="ul" sx={{ pl: 4 }}>
+          <Box component="li">
+            <Typography variant="body1">
+              <strong>Add new subjects</strong> to the system using the "Add New Subject" button
+            </Typography>
+          </Box>
+          <Box component="li">
+            <Typography variant="body1">
+              <strong>Assign lecturers</strong> to subjects using the person icon in the actions column
+            </Typography>
+          </Box>
+          <Box component="li">
+            <Typography variant="body1">
+              <strong>Delete subjects</strong> that are no longer needed using the delete icon
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
 
       <AdminSubjectList />
     </Container>

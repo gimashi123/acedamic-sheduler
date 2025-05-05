@@ -8,9 +8,10 @@ export interface SubjectFormData {
   name: string;
   code: string;
   credits: number;
+  lecturerId?: string | null;
 }
 
-// Add a new subject
+// Add a new subject (Admin only)
 export const addSubject = async (subjectData: SubjectFormData): Promise<Subject> => {
   try {
     const response = await api.post(`/subjects/add`, subjectData);
@@ -58,7 +59,28 @@ export const getSubjectById = async (id: string): Promise<Subject> => {
   }
 };
 
-// Update a subject
+// Get subjects for a specific lecturer
+export const getLecturerSubjects = async (lecturerId?: string): Promise<Subject[]> => {
+  try {
+    let url = `/subjects/lecturer`;
+    if (lecturerId) {
+      url += `?lecturerId=${lecturerId}`;
+    }
+    
+    const response = await api.get(url);
+    
+    if (!response.data || !response.data.data) {
+      return [];
+    }
+    
+    return response.data.data;
+  } catch (error) {
+    console.error('Error in getLecturerSubjects service:', error);
+    throw error;
+  }
+};
+
+// Update a subject (Admin only)
 export const updateSubject = async (id: string, subjectData: Partial<SubjectFormData>): Promise<Subject> => {
   try {
     const response = await api.put(`/subjects/update/${id}`, subjectData);
@@ -74,7 +96,23 @@ export const updateSubject = async (id: string, subjectData: Partial<SubjectForm
   }
 };
 
-// Delete a subject
+// Assign a lecturer to a subject (Admin only)
+export const assignLecturer = async (subjectId: string, lecturerId: string | null): Promise<Subject> => {
+  try {
+    const response = await api.put(`/subjects/update/${subjectId}`, { lecturerId });
+    
+    if (!response.data || !response.data.data) {
+      throw new Error('Invalid response format from server');
+    }
+    
+    return response.data.data;
+  } catch (error) {
+    console.error('Error in assignLecturer service:', error);
+    throw error;
+  }
+};
+
+// Delete a subject (Admin only)
 export const deleteSubject = async (id: string): Promise<{ success: boolean; message: string }> => {
   try {
     const response = await api.delete(`/subjects/delete/${id}`);
