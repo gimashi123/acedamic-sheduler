@@ -8,8 +8,9 @@ import {
 import { Search, Delete, Edit, PersonAdd, Add } from '@mui/icons-material';
 import { Subject, User, LecturerInfo } from '../../types';
 import { getSubjects, deleteSubject, assignLecturer } from './subjectService';
-import { getAllUsers } from '../../features/users/userService';
+import { getAllUsers, userService } from '../../features/users/userService';
 import SubjectForm from './SubjectForm';
+import { userApi } from '../../utils/api';
 
 const AdminSubjectList: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -48,12 +49,59 @@ const AdminSubjectList: React.FC = () => {
   const loadLecturers = async () => {
     setLoadingLecturers(true);
     try {
-      const users = await getAllUsers();
-      // Filter only lecturers
-      const lecturerUsers = users.filter(user => user.role === 'Lecturer');
-      setLecturers(lecturerUsers);
+      // Try multiple methods to get lecturers
+      
+      // Method 1: Using direct API method
+      try {
+        console.log('Trying to load lecturers using userApi...');
+        const allUsers = await userApi.getAllUsers();
+        console.log('All users from userApi:', allUsers);
+        const lecturerUsers = allUsers.filter(user => user.role === 'Lecturer');
+        console.log('Filtered lecturers from userApi:', lecturerUsers);
+        
+        if (lecturerUsers.length > 0) {
+          setLecturers(lecturerUsers);
+          return;
+        }
+      } catch (apiErr) {
+        console.error('Error loading lecturers using userApi:', apiErr);
+      }
+      
+      // Method 2: Using the getAllUsers utility 
+      try {
+        console.log('Trying to load lecturers using getAllUsers...');
+        const users = await getAllUsers();
+        console.log('All users from getAllUsers:', users);
+        
+        // Filter only lecturers
+        const lecturerUsers = users.filter(user => user.role === 'Lecturer');
+        console.log('Filtered lecturers from getAllUsers:', lecturerUsers);
+        
+        if (lecturerUsers.length > 0) {
+          setLecturers(lecturerUsers);
+          return;
+        }
+      } catch (err) {
+        console.error('Error loading lecturers using getAllUsers:', err);
+      }
+      
+      // Method 3: Using the getUsersByRole method
+      try {
+        console.log('Trying to load lecturers using getUsersByRole...');
+        const lecturers = await userService.getUsersByRole('Lecturer');
+        console.log('Lecturers from getUsersByRole:', lecturers);
+        
+        if (lecturers.length > 0) {
+          setLecturers(lecturers);
+          return;
+        }
+      } catch (roleErr) {
+        console.error('Error loading lecturers using getUsersByRole:', roleErr);
+      }
+      
+      console.warn('All methods of loading lecturers failed');
     } catch (err) {
-      console.error('Error loading lecturers:', err);
+      console.error('Unexpected error in loadLecturers:', err);
     } finally {
       setLoadingLecturers(false);
     }
@@ -62,7 +110,17 @@ const AdminSubjectList: React.FC = () => {
   useEffect(() => {
     loadSubjects();
     loadLecturers();
-  }, []);
+
+    // Set up a retry mechanism if no lecturers are loaded
+    const checkLecturers = setTimeout(() => {
+      if (lecturers.length === 0) {
+        console.log('No lecturers found on initial load, retrying...');
+        loadLecturers();
+      }
+    }, 3000); // Try again after 3 seconds
+
+    return () => clearTimeout(checkLecturers);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -356,25 +414,45 @@ const AdminSubjectList: React.FC = () => {
         <DialogTitle>Assign Lecturer to {subjectToAssign?.name}</DialogTitle>
         <DialogContent>
           <Box mt={2}>
-            <FormControl fullWidth>
-              <InputLabel id="lecturer-select-label">Lecturer</InputLabel>
-              <Select
-                labelId="lecturer-select-label"
-                id="lecturer-select"
-                value={selectedLecturerId}
-                label="Lecturer"
-                onChange={handleLecturerChange}
-              >
-                <MenuItem value="">
-                  <em>None (Unassign)</em>
-                </MenuItem>
-                {lecturers.map((lecturer) => (
-                  <MenuItem key={lecturer._id} value={lecturer._id}>
-                    {lecturer.firstName} {lecturer.lastName} - {lecturer.email}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            {loadingLecturers ? (
+              <CircularProgress size={24} sx={{ mb: 2 }} />
+            ) : (
+              <>
+                {lecturers.length === 0 && (
+                  <Alert severity="warning" sx={{ mb: 2 }} action={
+                    <Button 
+                      color="inherit" 
+                      size="small"
+                      onClick={loadLecturers}
+                      disabled={loadingLecturers}
+                    >
+                      Refresh
+                    </Button>
+                  }>
+                    No lecturers found in the system. Please add lecturers first.
+                  </Alert>
+                )}
+                <FormControl fullWidth>
+                  <InputLabel id="lecturer-select-label">Lecturer</InputLabel>
+                  <Select
+                    labelId="lecturer-select-label"
+                    id="lecturer-select"
+                    value={selectedLecturerId}
+                    label="Lecturer"
+                    onChange={handleLecturerChange}
+                  >
+                    <MenuItem value="">
+                      <em>None (Unassign)</em>
+                    </MenuItem>
+                    {lecturers.map((lecturer) => (
+                      <MenuItem key={lecturer._id} value={lecturer._id}>
+                        {lecturer.firstName} {lecturer.lastName} - {lecturer.email}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
@@ -385,7 +463,7 @@ const AdminSubjectList: React.FC = () => {
             onClick={handleAssignLecturer} 
             color="primary"
             variant="contained"
-            disabled={assignInProgress}
+            disabled={assignInProgress || lecturers.length === 0}
             autoFocus
           >
             {assignInProgress ? 'Assigning...' : 'Assign Lecturer'}
