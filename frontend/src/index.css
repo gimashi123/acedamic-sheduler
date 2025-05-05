@@ -1,3 +1,207 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme variables */
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f9fafb;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4b5563;
+    --color-border: #e5e7eb;
+    --color-accent: #4f46e5;
+    --color-accent-hover: #4338ca;
+    --toaster-bg: #ffffff;
+    --toaster-text: #111827;
+  }
+  
+  .dark {
+    /* Dark theme variables */
+    --color-bg-primary: #1f2937;
+    --color-bg-secondary: #111827;
+    --color-text-primary: #f9fafb;
+    --color-text-secondary: #d1d5db;
+    --color-border: #374151;
+    --color-accent: #6366f1;
+    --color-accent-hover: #818cf8;
+    --toaster-bg: #1f2937;
+    --toaster-text: #f9fafb;
+  }
+
+  html {
+    @apply transition-colors duration-200;
+  }
+  
+  body {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    @apply transition-colors duration-200;
+  }
+
+  h1, h2, h3, h4, h5, h6, p, span, div, a {
+    color: var(--color-text-primary);
+    @apply transition-colors duration-200;
+  }
+
+  /* Stronger text color enforcement for all elements */
+  .dark * {
+    color-scheme: dark;
+  }
+
+  /* Custom scrollbar for dark mode */
+  .dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-gray-800;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-gray-600 rounded hover:bg-gray-500;
+  }
+
+  /* MUI theme overrides for dark mode */
+  .dark .MuiPaper-root {
+    @apply bg-gray-800 text-gray-100;
+  }
+
+  .dark .MuiTableContainer-root {
+    @apply bg-gray-800;
+  }
+
+  .dark .MuiTable-root {
+    @apply bg-gray-800;
+  }
+
+  .dark .MuiTableCell-root {
+    @apply text-gray-200 border-gray-700;
+  }
+
+  .dark .MuiTableRow-root:hover {
+    @apply bg-gray-700/50;
+  }
+
+  .dark .MuiTableHead-root .MuiTableCell-root {
+    @apply bg-gray-700 text-gray-100;
+  }
+
+  .dark .MuiMenuItem-root {
+    @apply text-gray-200;
+  }
+
+  .dark .MuiInputBase-root {
+    @apply text-gray-200;
+  }
+
+  .dark .MuiOutlinedInput-notchedOutline {
+    @apply border-gray-600;
+  }
+
+  .dark .MuiInputLabel-root {
+    @apply text-gray-300;
+  }
+
+  .dark .MuiTypography-root {
+    @apply text-gray-100;
+  }
+
+  .dark .MuiListItemText-primary {
+    @apply text-gray-100;
+  }
+
+  .dark .MuiListItemText-secondary {
+    @apply text-gray-400;
+  }
+
+  .dark .MuiButton-text {
+    @apply text-indigo-400;
+  }
+
+  .dark .MuiFormControlLabel-label {
+    @apply text-gray-100;
+  }
+
+  .dark .MuiDialog-paper {
+    @apply bg-gray-800 text-gray-100;
+  }
+
+  .dark .MuiDialogTitle-root {
+    @apply text-gray-100;
+  }
+
+  .dark .MuiDialogContentText-root {
+    @apply text-gray-300;
+  }
+
+  .dark .MuiAlert-standardSuccess {
+    @apply bg-green-900/80 text-green-100;
+  }
+
+  .dark .MuiAlert-standardError {
+    @apply bg-red-900/80 text-red-100;
+  }
+
+  .dark .MuiAlert-standardWarning {
+    @apply bg-amber-900/80 text-amber-100;
+  }
+
+  .dark .MuiAlert-standardInfo {
+    @apply bg-blue-900/80 text-blue-100;
+  }
+  
+  /* Tabs specific */
+  .dark .MuiTabs-root {
+    @apply bg-gray-800;
+  }
+  
+  .dark .MuiTab-root {
+    @apply text-gray-400;
+  }
+  
+  .dark .Mui-selected {
+    @apply text-indigo-400;
+  }
+
+  /* Form fields */
+  .dark .MuiFormHelperText-root {
+    @apply text-gray-400;
+  }
+  
+  .dark .MuiCheckbox-root {
+    @apply text-indigo-400;
+  }
+  
+  .dark .MuiRadio-root {
+    @apply text-indigo-400;
+  }
+  
+  /* Cards */
+  .dark .MuiCardHeader-title {
+    @apply text-gray-100;
+  }
+  
+  .dark .MuiCardHeader-subheader {
+    @apply text-gray-400;
+  }
+}
+
+/* Animation for theme switching */
+.theme-transition {
+  @apply transition-all duration-300;
+}
+
+/* Custom classes for enforcing colors */
+.dark-text-fix {
+  @apply text-gray-900 dark:text-gray-100;
+}
+
+.dark-bg-fix {
+  @apply bg-white dark:bg-gray-800;
+}
+
+.dark-border-fix {
+  @apply border-gray-200 dark:border-gray-700;
+}

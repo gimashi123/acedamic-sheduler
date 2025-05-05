@@ -13,7 +13,9 @@ import {
   BookOpen, 
   MessageSquare, 
   Book,
-  LogOut 
+  LogOut,
+  Moon,
+  Sun
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -22,6 +24,8 @@ import { RootState } from '../store/store';
 import { fetchProfilePicture } from '../features/profile/profileSlice';
 import ProfilePicture from './ProfilePicture';
 import { AppDispatch } from '../store/store';
+import { toggleTheme } from '../store/themeSlice';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   AppBar, Box, CssBaseline, Divider, Drawer, IconButton,
   List, ListItem, ListItemButton, ListItemIcon, ListItemText,
@@ -36,7 +40,9 @@ import {
   Assignment as AssignmentIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  LightMode as LightModeIcon,
+  DarkMode as DarkModeIcon
 } from '@mui/icons-material';
 
 const Layout: React.FC = () => {
@@ -44,6 +50,7 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const profilePicture = useSelector((state: RootState) => state.profile.profilePicture);
+  const { mode, toggleMode, isDark } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
@@ -53,6 +60,10 @@ const Layout: React.FC = () => {
       dispatch(fetchProfilePicture());
     }
   }, [user, dispatch]);
+
+  const handleThemeToggle = () => {
+    toggleMode();
+  };
 
   const handleLogout = () => {
     logout();
@@ -72,29 +83,31 @@ const Layout: React.FC = () => {
   const renderNavItems = () => {
     if (!user) return null;
 
+    const linkClass = "transition-colors duration-200 hover:text-indigo-600 dark:hover:text-indigo-400";
+
     switch (user.role) {
       case 'Admin':
         return (
           <>
-            <Link to="/venues" className="text-gray-700 hover:text-gray-900">
+            <Link to="/venues" className={linkClass}>
               <Building2 className="h-5 w-5" />
             </Link>
-            <Link to="/groups" className="text-gray-700 hover:text-gray-900">
+            <Link to="/groups" className={linkClass}>
               <Users className="h-5 w-5" />
             </Link>
-            <Link to="/subjects" className="text-gray-700 hover:text-gray-900">
+            <Link to="/subjects" className={linkClass}>
               <BookText className="h-5 w-5" />
             </Link>
-            <Link to="/subject-assignments" className="text-gray-700 hover:text-gray-900">
+            <Link to="/subject-assignments" className={linkClass}>
               <Book className="h-5 w-5" />
             </Link>
-            <Link to="/users" className="text-gray-700 hover:text-gray-900">
+            <Link to="/users" className={linkClass}>
               <User className="h-5 w-5" />
             </Link>
-            <Link to="/requests" className="text-gray-700 hover:text-gray-900">
+            <Link to="/requests" className={linkClass}>
               <UserPlus className="h-5 w-5" />
             </Link>
-            <Link to="/settings" className="text-gray-700 hover:text-gray-900">
+            <Link to="/settings" className={linkClass}>
               <Settings className="h-5 w-5" />
             </Link>
           </>
@@ -102,22 +115,22 @@ const Layout: React.FC = () => {
       case 'Lecturer':
         return (
           <>
-            <Link to="/schedule" className="text-gray-700 hover:text-gray-900">
+            <Link to="/schedule" className={linkClass}>
               <Calendar className="h-5 w-5" />
             </Link>
-            <Link to="/classes" className="text-gray-700 hover:text-gray-900">
+            <Link to="/classes" className={linkClass}>
               <Users className="h-5 w-5" />
             </Link>
-            <Link to="/attendance" className="text-gray-700 hover:text-gray-900">
+            <Link to="/attendance" className={linkClass}>
               <ClipboardList className="h-5 w-5" />
             </Link>
-            <Link to="/subject-assignments" className="text-gray-700 hover:text-gray-900">
+            <Link to="/subject-assignments" className={linkClass}>
               <Book className="h-5 w-5" />
             </Link>
-            <Link to="/materials" className="text-gray-700 hover:text-gray-900">
+            <Link to="/materials" className={linkClass}>
               <BookOpen className="h-5 w-5" />
             </Link>
-            <Link to="/messages" className="text-gray-700 hover:text-gray-900">
+            <Link to="/messages" className={linkClass}>
               <MessageSquare className="h-5 w-5" />
             </Link>
           </>
@@ -125,16 +138,16 @@ const Layout: React.FC = () => {
       case 'Student':
         return (
           <>
-            <Link to="/schedule" className="text-gray-700 hover:text-gray-900">
+            <Link to="/schedule" className={linkClass}>
               <Calendar className="h-5 w-5" />
             </Link>
-            <Link to="/courses" className="text-gray-700 hover:text-gray-900">
+            <Link to="/courses" className={linkClass}>
               <BookOpen className="h-5 w-5" />
             </Link>
-            <Link to="/attendance" className="text-gray-700 hover:text-gray-900">
+            <Link to="/attendance" className={linkClass}>
               <ClipboardList className="h-5 w-5" />
             </Link>
-            <Link to="/messages" className="text-gray-700 hover:text-gray-900">
+            <Link to="/messages" className={linkClass}>
               <MessageSquare className="h-5 w-5" />
             </Link>
           </>
@@ -149,6 +162,20 @@ const Layout: React.FC = () => {
     
     return (
       <div className="flex items-center">
+        <Tooltip title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+          <IconButton
+            onClick={handleThemeToggle}
+            size="small"
+            sx={{ mr: 2 }}
+            aria-label="toggle theme"
+          >
+            {isDark ? (
+              <Sun className="h-5 w-5 text-yellow-400" />
+            ) : (
+              <Moon className="h-5 w-5 text-indigo-600" />
+            )}
+          </IconButton>
+        </Tooltip>
         <Tooltip title="Account settings">
           <IconButton
             onClick={handleProfileMenuOpen}
@@ -173,6 +200,12 @@ const Layout: React.FC = () => {
           onClick={handleProfileMenuClose}
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          PaperProps={{
+            sx: {
+              bgcolor: 'var(--color-bg-primary)',
+              color: 'var(--color-text-primary)',
+            }
+          }}
         >
           <MenuItem onClick={() => navigate('/profile')}>
             <ListItemIcon>
@@ -199,10 +232,22 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 py-4 px-6 flex justify-between items-center">
+    <div className="flex flex-col min-h-screen transition-colors duration-200"
+      style={{ 
+        backgroundColor: 'var(--color-bg-secondary)',
+        color: 'var(--color-text-primary)'
+      }}
+    >
+      <header className="py-4 px-6 flex justify-between items-center transition-colors duration-200"
+        style={{ 
+          backgroundColor: 'var(--color-bg-primary)',
+          borderBottom: '1px solid var(--color-border)',
+        }}
+      >
         <div className="flex items-center space-x-4">
-          <Link to="/" className="text-xl font-bold text-indigo-600">Academic Scheduler</Link>
+          <Link to="/" className="text-xl font-bold" style={{ color: 'var(--color-accent)' }}>
+            Academic Scheduler
+          </Link>
         </div>
         
         {user && (
@@ -218,7 +263,9 @@ const Layout: React.FC = () => {
         )}
       </header>
       
-      <main className="flex-grow p-6">
+      <main className="flex-grow p-6 transition-colors duration-200"
+        style={{ color: 'var(--color-text-primary)' }}
+      >
         <Outlet />
       </main>
       
