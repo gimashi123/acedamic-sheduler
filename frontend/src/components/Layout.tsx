@@ -103,6 +103,9 @@ const Layout: React.FC = () => {
             <Link to="/subject-assignments" className={linkClass}>
               <Book className="h-5 w-5" />
             </Link>
+            <Link to="/schedule" className={linkClass}>
+              <Calendar className="h-5 w-5" />
+            </Link>
             <Link to="/users" className={linkClass}>
               <User className="h-5 w-5" />
             </Link>

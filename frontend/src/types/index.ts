@@ -95,3 +95,26 @@ export interface RemovedUser {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface TimeSlot {
+  _id?: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  subject: string | Subject;
+  venue: string | Venue;
+  lecturer: string | LecturerInfo | User;
+}
+
+export interface Timetable {
+  _id: string;
+  group: string | Group;
+  semester: number;
+  year: number;
+  slots: TimeSlot[];
+  generatedBy: 'system' | 'admin' | 'ai' | 'hybrid';
+  version: 'constraint' | 'ai' | 'final';
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

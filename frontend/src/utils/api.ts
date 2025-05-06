@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { AuthResponse, User, UserRequest, Venue, Group, ApiResponse, UserRole } from '../types';
+import { AuthResponse, User, UserRequest, Venue, Group, ApiResponse, UserRole, Timetable } from '../types';
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig<any> {
   _retry?: boolean;
@@ -202,27 +202,55 @@ export const venueApi = {
 // Group API calls
 export const groupApi = {
   getAllGroups: async (): Promise<Group[]> => {
-    const response = await api.get<ApiResponse<Group[]>>('/group');
+    const response = await api.get<ApiResponse<Group[]>>('/groups');
     return response.data.data;
   },
   
   getGroupById: async (id: string): Promise<Group> => {
-    const response = await api.get<ApiResponse<Group>>(`/group/${id}`);
+    const response = await api.get<ApiResponse<Group>>(`/groups/${id}`);
     return response.data.data;
   },
   
   createGroup: async (groupData: Omit<Group, '_id'>): Promise<Group> => {
-    const response = await api.post<ApiResponse<Group>>('/group', groupData);
+    const response = await api.post<ApiResponse<Group>>('/groups', groupData);
     return response.data.data;
   },
   
   updateGroup: async (id: string, groupData: Partial<Group>): Promise<Group> => {
-    const response = await api.put<ApiResponse<Group>>(`/group/${id}`, groupData);
+    const response = await api.put<ApiResponse<Group>>(`/groups/${id}`, groupData);
     return response.data.data;
   },
   
   deleteGroup: async (id: string): Promise<void> => {
-    await api.delete<ApiResponse<void>>(`/group/${id}`);
+    await api.delete<ApiResponse<void>>(`/groups/${id}`);
+  }
+};
+
+// Timetable API calls
+export const timetableApi = {
+  getAllTimetables: async (): Promise<Timetable[]> => {
+    const response = await api.get<ApiResponse<Timetable[]>>('/timetable');
+    return response.data.data;
+  },
+  
+  getTimetableByGroup: async (groupId: string): Promise<Timetable> => {
+    const response = await api.get<ApiResponse<Timetable>>(`/timetable/group/${groupId}`);
+    return response.data.data;
+  },
+  
+  generateConstraintTimetable: async (groupId: string): Promise<Timetable> => {
+    const response = await api.post<ApiResponse<Timetable>>('/timetable/generate/constraint', { groupId });
+    return response.data.data;
+  },
+  
+  generateAITimetable: async (groupId: string): Promise<Timetable> => {
+    const response = await api.post<ApiResponse<Timetable>>('/timetable/generate/ai', { groupId });
+    return response.data.data;
+  },
+  
+  finalizeTimetable: async (timetableId: string): Promise<Timetable> => {
+    const response = await api.post<ApiResponse<Timetable>>('/timetable/finalize', { timetableId });
+    return response.data.data;
   }
 };
 
