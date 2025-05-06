@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -31,20 +31,35 @@ import {
   ScheduleBuilder 
 } from '../components/content';
 import { 
-  fetchAllSubjects, 
-  getTimetableContent, 
-  Subject, 
-  ScheduleEntry 
+  saveSubjectsToTimetable,
+  ScheduleEntry,
+  Subject
 } from '../services/timetableContentService';
+import { useTimetable } from '../../../contexts/TimetableContext';
 
 const AddTimetableContentPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { 
+    subjects, 
+    fetchTimetableContentById, 
+    contentLoading, 
+    currentTimetableContent,
+    refetchTimetables
+  } = useTimetable();
+  
+  // Store fetchTimetableContentById in a ref to avoid dependency changes
+  const fetchTimetableContentByIdRef = useRef(fetchTimetableContentById);
+  
+  // Update the ref when the function changes
+  useEffect(() => {
+    fetchTimetableContentByIdRef.current = fetchTimetableContentById;
+  }, [fetchTimetableContentById]);
+  
   const [timetable, setTimetable] = useState<ITimetable | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
   const [isPublished, setIsPublished] = useState<boolean>(false);
@@ -61,15 +76,21 @@ const AddTimetableContentPage: React.FC = () => {
         setTimetable(timetableData);
         setIsPublished(timetableData.isPublished);
         
-        // Fetch all available subjects
-        const subjectsData = await fetchAllSubjects();
-        setSubjects(subjectsData);
-        
         // Try to fetch existing content if available
-        const contentData = await getTimetableContent(id);
+        const contentData = await fetchTimetableContentByIdRef.current(id);
         if (contentData) {
-          setSelectedSubjectIds(contentData.subjects || []);
-          setSchedule(contentData.schedule || []);
+          // Extract subject IDs from the content
+          if (contentData.subjects) {
+            const subjectIds = contentData.subjects.map(subject => 
+              typeof subject === 'string' ? subject : subject.id
+            );
+            setSelectedSubjectIds(subjectIds);
+          }
+          
+          // Set the schedule
+          if (contentData.schedule) {
+            setSchedule(contentData.schedule);
+          }
         }
         
       } catch (error) {
@@ -106,8 +127,14 @@ const AddTimetableContentPage: React.FC = () => {
         await updateTimetable(id, { isPublished });
       }
       
-      // Here you would save the subject selections and schedule
-      // This would require implementing backend endpoints
+      // Save subject selections
+      await saveSubjectsToTimetable(id, selectedSubjectIds);
+      
+      // Schedule entries are saved individually when they're created
+      // through the ScheduleBuilder component
+
+      // Refetch timetables to reflect any changes
+      await refetchTimetables();
       
       toast.success('Timetable content saved successfully');
       navigate(`/admin/dashboard/timetable/view/${id}`);
@@ -119,7 +146,7 @@ const AddTimetableContentPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading || contentLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
         <CircularProgress />
@@ -216,6 +243,7 @@ const AddTimetableContentPage: React.FC = () => {
               subjects={subjects}
               selectedSubjectIds={selectedSubjectIds}
               initialSchedule={schedule}
+              onScheduleChange={handleScheduleChange}
             />
           </Box>
         )}

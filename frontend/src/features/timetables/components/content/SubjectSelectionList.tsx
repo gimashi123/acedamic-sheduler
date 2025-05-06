@@ -13,10 +13,12 @@ import {
   Paper,
   ListItemSecondaryAction,
   Divider,
-  Button
+  Button,
+  Alert
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import SaveIcon from '@mui/icons-material/Save';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { fetchAllSubjects, Subject, saveSubjectsToTimetable } from '../../services/timetableContentService';
 import { toast } from 'react-hot-toast';
 
@@ -45,9 +47,10 @@ const SubjectSelectionList: React.FC<SubjectSelectionListProps> = ({
         const data = await fetchAllSubjects();
         setSubjects(data);
         setError(null);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error loading subjects:', err);
-        setError('Failed to load subjects. Please try again later.');
+        // Display a more specific error message from the service
+        setError(err.message || 'Failed to load subjects. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -56,9 +59,26 @@ const SubjectSelectionList: React.FC<SubjectSelectionListProps> = ({
     loadSubjects();
   }, []);
 
-  useEffect(() => {
-    setSelectedSubjects(initialSelectedSubjects);
-  }, [initialSelectedSubjects]);
+  // Complete the retry function
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    
+    const loadSubjects = async () => {
+      try {
+        const data = await fetchAllSubjects();
+        setSubjects(data);
+        setError(null);
+      } catch (err: any) {
+        console.error('Error reloading subjects:', err);
+        setError(err.message || 'Failed to load subjects. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSubjects();
+  };
 
   const handleToggleSubject = (id: string) => {
     const newSelectedSubjects = selectedSubjects.includes(id)
@@ -109,7 +129,21 @@ const SubjectSelectionList: React.FC<SubjectSelectionListProps> = ({
   if (error) {
     return (
       <Box p={2}>
-        <Typography color="error">{error}</Typography>
+        <Alert 
+          severity="error" 
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              onClick={handleRetry}
+              startIcon={<RefreshIcon />}
+            >
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
       </Box>
     );
   }

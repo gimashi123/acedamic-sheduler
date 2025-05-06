@@ -20,10 +20,13 @@ import {
   MenuItem,
   TextField,
   Chip,
-  SelectChangeEvent
+  SelectChangeEvent,
+  IconButton,
+  Alert
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { Subject, ScheduleEntry, addScheduleEntry } from '../../services/timetableContentService';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Subject, ScheduleEntry, addScheduleEntry, deleteScheduleEntry } from '../../services/timetableContentService';
 import { toast } from 'react-hot-toast';
 
 interface ScheduleBuilderProps {
@@ -31,6 +34,7 @@ interface ScheduleBuilderProps {
   subjects: Subject[];
   selectedSubjectIds: string[];
   initialSchedule?: ScheduleEntry[];
+  onScheduleChange?: (schedule: ScheduleEntry[]) => void;
 }
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -40,19 +44,35 @@ const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({
   timetableId,
   subjects,
   selectedSubjectIds,
-  initialSchedule = []
+  initialSchedule = [],
+  onScheduleChange
 }) => {
   const [schedule, setSchedule] = useState<ScheduleEntry[]>(initialSchedule);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentEntry, setCurrentEntry] = useState<Partial<ScheduleEntry>>({});
+  const [currentEntry, setCurrentEntry] = useState<{
+    subject?: string;
+    day?: string;
+    startTime?: string;
+    endTime?: string;
+    venue?: string;
+  }>({});
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Filter subjects to only those selected
   const availableSubjects = subjects.filter(subject => 
     selectedSubjectIds.includes(subject.id)
   );
+
+  // Update parent component when schedule changes
+  useEffect(() => {
+    if (onScheduleChange) {
+      onScheduleChange(schedule);
+    }
+  }, [schedule, onScheduleChange]);
 
   const handleOpenDialog = () => {
     setIsDialogOpen(true);
@@ -85,42 +105,75 @@ const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({
   };
 
   const handleSubjectChange = (e: SelectChangeEvent<string>) => {
-    handleInputChange('subjectId', e.target.value);
+    handleInputChange('subject', e.target.value);
   };
 
-  const handleSaveEntry = async () => {
-    if (!currentEntry.subjectId || !currentEntry.day || !startTime || !endTime) {
-      toast.error('Please fill all required fields');
+  const handleAddEntry = async () => {
+    if (!currentEntry.subject || !currentEntry.day || !startTime || !endTime) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     try {
       setIsSaving(true);
-      
-      const newEntry: Omit<ScheduleEntry, 'id'> = {
-        subjectId: currentEntry.subjectId as string,
-        day: currentEntry.day as string,
+      setApiError(null);
+
+      const newEntry = {
+        ...currentEntry,
         startTime,
-        endTime,
-        venue: currentEntry.venue
+        endTime
       };
 
-      try {
-        // Try to save to backend
-        const savedEntry = await addScheduleEntry(timetableId, newEntry);
-        setSchedule([...schedule, savedEntry]);
-      } catch (error) {
-        // If backend fails, add locally
-        console.error('Backend save failed, adding entry locally', error);
-        setSchedule([...schedule, { ...newEntry, id: Date.now().toString() }]);
+      const result = await addScheduleEntry(timetableId, newEntry);
+      
+      // Find the newly added entry in the result
+      const addedEntry = result.schedule.find(entry => 
+        typeof entry.subject === 'string' 
+          ? entry.subject === currentEntry.subject 
+          : entry.subject.id === currentEntry.subject
+      );
+
+      if (addedEntry) {
+        setSchedule([...schedule, addedEntry]);
+        setIsDialogOpen(false);
+        resetFormState();
+        toast.success('Schedule entry added successfully');
+      }
+    } catch (error: any) {
+      console.error('Error adding schedule entry:', error);
+      
+      if (error.code === 'ERR_NETWORK') {
+        setApiError('Could not connect to the backend server. Please ensure the server is running.');
+      } else {
+        setApiError(error.message || 'Failed to add schedule entry');
       }
       
-      toast.success('Schedule entry added successfully');
-      handleCloseDialog();
-    } catch (error) {
       toast.error('Failed to add schedule entry');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteEntry = async (entryId: string) => {
+    try {
+      setIsDeleting(true);
+      setApiError(null);
+      
+      await deleteScheduleEntry(timetableId, entryId);
+      setSchedule(schedule.filter(entry => entry.id !== entryId));
+      toast.success('Schedule entry deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting schedule entry:', error);
+      
+      if (error.code === 'ERR_NETWORK') {
+        setApiError('Could not connect to the backend server. Please ensure the server is running.');
+      } else {
+        setApiError(error.message || 'Failed to delete schedule entry');
+      }
+      
+      toast.error('Failed to delete schedule entry');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -136,6 +189,27 @@ const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({
       return entry.day === day && time >= startHour && time < endHour;
     });
   };
+
+  if (apiError) {
+    return (
+      <Box sx={{ mb: 3 }}>
+        <Alert 
+          severity="error" 
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              onClick={() => setApiError(null)}
+            >
+              Dismiss
+            </Button>
+          }
+        >
+          {apiError}
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -187,9 +261,21 @@ const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({
                       >
                         {entry && timeSlot === parseInt(entry.startTime.split(':')[0]) && (
                           <Box>
-                            <Typography variant="subtitle2">
-                              {getSubjectName(entry.subjectId)}
-                            </Typography>
+                            <Box display="flex" justifyContent="space-between" alignItems="center">
+                              <Typography variant="subtitle2">
+                                {typeof entry.subject === 'string' 
+                                  ? getSubjectName(entry.subject)
+                                  : `${entry.subject.name} (${entry.subject.code})`}
+                              </Typography>
+                              <IconButton 
+                                size="small" 
+                                color="error" 
+                                onClick={() => handleDeleteEntry(entry.id)}
+                                disabled={isDeleting}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
                             <Typography variant="caption" display="block">
                               {`${entry.startTime} - ${entry.endTime}`}
                             </Typography>
@@ -220,7 +306,7 @@ const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({
               <InputLabel id="subject-select-label">Subject</InputLabel>
               <Select
                 labelId="subject-select-label"
-                value={currentEntry.subjectId || ''}
+                value={currentEntry.subject || ''}
                 label="Subject"
                 onChange={handleSubjectChange}
               >
@@ -280,7 +366,7 @@ const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button 
-            onClick={handleSaveEntry} 
+            onClick={handleAddEntry} 
             variant="contained" 
             color="primary"
             disabled={isSaving}
@@ -294,3 +380,7 @@ const ScheduleBuilder: React.FC<ScheduleBuilderProps> = ({
 };
 
 export default ScheduleBuilder;
+
+function resetFormState() {
+  throw new Error('Function not implemented.');
+}
