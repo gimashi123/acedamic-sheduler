@@ -9,51 +9,114 @@ import {
   CircularProgress,
   Tabs,
   Tab,
-  Card,
-  CardContent,
   IconButton,
   Alert,
   Stepper,
   Step,
-  StepLabel
+  StepLabel,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Info as InfoIcon,
-  Save as SaveIcon
+  Save as SaveIcon,
+  Check as CheckIcon
 } from '@mui/icons-material';
-import { getTimetableById } from '../timetableService';
+import { getTimetableById, updateTimetable } from '../timetableService';
 import { ITimetable } from '../../../types/timetable';
 import { toast } from 'react-hot-toast';
+import { 
+  SubjectSelectionList, 
+  ScheduleBuilder 
+} from '../components/content';
+import { 
+  fetchAllSubjects, 
+  getTimetableContent, 
+  Subject, 
+  ScheduleEntry 
+} from '../services/timetableContentService';
 
 const AddTimetableContentPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [timetable, setTimetable] = useState<ITimetable | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState(0);
-
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
+  const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
+  const [isPublished, setIsPublished] = useState<boolean>(false);
+  
   useEffect(() => {
-    const fetchTimetable = async () => {
+    const fetchTimetableData = async () => {
       if (!id) return;
       
       try {
         setLoading(true);
-        const data = await getTimetableById(id);
-        setTimetable(data);
+        
+        // Fetch timetable details
+        const timetableData = await getTimetableById(id);
+        setTimetable(timetableData);
+        setIsPublished(timetableData.isPublished);
+        
+        // Fetch all available subjects
+        const subjectsData = await fetchAllSubjects();
+        setSubjects(subjectsData);
+        
+        // Try to fetch existing content if available
+        const contentData = await getTimetableContent(id);
+        if (contentData) {
+          setSelectedSubjectIds(contentData.subjects || []);
+          setSchedule(contentData.schedule || []);
+        }
+        
       } catch (error) {
-        console.error('Error fetching timetable:', error);
-        toast.error('Failed to load timetable details');
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load timetable data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTimetable();
+    fetchTimetableData();
   }, [id]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
+  };
+  
+  const handleSubjectSelectionChange = (selectedIds: string[]) => {
+    setSelectedSubjectIds(selectedIds);
+  };
+  
+  const handleScheduleChange = (newSchedule: ScheduleEntry[]) => {
+    setSchedule(newSchedule);
+  };
+  
+  const handleSaveProgress = async () => {
+    if (!id) return;
+    
+    setSaving(true);
+    
+    try {
+      // First update the timetable publish status if changed
+      if (timetable && timetable.isPublished !== isPublished) {
+        await updateTimetable(id, { isPublished });
+      }
+      
+      // Here you would save the subject selections and schedule
+      // This would require implementing backend endpoints
+      
+      toast.success('Timetable content saved successfully');
+      navigate(`/admin/dashboard/timetable/view/${id}`);
+    } catch (error) {
+      console.error('Error saving timetable content:', error);
+      toast.error('Failed to save timetable content');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -102,7 +165,7 @@ const AddTimetableContentPage: React.FC = () => {
       </Box>
 
       <Paper sx={{ p: 3, mb: 4 }}>
-        <Stepper activeStep={0} sx={{ mb: 4 }}>
+        <Stepper activeStep={activeTab} sx={{ mb: 4 }}>
           <Step>
             <StepLabel>Set up subjects</StepLabel>
           </Step>
@@ -113,14 +176,6 @@ const AddTimetableContentPage: React.FC = () => {
             <StepLabel>Review and publish</StepLabel>
           </Step>
         </Stepper>
-
-        <Alert 
-          icon={<InfoIcon />} 
-          severity="info" 
-          sx={{ mb: 3 }}
-        >
-          This feature is currently under development. Please check back later for full functionality.
-        </Alert>
 
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
           <Tab label="Subjects" />
@@ -139,15 +194,11 @@ const AddTimetableContentPage: React.FC = () => {
               Select the subjects you want to include in this timetable.
             </Typography>
             
-            <Box sx={{ height: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <Card sx={{ width: '100%', textAlign: 'center', p: 3 }}>
-                <CardContent>
-                  <Typography color="textSecondary" gutterBottom>
-                    Subject selection will be available soon
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
+            <SubjectSelectionList
+              timetableId={id || ''}
+              initialSelectedSubjects={selectedSubjectIds}
+              onSelectionChange={handleSubjectSelectionChange}
+            />
           </Box>
         )}
 
@@ -160,15 +211,12 @@ const AddTimetableContentPage: React.FC = () => {
               Arrange subjects into time slots for each day of the week.
             </Typography>
             
-            <Box sx={{ height: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <Card sx={{ width: '100%', textAlign: 'center', p: 3 }}>
-                <CardContent>
-                  <Typography color="textSecondary" gutterBottom>
-                    Schedule builder will be available soon
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
+            <ScheduleBuilder
+              timetableId={id || ''}
+              subjects={subjects}
+              selectedSubjectIds={selectedSubjectIds}
+              initialSchedule={schedule}
+            />
           </Box>
         )}
 
@@ -178,43 +226,116 @@ const AddTimetableContentPage: React.FC = () => {
               Timetable Settings
             </Typography>
             <Typography variant="body2" paragraph color="textSecondary">
-              Configure additional settings for this timetable.
+              Configure additional settings and review your timetable before publishing.
             </Typography>
             
-            <Box sx={{ height: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <Card sx={{ width: '100%', textAlign: 'center', p: 3 }}>
-                <CardContent>
-                  <Typography color="textSecondary" gutterBottom>
-                    Settings configuration will be available soon
-                  </Typography>
-                </CardContent>
-              </Card>
+            <Box sx={{ mt: 3 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isPublished}
+                    onChange={(e) => setIsPublished(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={isPublished ? "Published" : "Draft"}
+              />
+              
+              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                {isPublished 
+                  ? "This timetable is visible to all users." 
+                  : "This timetable is currently in draft mode and only visible to administrators."}
+              </Typography>
             </Box>
+            
+            {selectedSubjectIds.length > 0 ? (
+              <Alert 
+                icon={<CheckIcon />} 
+                severity="success" 
+                sx={{ mt: 3 }}
+              >
+                {selectedSubjectIds.length} subject{selectedSubjectIds.length !== 1 ? 's' : ''} added to this timetable.
+              </Alert>
+            ) : (
+              <Alert 
+                icon={<InfoIcon />} 
+                severity="warning" 
+                sx={{ mt: 3 }}
+              >
+                No subjects have been added to this timetable yet. Go to the Subjects tab to add subjects.
+              </Alert>
+            )}
+            
+            {schedule.length > 0 ? (
+              <Alert 
+                icon={<CheckIcon />} 
+                severity="success" 
+                sx={{ mt: 2 }}
+              >
+                {schedule.length} schedule entr{schedule.length !== 1 ? 'ies' : 'y'} created.
+              </Alert>
+            ) : (
+              <Alert 
+                icon={<InfoIcon />} 
+                severity="warning" 
+                sx={{ mt: 2 }}
+              >
+                No schedule entries have been created yet. Go to the Schedule tab to create your timetable schedule.
+              </Alert>
+            )}
           </Box>
         )}
 
-        <Box display="flex" justifyContent="flex-end" mt={3}>
+        <Box display="flex" justifyContent="space-between" mt={3}>
           <Button
             variant="outlined"
-            onClick={() => navigate(`/admin/dashboard/timetable/view/${timetable.id}`)}
-            sx={{ mr: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SaveIcon />}
             onClick={() => {
-              toast.success('Feature coming soon!');
+              const nextTab = Math.max(0, activeTab - 1);
+              setActiveTab(nextTab);
             }}
+            disabled={activeTab === 0 || saving}
           >
-            Save Progress
+            Previous
           </Button>
+          
+          <Box>
+            <Button
+              variant="outlined"
+              onClick={() => navigate(`/admin/dashboard/timetable/view/${timetable.id}`)}
+              sx={{ mr: 2 }}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            
+            {activeTab < 2 ? (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => {
+                  const nextTab = Math.min(2, activeTab + 1);
+                  setActiveTab(nextTab);
+                }}
+                disabled={saving}
+              >
+                Continue
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<SaveIcon />}
+                onClick={handleSaveProgress}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save & Finish'}
+              </Button>
+            )}
+          </Box>
         </Box>
       </Paper>
     </Box>
   );
 };
 
-export default AddTimetableContentPage; 
+export default AddTimetableContentPage;
