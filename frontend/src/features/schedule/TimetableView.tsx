@@ -16,18 +16,28 @@ const TimetableView: React.FC<TimetableViewProps> = ({ timetable }) => {
     return acc;
   }, {});
   
-  // Sort days in the correct order
+  // Set all days of the week in correct order
   const weekdayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const sortedDays = Object.keys(slotsByDay).sort(
-    (a, b) => weekdayOrder.indexOf(a) - weekdayOrder.indexOf(b)
-  );
   
-  // Get all unique time slots
-  const timeSlots = Array.from(
+  // Get all unique time slots from the timetable or use default time slots
+  const availableTimeSlots = Array.from(
     new Set(
       timetable.slots.map(slot => `${slot.startTime}-${slot.endTime}`)
     )
-  ).sort();
+  );
+  
+  // Default time slots if the timetable doesn't have any
+  const defaultTimeSlots = [
+    '08:00-10:00',
+    '10:30-12:30',
+    '13:00-15:00',
+    '15:30-17:30'
+  ];
+  
+  // Use available time slots if they exist, otherwise use default time slots
+  const timeSlots = availableTimeSlots.length > 0 
+    ? availableTimeSlots.sort() 
+    : defaultTimeSlots;
   
   // Find a slot for a specific day and time
   const findSlot = (day: string, timeSlot: string) => {
@@ -81,7 +91,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({ timetable }) => {
         <TableHead>
           <TableRow>
             <TableCell width={120}>Time Slot</TableCell>
-            {sortedDays.map(day => (
+            {weekdayOrder.map(day => (
               <TableCell key={day} align="center">
                 {day}
               </TableCell>
@@ -94,10 +104,18 @@ const TimetableView: React.FC<TimetableViewProps> = ({ timetable }) => {
               <TableCell component="th" scope="row">
                 {timeSlot.replace('-', ' - ')}
               </TableCell>
-              {sortedDays.map(day => {
+              {weekdayOrder.map(day => {
                 const slot = findSlot(day, timeSlot);
                 return (
-                  <TableCell key={`${day}-${timeSlot}`} align="center" sx={{ height: 150, minWidth: 200 }}>
+                  <TableCell 
+                    key={`${day}-${timeSlot}`} 
+                    align="center" 
+                    sx={{ 
+                      height: 150, 
+                      minWidth: 200,
+                      backgroundColor: slot ? 'rgba(0, 0, 0, 0.02)' : 'inherit' 
+                    }}
+                  >
                     {slot ? renderSubjectCell(slot) : ''}
                   </TableCell>
                 );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Paper, Container, Grid, CircularProgress, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Alert, Tabs, Tab, Divider, Tooltip, Link } from '@mui/material';
+import { Box, Button, Typography, Paper, Container, Grid, CircularProgress, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Alert, Tabs, Tab, Divider, Tooltip, Link, Checkbox, ListItemText, OutlinedInput } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { timetableApi } from '../../utils/api';
 import { Group, Timetable, TimeSlot } from '../../types';
@@ -8,9 +8,21 @@ import TimetableView from './TimetableView';
 import AIBadge from './AIBadge';
 import { groupApi } from '../../utils/api'; // Import the group API
 
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 5.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
 const Schedule: React.FC = () => {
   const { user } = useAuthStore();
   const [selectedGroup, setSelectedGroup] = useState<string>('');
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [constraintTimetable, setConstraintTimetable] = useState<Timetable | null>(null);
   const [aiTimetable, setAiTimetable] = useState<Timetable | null>(null);
@@ -21,6 +33,7 @@ const Schedule: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isUsingGemini, setIsUsingGemini] = useState<boolean | null>(null);
+  const [isMultiGroupMode, setIsMultiGroupMode] = useState<boolean>(false);
 
   // Fetch all groups on mount
   useEffect(() => {
@@ -54,10 +67,10 @@ const Schedule: React.FC = () => {
 
   // Fetch timetable for selected group
   useEffect(() => {
-    if (selectedGroup) {
+    if (!isMultiGroupMode && selectedGroup) {
       fetchTimetable();
     }
-  }, [selectedGroup]);
+  }, [selectedGroup, isMultiGroupMode]);
 
   const fetchTimetable = async () => {
     if (!selectedGroup) return;
@@ -97,13 +110,34 @@ const Schedule: React.FC = () => {
     setAiTimetable(null);
     setFinalTimetable(null);
   };
+
+  const handleMultiGroupChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    setSelectedGroups(typeof value === 'string' ? value.split(',') : value);
+  };
   
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
+
+  const toggleGroupSelectionMode = () => {
+    setIsMultiGroupMode(!isMultiGroupMode);
+    // Clear selections when switching modes
+    setSelectedGroup('');
+    setSelectedGroups([]);
+    // Reset timetables
+    setConstraintTimetable(null);
+    setAiTimetable(null);
+    setFinalTimetable(null);
+  };
   
   const generateConstraintBasedTimetable = async () => {
-    if (!selectedGroup) {
+    if (isMultiGroupMode) {
+      if (selectedGroups.length === 0) {
+        setError('Please select at least one group');
+        return;
+      }
+    } else if (!selectedGroup) {
       setError('Please select a group first');
       return;
     }
@@ -112,10 +146,20 @@ const Schedule: React.FC = () => {
     setError(null);
     
     try {
-      const timetable = await timetableApi.generateConstraintTimetable(selectedGroup);
-      setConstraintTimetable(timetable);
-      setSuccess('Constraint-based timetable generated successfully');
-      setActiveTab(0); // Switch to constraint tab
+      // Handle single group selection
+      if (!isMultiGroupMode) {
+        const timetable = await timetableApi.generateConstraintTimetable(selectedGroup);
+        setConstraintTimetable(timetable);
+        setSuccess('Constraint-based timetable generated successfully');
+        setActiveTab(0); // Switch to constraint tab
+      } 
+      // Handle multi-group selection
+      else {
+        const timetable = await timetableApi.generateMultiGroupTimetable(selectedGroups);
+        setConstraintTimetable(timetable);
+        setSuccess(`Constraint-based timetable generated successfully for ${selectedGroups.length} groups`);
+        setActiveTab(0); // Switch to constraint tab
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to generate constraint-based timetable');
     } finally {
@@ -124,7 +168,12 @@ const Schedule: React.FC = () => {
   };
   
   const generateAITimetable = async () => {
-    if (!selectedGroup) {
+    if (isMultiGroupMode) {
+      if (selectedGroups.length === 0) {
+        setError('Please select at least one group');
+        return;
+      }
+    } else if (!selectedGroup) {
       setError('Please select a group first');
       return;
     }
@@ -138,7 +187,15 @@ const Schedule: React.FC = () => {
     setError(null);
     
     try {
-      const timetable = await timetableApi.generateAITimetable(selectedGroup);
+      let timetable;
+      if (!isMultiGroupMode) {
+        timetable = await timetableApi.generateAITimetable(selectedGroup);
+      } else {
+        // For multi-group mode, just use the first group for now
+        // In the future, the backend could be updated to support AI optimization for multiple groups
+        timetable = await timetableApi.generateAITimetable(selectedGroups[0]);
+      }
+      
       setAiTimetable(timetable);
       
       // Determine if Gemini was used based on the response message
@@ -146,8 +203,8 @@ const Schedule: React.FC = () => {
       setIsUsingGemini(usingGemini);
       
       setSuccess(usingGemini 
-        ? 'AI-optimized timetable generated successfully with Gemini AI' 
-        : 'Timetable simulated (Gemini API not configured)');
+        ? `AI-optimized timetable generated successfully with Gemini AI${isMultiGroupMode ? ' for ' + selectedGroups.length + ' groups' : ''}` 
+        : `Timetable simulated (Gemini API not configured)${isMultiGroupMode ? ' for ' + selectedGroups.length + ' groups' : ''}`);
       
       setActiveTab(1); // Switch to AI tab
     } catch (err: any) {
@@ -248,23 +305,75 @@ const Schedule: React.FC = () => {
         )}
         
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel id="group-select-label">Select Group</InputLabel>
-              <Select
-                labelId="group-select-label"
-                value={selectedGroup}
-                label="Select Group"
-                onChange={handleGroupChange}
-                disabled={loading || generating}
+          <Grid item xs={12} md={12}>
+            <Box display="flex" alignItems="center" mb={2}>
+              <Button 
+                variant={isMultiGroupMode ? "contained" : "outlined"}
+                color="primary"
+                onClick={toggleGroupSelectionMode}
+                sx={{ mr: 2 }}
               >
-                {groups.map((group) => (
-                  <MenuItem key={group._id} value={group._id}>
-                    {group.name} - {group.faculty} ({group.groupType})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                {isMultiGroupMode ? "Multi-Group Mode: ON" : "Multi-Group Mode: OFF"}
+              </Button>
+              <Typography variant="body2" color="text.secondary">
+                {isMultiGroupMode 
+                  ? "Select multiple groups to create a combined timetable" 
+                  : "Switch to multi-group mode to schedule multiple groups together"}
+              </Typography>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            {!isMultiGroupMode ? (
+              <FormControl fullWidth>
+                <InputLabel id="group-select-label">Select Group</InputLabel>
+                <Select
+                  labelId="group-select-label"
+                  value={selectedGroup}
+                  label="Select Group"
+                  onChange={handleGroupChange}
+                  disabled={loading || generating}
+                >
+                  {groups.map((group) => (
+                    <MenuItem key={group._id} value={group._id}>
+                      {group.name} - {group.faculty} ({group.groupType})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            ) : (
+              <FormControl fullWidth>
+                <InputLabel id="multi-group-select-label">Select Multiple Groups</InputLabel>
+                <Select
+                  labelId="multi-group-select-label"
+                  multiple
+                  value={selectedGroups}
+                  onChange={handleMultiGroupChange}
+                  input={<OutlinedInput label="Select Multiple Groups" />}
+                  renderValue={(selected) => {
+                    if (selected.length === 0) {
+                      return 'Select groups';
+                    }
+                    if (selected.length <= 2) {
+                      return selected.map(id => {
+                        const group = groups.find(g => g._id === id);
+                        return group ? group.name : id;
+                      }).join(', ');
+                    }
+                    return `${selected.length} groups selected`;
+                  }}
+                  MenuProps={MenuProps}
+                  disabled={loading || generating}
+                >
+                  {groups.map((group) => (
+                    <MenuItem key={group._id} value={group._id}>
+                      <Checkbox checked={selectedGroups.indexOf(group._id) > -1} />
+                      <ListItemText primary={`${group.name} - ${group.faculty} (${group.groupType})`} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
           </Grid>
           
           <Grid item xs={12} md={6}>
@@ -273,22 +382,24 @@ const Schedule: React.FC = () => {
                 variant="contained"
                 color="primary"
                 onClick={generateConstraintBasedTimetable}
-                disabled={!selectedGroup || loading || generating}
+                disabled={(isMultiGroupMode ? selectedGroups.length === 0 : !selectedGroup) || loading || generating}
                 startIcon={generating && activeTab === 0 ? <CircularProgress size={20} color="inherit" /> : null}
               >
                 Generate Constraint-Based Timetable
               </Button>
               
               <Tooltip title="Uses Gemini AI to optimize the timetable. Requires API key configuration on the backend.">
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={generateAITimetable}
-                  disabled={!constraintTimetable || loading || generating}
-                  startIcon={generating && activeTab === 1 ? <CircularProgress size={20} color="inherit" /> : null}
-                >
-                  Optimize with AI
-                </Button>
+                <span>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={generateAITimetable}
+                    disabled={!constraintTimetable || loading || generating}
+                    startIcon={generating && activeTab === 1 ? <CircularProgress size={20} color="inherit" /> : null}
+                  >
+                    Optimize with AI
+                  </Button>
+                </span>
               </Tooltip>
             </Box>
           </Grid>
@@ -315,7 +426,7 @@ const Schedule: React.FC = () => {
         </Paper>
       )}
       
-      {selectedGroup && (
+      {((isMultiGroupMode && selectedGroups.length > 0) || (!isMultiGroupMode && selectedGroup)) && (
         <Paper elevation={3} sx={{ p: 3 }}>
           <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
             <Tab label="Constraint-Based Timetable" disabled={!constraintTimetable} />

@@ -4,7 +4,8 @@ import {
   getTimetableByGroup, 
   generateConstraintTimetable, 
   generateAITimetable, 
-  finalizeTimetable 
+  finalizeTimetable,
+  generateMultiGroupTimetable
 } from '../controller/timetable.controller.js';
 import { authenticateToken } from '../middleware/jwt.middleware.js';
 
@@ -21,6 +22,9 @@ router.post('/generate/constraint', authenticateToken, generateConstraintTimetab
 
 // Generate timetable using AI
 router.post('/generate/ai', authenticateToken, generateAITimetable);
+
+// Generate timetable for multiple groups
+router.post('/generate/multi-group', authenticateToken, generateMultiGroupTimetable);
 
 // Finalize timetable
 router.post('/finalize', authenticateToken, finalizeTimetable);

@@ -243,6 +243,11 @@ export const timetableApi = {
     return response.data.data;
   },
   
+  generateMultiGroupTimetable: async (groupIds: string[]): Promise<Timetable> => {
+    const response = await api.post<ApiResponse<Timetable>>('/timetable/generate/multi-group', { groupIds });
+    return response.data.data;
+  },
+  
   generateAITimetable: async (groupId: string): Promise<Timetable> => {
     const response = await api.post<ApiResponse<Timetable>>('/timetable/generate/ai', { groupId });
     return response.data.data;

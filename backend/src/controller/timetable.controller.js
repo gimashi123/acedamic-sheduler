@@ -18,6 +18,7 @@ const TIME_SLOTS = [
 ];
 
 // Available days
+const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const WEEKEND_DAYS = ['Saturday', 'Sunday'];
 
@@ -107,8 +108,8 @@ export const generateConstraintTimetable = async (req, res) => {
       version: 'constraint'
     });
     
-    // Days to use based on group type
-    const daysToUse = group.groupType === 'weekday' ? DAYS : WEEKEND_DAYS;
+    // Use all days of the week regardless of group type
+    const daysToUse = ALL_DAYS;
     
     // Map to track allocated subjects
     const allocatedSubjects = new Map();
@@ -242,7 +243,7 @@ export const generateAITimetable = async (req, res) => {
         capacity: venue.capacity
       })),
       timeSlots: TIME_SLOTS,
-      days: group.groupType === 'weekday' ? DAYS : WEEKEND_DAYS,
+      days: ALL_DAYS,
       previousTimetable: previousTimetable ? {
         slots: previousTimetable.slots.map(slot => ({
           day: slot.day,
@@ -396,4 +397,170 @@ const generateFallbackTimetable = async (groupId, group, subjects, venues) => {
   
   await timetable.save();
   return timetable;
+};
+
+// Generate timetable for multiple groups simultaneously
+export const generateMultiGroupTimetable = async (req, res) => {
+  try {
+    const { groupIds } = req.body;
+    
+    if (!groupIds || !Array.isArray(groupIds) || groupIds.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide at least one group ID' 
+      });
+    }
+
+    // Validate all groups exist
+    const groups = await Group.find({ _id: { $in: groupIds } });
+    if (groups.length !== groupIds.length) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'One or more groups not found' 
+      });
+    }
+
+    // Get subjects
+    const subjects = await Subject.find({}).populate('lecturer');
+    if (subjects.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No subjects found' 
+      });
+    }
+
+    // Get venues
+    const venues = await Venue.find({});
+    if (venues.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No venues found' 
+      });
+    }
+    
+    // Archive any existing timetables for these groups
+    await Timetable.updateMany(
+      { group: { $in: groupIds }, isActive: true },
+      { isActive: false }
+    );
+    
+    // Create a new timetable for each group
+    const createdTimetables = [];
+    
+    for (const group of groups) {
+      const timetable = new Timetable({
+        group: group._id,
+        semester: group.semester,
+        year: group.year,
+        slots: [],
+        generatedBy: 'system',
+        version: 'constraint'
+      });
+      
+      // Assign subjects to the group
+      // For this implementation, we're assigning all subjects to each group
+      // In a real-world scenario, you'd want to filter subjects relevant to each group
+      
+      const timetableSlots = [];
+      const allocatedSubjects = new Map();
+      const allocatedSlots = new Map(); // Track allocated slots to avoid conflicts
+      
+      // Generate schedule using a greedy algorithm with constraints
+      for (const subject of subjects) {
+        if (!subject.lecturer) {
+          console.warn(`Subject ${subject.name} has no assigned lecturer, skipping`);
+          continue;
+        }
+        
+        let allocated = false;
+        
+        // Find a suitable venue type based on subject
+        const venueType = subject.name.toLowerCase().includes('lab') ? 'lab' : 'lecture';
+        const suitableVenues = venues.filter(v => v.type === venueType);
+        
+        if (suitableVenues.length === 0) {
+          console.warn(`No suitable venues of type ${venueType} found for ${subject.name}`);
+          continue;
+        }
+        
+        // Try to find an available slot across all days
+        for (const day of ALL_DAYS) {
+          if (allocated) break;
+          
+          for (const timeSlot of TIME_SLOTS) {
+            if (allocated) break;
+            
+            for (const venue of suitableVenues) {
+              // Generate a unique key for this time slot
+              const slotKey = `${day}-${timeSlot.start}-${venue._id}-${subject.lecturer._id}`;
+              
+              // Check if this slot is already allocated
+              if (allocatedSlots.has(slotKey)) {
+                continue;
+              }
+              
+              // Check if there are conflicts with other groups
+              const hasConflict = createdTimetables.some(otherTimetable => {
+                return otherTimetable.slots.some(slot => 
+                  slot.day === day && 
+                  slot.startTime === timeSlot.start &&
+                  (slot.venue.toString() === venue._id.toString() || 
+                   slot.lecturer.toString() === subject.lecturer._id.toString())
+                );
+              });
+              
+              if (!hasConflict) {
+                // Add this slot to the timetable
+                const newSlot = {
+                  day,
+                  startTime: timeSlot.start,
+                  endTime: timeSlot.end,
+                  subject: subject._id,
+                  venue: venue._id,
+                  lecturer: subject.lecturer._id
+                };
+                
+                timetableSlots.push(newSlot);
+                allocatedSlots.set(slotKey, true);
+                allocatedSubjects.set(subject._id.toString(), true);
+                allocated = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (!allocated) {
+          console.warn(`Could not allocate subject ${subject.name} for group ${group.name} due to constraints`);
+        }
+      }
+      
+      // Assign the slots to the timetable
+      timetable.slots = timetableSlots;
+      
+      // Save the timetable
+      await timetable.save();
+      createdTimetables.push(timetable);
+    }
+    
+    // For simplicity, return the first timetable for now
+    // In a more advanced implementation, you might want to return all timetables
+    // or a merged view
+    const firstTimetable = createdTimetables[0];
+    await firstTimetable.populate('group');
+    await firstTimetable.populate('slots.subject');
+    await firstTimetable.populate('slots.venue');
+    await firstTimetable.populate('slots.lecturer');
+    
+    res.status(200).json({ 
+      success: true, 
+      message: `Generated timetables for ${groups.length} groups`, 
+      data: firstTimetable,
+      totalTimetables: createdTimetables.length
+    });
+    
+  } catch (error) {
+    console.error('Error generating multi-group timetable:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 }; 
