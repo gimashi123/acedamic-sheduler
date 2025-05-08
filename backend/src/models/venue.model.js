@@ -2,11 +2,6 @@
 import mongoose from "mongoose";
 
 const venueSchema = new mongoose.Schema ({
-    // faculty: {
-    //     type: String,
-    //     required: true
-    // },
-
     department: {
         type: String,
         required: true

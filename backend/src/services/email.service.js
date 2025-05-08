@@ -15,12 +15,13 @@ class EmailService {
   initializeProviders() {
     // Add Gmail provider if credentials are available
     const gmailEmail = emailSettings.email || process.env.EMAIL_SERVICE_EMAIL;
-    const gmailPassword = emailSettings.password || process.env.EMAIL_SERVICE_PASSWORD;
-    
+    const gmailPassword =
+      emailSettings.password || process.env.EMAIL_SERVICE_PASSWORD;
+
     if (gmailEmail && gmailPassword) {
       this.addProvider('gmail', {
         service: 'gmail',
-        auth: { user: gmailEmail, pass: gmailPassword }
+        auth: { user: gmailEmail, pass: gmailPassword },
       });
     }
 
@@ -29,13 +30,13 @@ class EmailService {
     const smtpPort = process.env.SMTP_PORT;
     const smtpUser = process.env.SMTP_USER;
     const smtpPass = process.env.SMTP_PASS;
-    
+
     if (smtpHost && smtpPort && smtpUser && smtpPass) {
       this.addProvider('smtp', {
         host: smtpHost,
         port: smtpPort,
         secure: smtpPort === '465',
-        auth: { user: smtpUser, pass: smtpPass }
+        auth: { user: smtpUser, pass: smtpPass },
       });
     }
 
@@ -44,42 +45,46 @@ class EmailService {
     if (sendgridApiKey) {
       this.addProvider('sendgrid', {
         service: 'SendGrid',
-        auth: { api_key: sendgridApiKey }
+        auth: { api_key: sendgridApiKey },
       });
     }
 
     // Add a fallback console provider that just logs emails (always available)
-    this.addProvider('console', {
-      name: 'console-transport',
-      version: '1.0.0',
-      send: (mail, callback) => {
-        const message = mail.message.toString();
-        console.log('\n--- Email would be sent (CONSOLE FALLBACK) ---');
-        console.log(`To: ${mail.data.to}`);
-        console.log(`Subject: ${mail.data.subject}`);
-        console.log(`Body: ${mail.data.text}`);
-        console.log('--- End of email ---\n');
-        callback(null, { response: 'Email logged to console' });
-      }
-    }, true); // true means this is a custom transport
+    this.addProvider(
+      'console',
+      {
+        name: 'console-transport',
+        version: '1.0.0',
+        send: (mail, callback) => {
+          const message = mail.message.toString();
+          console.log('\n--- Email would be sent (CONSOLE FALLBACK) ---');
+          console.log(`To: ${mail.data.to}`);
+          console.log(`Subject: ${mail.data.subject}`);
+          console.log(`Body: ${mail.data.text}`);
+          console.log('--- End of email ---\n');
+          callback(null, { response: 'Email logged to console' });
+        },
+      },
+      true,
+    ); // true means this is a custom transport
   }
 
   // Add a provider to the list
   addProvider(name, config, isCustom = false) {
     let transport;
-    
+
     if (isCustom) {
       transport = config;
     } else {
       transport = nodemailer.createTransport(config);
     }
-    
+
     this.providers.push({
       name,
       transport,
-      isCustom
+      isCustom,
     });
-    
+
     console.log(`Email provider '${name}' added`);
   }
 
@@ -91,7 +96,7 @@ class EmailService {
       return {
         success: false,
         message: 'Email notifications are disabled',
-        provider: null
+        provider: null,
       };
     }
 
@@ -107,7 +112,7 @@ class EmailService {
           from: this.getFromAddress(provider.name),
           to,
           subject,
-          text
+          text,
         };
 
         // Add HTML content if provided
@@ -119,10 +124,13 @@ class EmailService {
         if (provider.isCustom && provider.name === 'console') {
           // Handle console transport differently
           await new Promise((resolve) => {
-            provider.transport.send({
-              data: mailOptions,
-              message: text
-            }, () => resolve());
+            provider.transport.send(
+              {
+                data: mailOptions,
+                message: text,
+              },
+              () => resolve(),
+            );
           });
         } else {
           // Regular nodemailer transport
@@ -133,10 +141,13 @@ class EmailService {
         return {
           success: true,
           message: 'Email sent successfully',
-          provider: provider.name
+          provider: provider.name,
         };
       } catch (error) {
-        console.error(`Failed to send email using provider ${provider.name}:`, error);
+        console.error(
+          `Failed to send email using provider ${provider.name}:`,
+          error,
+        );
         // Continue to the next provider
       }
     }
@@ -145,7 +156,7 @@ class EmailService {
     return {
       success: false,
       message: 'Failed to send email with all configured providers',
-      provider: null
+      provider: null,
     };
   }
 
@@ -233,11 +244,15 @@ class EmailService {
             <p>Dear ${firstName} ${lastName},</p>
             <p>We regret to inform you that your registration request for the Academic Scheduler system has been rejected.</p>
             
-            ${reason ? `
+            ${
+              reason
+                ? `
             <div class="reason">
               <p><strong>Reason:</strong> ${reason}</p>
             </div>
-            ` : ''}
+            `
+                : ''
+            }
             
             <p>If you believe this is an error or would like to provide additional information, please contact the administrator.</p>
             
@@ -306,27 +321,34 @@ class EmailService {
       // Find user by email to get their name
       const User = (await import('../models/user.model.js')).default;
       const user = await User.findOne({ email });
-      
+
       if (!user) {
-        console.error(`User with email ${email} not found for password update notification`);
+        console.error(
+          `User with email ${email} not found for password update notification`,
+        );
         return {
           success: false,
           message: 'User not found',
-          provider: null
+          provider: null,
         };
       }
-      
+
       const subject = 'Academic Scheduler - Password Update';
       const text = `Dear ${user.firstName} ${user.lastName},\n\nYour password has been updated in the Academic Scheduler system.\n\nUsername: ${email}\nPassword: ${newPassword}\n\nImportant: Please keep this information secure. Do not share your password with anyone.\n\nIf you did not make this change, please contact the administrator immediately.\n\nBest regards,\nAcademic Scheduler Team`;
-      const html = this.generatePasswordChangeHtml(user.firstName, user.lastName, user.email, newPassword);
-      
+      const html = this.generatePasswordChangeHtml(
+        user.firstName,
+        user.lastName,
+        user.email,
+        newPassword,
+      );
+
       return await this.sendEmail(email, subject, text, html);
     } catch (error) {
       console.error('Error sending password update notification:', error);
       return {
         success: false,
         message: error.message,
-        provider: null
+        provider: null,
       };
     }
   }
@@ -334,4 +356,4 @@ class EmailService {
 
 // Create and export a singleton instance
 const emailService = new EmailService();
-export default emailService; 
+export default emailService;

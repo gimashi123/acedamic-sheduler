@@ -6,9 +6,16 @@ import {
   getRequestsByRole,
   updateRequestStatus,
   getRequestStatus,
+  checkRequestStatusByEmail,
+  approveRequest,
+  rejectRequest,
 } from '../controller/request.controller.js';
-import { authenticateToken, authorizeRole } from '../middleware/jwt.middleware.js';
+import {
+  authenticateToken,
+  authorizeRole,
+} from '../middleware/jwt.middleware.js';
 import { ROLES } from '../models/user.model.js';
+import { REQUEST_STATUS } from '../models/user_request.model.js';
 
 const router = express.Router();
 
@@ -16,35 +23,50 @@ const router = express.Router();
 router.post('/submit', createRequest);
 
 // Public route to check request status by email
-router.get('/status/:email', getRequestStatus);
+router.get('/status-by-email/:email', checkRequestStatusByEmail);
 
 // Admin routes (protected)
 router.get(
   '/all',
   authenticateToken,
   authorizeRole([ROLES.ADMIN]),
-  getAllRequests
+  getAllRequests,
 );
 
 router.get(
   '/status/:status',
   authenticateToken,
   authorizeRole([ROLES.ADMIN]),
-  getRequestsByStatus
+  getRequestsByStatus,
 );
 
 router.get(
   '/role/:role',
   authenticateToken,
   authorizeRole([ROLES.ADMIN]),
-  getRequestsByRole
+  getRequestsByRole,
 );
 
 router.put(
   '/:requestId',
   authenticateToken,
   authorizeRole([ROLES.ADMIN]),
-  updateRequestStatus
+  updateRequestStatus,
 );
 
-export default router; 
+// Approve and reject request routes
+router.post(
+  '/approve/:id',
+  authenticateToken,
+  authorizeRole([ROLES.ADMIN]),
+  approveRequest,
+);
+
+router.post(
+  '/reject/:id',
+  authenticateToken,
+  authorizeRole([ROLES.ADMIN]),
+  rejectRequest,
+);
+
+export default router;

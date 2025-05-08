@@ -1,17 +1,27 @@
 import mongoose from "mongoose";
-
+import slotSchema from "./slot.model.js";
 
 const timetableSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-    groupName: { type: String, required: true },
+    title: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    groupName: {
+        type: String,
+        required: true
+    },
     isPublished: {
         type: Boolean,
         default: false
-    },// Store only the group name
-});
+    },
+    slots: {
+        type: [slotSchema],
+        default: []
+    }
+}, { timestamps: true });
 
-
-const TimeTable = mongoose.model('TimeTable', timetableSchema);
-
-export default TimeTable;
+export default mongoose.model('TimeTable', timetableSchema);
