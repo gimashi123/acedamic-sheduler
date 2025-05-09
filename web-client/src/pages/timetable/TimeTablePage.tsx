@@ -24,37 +24,52 @@ import {
 
 import { ITimetable } from "@/data-types/timetable.tp.ts";
 
-import {AddTimeTableDetailsDialog} from "@/pages/timetable/AddTimeTableDetailsDialog.tsx";
-import {useTimetable} from "@/context/timetable/timetable-context.tsx";
+import { AddTimeTableDetailsDialog } from "@/pages/timetable/AddTimeTableDetailsDialog.tsx";
+import { useTimetable } from "@/context/timetable/timetable-context.tsx";
 import { deleteTimetable } from '@/services/timetable.service.ts';
-import {CalendarPlus2, Eye,  Trash} from "lucide-react";
-import {UpdateTimeTableDetailsDialog} from "@/pages/timetable/UpdateTimeTableDetailsDialog.tsx";
-
-import {toast} from "react-hot-toast";
+import { CalendarPlus2, Eye, Trash } from "lucide-react";
+import { UpdateTimeTableDetailsDialog } from "@/pages/timetable/UpdateTimeTableDetailsDialog.tsx";
+import { useAuth } from "@/context/auth/auth-context.tsx";
+import { toast } from "react-hot-toast";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 export const TimeTablePage = () => {
 
     const navigate = useNavigate();
-    const {timetables} = useTimetable();
+    const { timetables } = useTimetable();
+    const { currentUser } = useAuth();
+    const [searchTerm, setSearchTerm] = useState("");
 
 
     const handleViewTimetable = (timetable: ITimetable) => {
         navigate(`/admin/dashboard/timetable/view`, { state: { timetable } });
     }
 
+    const filteredTimeTables = timetables?.filter(timetable =>
+        timetable.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div>
             <div>
-                <div className={'flex flex-row justify-end items-center'}>
+                <div className={'flex flex-row justify-end items-center gap-4'}>
                     {/*<Button clas sName={'cursor-pointer hover:bg-green-800'} onClick={() => navigate('/admin/dashboard/timetable/add-details')}>*/}
                     {/*    Add Details*/}
                     {/*</Button>*/}
-                    <AddTimeTableDetailsDialog/>
+                    <Input
+                        placeholder="Search timetables..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="max-w-xs"
+                    />
+                    <AddTimeTableDetailsDialog />
+
                 </div>
             </div>
             <div className={'mt-5'}>
                 <div className={'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}>
-                    {timetables?.map((item) => (
+                    {filteredTimeTables?.map((item) => (
                         <Card key={item.id} >
                             <CardHeader>
                                 <CardTitle>{item.title}</CardTitle>
@@ -70,18 +85,33 @@ export const TimeTablePage = () => {
                             </CardContent>
                             <CardFooter>
                                 <div className="flex gap-x-4">
-                                    <Button variant={'outline'} size={"icon"} className={'cursor-pointer hover:text-white hover:bg-green-400'} onClick={()=>handleViewTimetable(item)}>
-                                        <Eye/>
+                                    {/* Always show the View button */}
+                                    <Button
+                                        variant={'outline'}
+                                        size={"icon"}
+                                        className={'cursor-pointer hover:text-white hover:bg-green-400'}
+                                        onClick={() => handleViewTimetable(item)}
+                                    >
+                                        <Eye />
                                     </Button>
-                                    <Button variant={'outline'} size={"sm"} className={'cursor-pointer hover:text-white hover:bg-green-400'} onClick={() => navigate(`/admin/dashboard/timetable/add`)}>
-                                        <CalendarPlus2/>
-                                    </Button>
 
-                                    <DeleteTimeTableAlert selectedTimetable={item} />
+                                    {/* Hide other buttons for Student role */}
+                                    {currentUser?.role !== 'Student' && (
+                                        <>
+                                            <Button
+                                                variant={'outline'}
+                                                size={"sm"}
+                                                className={'cursor-pointer hover:text-white hover:bg-green-400'}
+                                                onClick={() => navigate(`/admin/dashboard/timetable/add`)}
+                                            >
+                                                <CalendarPlus2 />
+                                            </Button>
 
-                                    <UpdateTimeTableDetailsDialog selectedTimetable={item}/>
+                                            <DeleteTimeTableAlert selectedTimetable={item} />
 
-
+                                            <UpdateTimeTableDetailsDialog selectedTimetable={item} />
+                                        </>
+                                    )}
                                 </div>
                             </CardFooter>
                         </Card>
@@ -94,9 +124,9 @@ export const TimeTablePage = () => {
 
 
 
-const DeleteTimeTableAlert = ( { selectedTimetable} : { selectedTimetable: ITimetable}) => {
+const DeleteTimeTableAlert = ({ selectedTimetable }: { selectedTimetable: ITimetable }) => {
 
-    const {getTimetables } = useTimetable();
+    const { getTimetables } = useTimetable();
     const handleDelete = async () => {
         try {
             if (!selectedTimetable?.id) return;
@@ -110,26 +140,26 @@ const DeleteTimeTableAlert = ( { selectedTimetable} : { selectedTimetable: ITime
     };
 
     return (
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
 
-            <Button variant={'outline'} size={"icon"} className={'cursor-pointer hover:text-white hover:bg-red-400'}>
-                <Trash/>
-            </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              timetable and remove your data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                <Button variant={'outline'} size={"icon"} className={'cursor-pointer hover:text-white hover:bg-red-400'}>
+                    <Trash />
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the
+                        timetable and remove your data from our servers.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 };

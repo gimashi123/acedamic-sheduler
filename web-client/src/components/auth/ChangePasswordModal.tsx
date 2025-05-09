@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { authApi } from '@/services/auth.service.ts';
 import { useAuth } from '@/context/auth/auth-context.tsx';
+import { useNavigate } from 'react-router-dom';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const validatePassword = (password: string): boolean => {
     const passwordRegex =
@@ -62,6 +64,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           onClose();
         }, 2000);
       }
+      navigate('/profile')
     } catch (err) {
       setError(
         'Failed to change password. Please check your current password and try again.',
@@ -74,7 +77,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-8 max-w-md w-full">
         <h2 className="text-xl font-bold mb-4">
           {isFirstLogin ? 'Set New Password' : 'Change Password'}

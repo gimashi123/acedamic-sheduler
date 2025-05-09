@@ -48,9 +48,9 @@ export const updateTimetable = async (id: string, data: any) => {
 export const addSlotToTimetable = async (timetableId: string, slot: SlotRequest) => {
     try {
         const response = await api.post(`/timetable/${timetableId}/slots`, slot);
-        if(response.data.success){
-            toast.success("Slot added successfully");
-        }
+        // if(response.data.success){
+        //     toast.success("Slot added successfully");
+        // }
         if(response.data.success){
             return response.data.result;
         }

@@ -88,37 +88,41 @@ export const getSubjects = async (req, res) => {
 // Update subject
 export const updateSubject = async (req, res) => {
   try {
+    const { id } = req.params;
     const { name, code, credits } = req.body;
 
-    if (!subject) {
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name;
+    if (code !== undefined) updateFields.code = code;
+    if (credits !== undefined) updateFields.credits = credits;
+
+    if (Object.keys(updateFields).length === 0) {
+      return errorResponse(res, 'No fields provided to update', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const updatedSubject = await Subject.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSubject) {
       return errorResponse(res, 'Subject not found', HTTP_STATUS.NOT_FOUND);
     }
-
-    if (code) {
-      subject.code = code;
-    }
-
-    if (credits) {
-      subject.credits = credits;
-    }
-
-    if (name) {
-      subject.name = name;
-    }
-
-    await subject.save();
 
     return successResponse(
       res,
       'Subject updated successfully',
       HTTP_STATUS.OK,
-      getSubjectResponse(subject),
+      updatedSubject
     );
+
   } catch (error) {
+    console.error('Error updating subject:', error);
     return errorResponse(
       res,
       error.message || 'Error updating subject',
-      HTTP_STATUS.NOT_FOUND,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 };

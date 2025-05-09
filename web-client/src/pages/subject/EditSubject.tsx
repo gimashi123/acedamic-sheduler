@@ -37,10 +37,10 @@ export function EditSubject() {
     e.preventDefault();
     try {
       await updateSubject(id, subject);
-      alert('✅ Subject updated successfully!');
+      alert('Subject updated successfully!');
       navigate('/admin/dashboard/subject'); // Redirect to subject list
     } catch (error) {
-      console.error('❌ Error updating subject:', error);
+      console.error('Error updating subject:', error);
       alert('Failed to update subject');
     }
   };

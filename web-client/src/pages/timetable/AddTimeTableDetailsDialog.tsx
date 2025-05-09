@@ -11,15 +11,16 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import {toast} from "react-hot-toast"
+import { toast } from "react-hot-toast"
 
-import {z} from "zod";
-import {useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form.tsx";
-import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group.tsx";
-import {useTimetable} from "@/context/timetable/timetable-context.tsx";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { useTimetable } from "@/context/timetable/timetable-context.tsx";
 import api from "@/config/axios.config.ts";
+import { useAuth } from "@/context/auth/auth-context.tsx";
 
 const formSchema = z.object({
     title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -33,7 +34,8 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function AddTimeTableDetailsDialog() {
 
-    const {getTimetables} = useTimetable();
+    const { getTimetables } = useTimetable();
+    const { currentUser } = useAuth();
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -68,7 +70,9 @@ export function AddTimeTableDetailsDialog() {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="default">Add Details</Button>
+                {currentUser?.role !== 'Student' && (
+                    <Button variant="default">Add Details</Button>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
@@ -90,7 +94,7 @@ export function AddTimeTableDetailsDialog() {
                                 <FormItem>
                                     <FormLabel>Title</FormLabel>
                                     <FormControl>
-                                        <Input {...field} className="w-full" id={'title'}/>
+                                        <Input {...field} className="w-full" id={'title'} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -120,7 +124,7 @@ export function AddTimeTableDetailsDialog() {
                                 <FormItem>
                                     <FormLabel>Group Name</FormLabel>
                                     <FormControl>
-                                        <Input {...field} className="w-full" id={'groupName'}/>
+                                        <Input {...field} className="w-full" id={'groupName'} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

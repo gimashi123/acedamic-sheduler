@@ -9,7 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RefreshCw, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { RemovedUser, User } from '@/data-types/user.tp.ts';
+import { RemovedUser, User, UserRequest } from '@/data-types/user.tp.ts';
+import { requestService } from '@/pages/requests/requestService.ts';
+import Requests from '../requests/Requests';
 
 const UsersPage: React.FC = () => {
   const [students, setStudents] = useState<User[]>([]);
@@ -21,6 +23,7 @@ const UsersPage: React.FC = () => {
     null,
   );
   const [tabValue, setTabValue] = useState('students');
+  const [requests, setRequests] = useState<UserRequest[]>([]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -91,10 +94,6 @@ const UsersPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const handleRemoveUser = async (userId: string, reason?: string) => {
     try {
       await userService.removeUser(userId, reason);
@@ -120,6 +119,27 @@ const UsersPage: React.FC = () => {
       });
     }
   };
+
+  const fetchRequests = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const requests = await requestService.getPendingRequests();
+      setRequests(requests);
+    }
+    catch (error) {
+      console.error('Error fetching requests:', error);
+      setError('Failed to load requests. Please try again.');
+    }
+    finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    fetchRequests();
+  }, []);
 
   if (loading) {
     return (
@@ -158,12 +178,15 @@ const UsersPage: React.FC = () => {
       </div>
 
       <Tabs value={tabValue} onValueChange={setTabValue} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="students">
             Students ({students.length})
           </TabsTrigger>
           <TabsTrigger value="lecturers">
             Lecturers ({lecturers.length})
+          </TabsTrigger>
+          <TabsTrigger value="requests">
+            Requests ({requests.length})
           </TabsTrigger>
           <TabsTrigger value="removed">
             Removed Users ({removedUsers.length})
@@ -193,6 +216,10 @@ const UsersPage: React.FC = () => {
             onRemoveUser={handleRemoveUser}
             onUserUpdated={fetchUsers}
           />
+        </TabsContent>
+
+        <TabsContent value="requests">
+          <Requests />
         </TabsContent>
 
         <TabsContent value="removed">

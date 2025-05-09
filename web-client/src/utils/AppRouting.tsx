@@ -43,7 +43,7 @@ export const AppRouting = () => {
         <Route path={'/profile'} element={<ProfilePage />} />
         <Route path={'/login'} element={<LoginPage />} />
         <Route path={'/signup'} element={<RegisterRequestForm />} />
-        <Route path="change-password" element={<ChangePassword />} />
+        <Route path="/change-password" element={<ChangePassword />} />
         <Route path={'/admin/dashboard/*'} element={<AdminDashboardPage />}>
           <Route path="groups" element={<GroupManagement />} />
 

@@ -11,9 +11,10 @@ import { Card } from '@/components/ui/card.tsx';
 import { useSubject } from '@/context/subject/subject.context.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { useNavigate } from 'react-router-dom';
-import { Trash } from 'lucide-react';
+import { Pencil, Trash, FileIcon } from 'lucide-react';
 import { deleteSubject } from '@/services/subject.service.ts';
 import { toast } from 'react-hot-toast';
+import { Input } from "@/components/ui/input";
 
 import {
   AlertDialog,
@@ -28,21 +29,53 @@ import {
 } from '@/components/ui/alert-dialog.tsx';
 import { ISubject } from '@/data-types/subject.tp.ts';
 import { UpdateSubjectDialog } from '@/pages/subject/UpdateSubjectDetailsDialog.tsx';
+import { exportToPdf } from '@/utils/pdf-utils.tsx';
+import { useState } from 'react';
 
 export function SubjectDashboard() {
   const navigate = useNavigate();
   const { subjects } = useSubject();
+  const [searchTerm, setSearchTerm] = useState("");
 
   console.log(subjects);
 
+  const handleExportToPdf = () => {
+    exportToPdf({
+      title: `A list of your recent subjects.`,
+      filename: `users-${new Date().toISOString().split('T')[0]}`,
+      columns: [
+        { header: 'Subject Name', dataKey: 'name' },
+        { header: 'Module Code', dataKey: 'code' },
+        { header: 'Credits', dataKey: 'credits' },
+      ],
+      data: subjects || [],
+    });
+    toast.success('PDF exported successfully');
+  };
+
+  const filteredSubjects = (subjects || []).filter(subject =>
+    subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    subject.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div>
-      <div className="flex flex-row w-full justify-end mb-4">
+      <div className="flex flex-row w-full justify-end mb-4 gap-4">
+        <Input
+          placeholder="Search subjects..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-xs"
+        />
         <Button
           className="cursor-pointer hover:bg-green-800"
           onClick={() => navigate('/admin/dashboard/subject/add')}
         >
           Add Subject
+        </Button>
+        <Button onClick={handleExportToPdf} variant="outline" className="gap-2">
+          <FileIcon className="h-4 w-4" />
+          Export PDF
         </Button>
       </div>
       <Card className={'p-4'}>
@@ -65,7 +98,7 @@ export function SubjectDashboard() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {subjects?.map((subject) => (
+            {filteredSubjects?.map((subject) => (
               <TableRow key={subject.id}>
                 <TableCell>{subject.name}</TableCell>
                 <TableCell>{subject.code}</TableCell>

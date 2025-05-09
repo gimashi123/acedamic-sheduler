@@ -66,7 +66,7 @@ app.use('/api/user', userRoute);
 app.use('/api/timetable', timeTableRoutes);
 // API routes
 app.use('/api/request', requestRoute);
-app.use('/api/group', authenticateToken, groupRoutes); // add authenticateToken after the testing
+app.use('/api/group',  groupRoutes); // add authenticateToken after the testing
 app.use('/api/venue', authenticateToken, venueRoutes); // add authenticateToken after the testing
 app.use('/api/settings', settingsRoutes);
 // Add Subject API route

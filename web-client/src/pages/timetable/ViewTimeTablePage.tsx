@@ -35,6 +35,12 @@ import {
 } from '@/components/ui/select.tsx';
 import { SubjectOptions } from '@/data-types/subject.tp.ts';
 import { getSubjectOptions } from '@/services/subject.service.ts';
+import { generateTimetableSlots } from './timetableGenerator';
+import { userService } from '../users/userService';
+import { User } from '@/data-types/user.tp.ts';
+import { exportToPdf } from '@/utils/pdf-utils.tsx';
+import { FileIcon } from 'lucide-react';
+import { useAuth } from "@/context/auth/auth-context.tsx";
 
 interface Slot {
   id: string;
@@ -73,14 +79,41 @@ const timeSlots = [
   { start: '17:00', end: '18:00' },
 ];
 
+const handleTimetableGeneration = async (
+  timetableId: string,
+  subjects: SubjectOptions[],
+  venues: VenueOptions[],
+  lecturers: User[],
+  setTimetable: (timetable: Timetable) => void,
+) => {
+  try {
+    const generatedSlots = generateTimetableSlots(subjects, venues, lecturers);
+
+    for (const slot of generatedSlots) {
+      await addSlotToTimetable(timetableId, slot);
+    }
+
+    const updatedTimetable = await getTimetableById(timetableId);
+    setTimetable(updatedTimetable);
+    toast.success('Timetable generated successfully!');
+  } catch (error) {
+    console.error('Error generating timetable:', error);
+    toast.error('Failed to generate timetable');
+  }
+};
+
 export const ViewTimeTablePage = () => {
   const [timetable, setTimetable] = useState<Timetable | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [lecturers, setLecturers] = useState<User[]>([]);
+  const [loadingLecturers, setLoadingLecturers] = useState(false);
+
   const [venues, setVenues] = useState<VenueOptions[]>([]);
   const [loadingVenues, setLoadingVenues] = useState(false);
 
   const [subjects, setSubjects] = useState<SubjectOptions[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [generatingTimetable, setGeneratingTimetable] = useState(false);
 
   const [newSlotInfo, setNewSlotInfo] = useState<{
     day: string;
@@ -150,22 +183,30 @@ export const ViewTimeTablePage = () => {
   };
 
   useEffect(() => {
-    const loadVenues = async () => {
+    const loadData = async () => {
       try {
         setLoadingSubjects(true);
         setLoadingVenues(true);
+        setLoadingLecturers(true);
+
         const venueOptions = await getVenueOptions();
         const subjectsData = await getSubjectOptions();
+        const lecturersData = await userService.getUsersByRole('Lecturer');
+
         setVenues(venueOptions);
         setSubjects(subjectsData);
+        setLecturers(lecturersData);
       } catch (error) {
-        toast.error('Failed to load venues');
+        toast.error('Failed to load data');
+        console.error('Error loading data:', error);
       } finally {
         setLoadingVenues(false);
         setLoadingSubjects(false);
+        setLoadingLecturers(false);
       }
     };
-    loadVenues().then();
+
+    loadData().then();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -178,6 +219,7 @@ export const ViewTimeTablePage = () => {
         const updatedTimetable = await getTimetableById(timetableId);
         setTimetable(updatedTimetable);
         setNewSlotInfo(null);
+        toast.success('Slot added successfully!');
       }
     } catch (error) {
       toast.error('Failed to add slot');
@@ -214,12 +256,73 @@ export const ViewTimeTablePage = () => {
       </div>
     );
   }
+  const handleExportToPdf = () => {
+    if (!timetable) return;
+
+    const columns = [
+      { header: 'Time', dataKey: 'time' },
+      ...days.map((day) => ({ header: day, dataKey: day })),
+    ];
+
+    const tableData = timeSlots.map((time) => {
+      const row: Record<string, string> = { time: `${time.start} - ${time.end}` };
+
+      days.forEach((day) => {
+        const slot = timetable.slots.find(
+          (slot) => slot.day === day && slot.startTime === time.start
+        );
+
+        if (slot) {
+          row[day] = `${slot.subject?.name || 'No subject'}\n${slot.instructor?.name || 'No instructor'}\n${slot.venue?.hallName || 'No venue'}`;
+        } else {
+          row[day] = 'No slot';
+        }
+      });
+
+      return row;
+    });
+
+    exportToPdf({
+      title: timetable.title,
+      filename: `${timetable.title}-${new Date().toISOString().split('T')[0]}`,
+      columns,
+      data: tableData,
+      orientation: 'landscape',
+      includeTimestamp: true,
+    });
+
+    toast.success('PDF exported successfully');
+  };
+
+  const { currentUser } = useAuth();
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">{timetable.title}</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold mb-6">{timetable.title}</h1>
+        <div className='flex gap-4'>
+          {currentUser?.role !== 'Student' && (
+            <Button
+              className="mb-6"
+              disabled={generatingTimetable}
+              onClick={async () => {
+                setGeneratingTimetable(true);
+                await handleTimetableGeneration(timetableId, subjects, venues, lecturers, setTimetable);
+                setGeneratingTimetable(false);
+              }}
+            >
+              {generatingTimetable ? 'Generating...' : 'Auto-Generate Timetable'}
+            </Button>
+          )}
+          <Button onClick={handleExportToPdf} variant="outline" className="gap-2">
+            <FileIcon className="h-4 w-4" />
+            Export PDF
+          </Button>
+        </div>
+      </div>
+
       <div className="rounded-md border overflow-x-auto">
-        <Table className="min-w-[700px]">
+        <Table className="w-full">
           <TableHeader>
             <TableRow>
               <TableHead className="w-[120px]">Time</TableHead>
@@ -389,15 +492,34 @@ export const ViewTimeTablePage = () => {
                 <Label htmlFor="instructor" className="text-right">
                   Instructor
                 </Label>
-                <Input
-                  id="instructor"
+                <Select
                   value={formData.instructor}
-                  onChange={(e) =>
-                    setFormData({ ...formData, instructor: e.target.value })
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, instructor: value })
                   }
-                  className="col-span-3"
                   required
-                />
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select an instructor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {loadingLecturers ? (
+                      <div className="p-2 text-center text-sm">
+                        Loading instructors...
+                      </div>
+                    ) : lecturers.length === 0 ? (
+                      <div className="p-2 text-center text-sm">
+                        No instructors available
+                      </div>
+                    ) : (
+                      lecturers.map((lecturer) => (
+                        <SelectItem key={lecturer._id} value={lecturer._id}>
+                          {lecturer.firstName} {lecturer.lastName}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="venue" className="text-right">

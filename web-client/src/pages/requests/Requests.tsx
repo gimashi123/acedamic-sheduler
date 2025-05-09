@@ -91,15 +91,15 @@ const Requests: React.FC = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold tracking-tight">
           Pending Registration Requests
         </h1>
-        <Button variant="outline" onClick={fetchPendingRequests}>
+        {/* <Button variant="outline" onClick={fetchPendingRequests}>
           <RefreshCcw className="mr-2 h-4 w-4" />
           Refresh
-        </Button>
+        </Button> */}
       </div>
 
       <div className="rounded-md border shadow-sm overflow-x-auto">
@@ -109,7 +109,7 @@ const Requests: React.FC = () => {
               <TableHead className="min-w-[150px]">Name</TableHead>
               <TableHead className="min-w-[200px]">Email</TableHead>
               <TableHead className="min-w-[120px]">Role</TableHead>
-              <TableHead className="min-w-[200px]">Details</TableHead>
+              {/* <TableHead className="min-w-[200px]">Details</TableHead> */}
               <TableHead className="min-w-[100px]">Status</TableHead>
               <TableHead className="min-w-[180px]">Submitted</TableHead>
               <TableHead className="min-w-[200px] text-right">
@@ -125,11 +125,11 @@ const Requests: React.FC = () => {
                 </TableCell>
                 <TableCell>{request.email}</TableCell>
                 <TableCell className="capitalize">{request.role}</TableCell>
-                <TableCell>
+                {/* <TableCell>
                   {request.additionalDetails || (
                     <span className="text-gray-400">N/A</span>
                   )}
-                </TableCell>
+                </TableCell> */}
                 <TableCell>
                   <Badge
                     variant={

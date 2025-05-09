@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/auth/auth-context.tsx';
 
 const pages = [
   {
@@ -18,7 +19,7 @@ const pages = [
   },
   {
     name: 'Group Management',
-    url: '/admin/dashboard/user',
+    url: '/admin/dashboard/groups',
     icon: PieChart,
   },
   {
@@ -42,33 +43,40 @@ const pages = [
 export function NavPages() {
   const [currentPath, setCurrentPath] = useState<string>('/');
   const location = useLocation();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     const pathname = location.pathname;
     setCurrentPath(pathname);
   }, [location.pathname]);
 
+  const isStudent = currentUser?.role === 'Student';
+
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Projects</SidebarGroupLabel>
       <SidebarMenu>
-        {pages.map((item) => (
-          <SidebarMenuItem
-            key={item.name}
-            className={
-              currentPath === item.url
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                : ''
-            }
-          >
-            <SidebarMenuButton asChild>
-              <a href={item.url}>
-                <item.icon />
-                <span>{item.name}</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+        {pages
+          .filter((item) =>
+            isStudent ? item.name === 'Time Table Management' : true
+          )
+          .map((item) => (
+            <SidebarMenuItem
+              key={item.name}
+              className={
+                currentPath === item.url
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                  : ''
+              }
+            >
+              <SidebarMenuButton asChild>
+                <a href={item.url}>
+                  <item.icon />
+                  <span>{item.name}</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
       </SidebarMenu>
     </SidebarGroup>
   );

@@ -49,7 +49,7 @@ export const NavigationBar = () => {
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/profile')}>Profile</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/admin/dashboard')}>
                 Dashboard
               </DropdownMenuItem>
